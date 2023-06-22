@@ -1,0 +1,289 @@
+simulation_metadata:
+    num_episodes: 10
+    num_steps_per_episode: 25
+    num_substeps_per_step: 1
+    
+state:
+    environment: null
+    agents:
+        consumers:
+            number: 6400
+            properties:
+                F_t:
+                    name: "Follower tendency"
+                    learnable: False
+                    shape:
+                        - ${state.agents.consumers.number}
+                        - 1
+                    initialization_function:
+                        generator: "random_normal"
+                        arguments:
+                            mu: 
+                                name: "F_t mean"
+                                learnable: False
+                                shape:
+                                    - 1
+                                initialization_function: null
+                                value: 0.5
+                                dtype: "float"
+                            sigma: 
+                                name: "F_t sigma"
+                                learnable: False
+                                shape:
+                                    - 1
+                                initialization_function: null
+                                value: 0.67
+                                dtype: "float"
+                    dtype: "float"
+                            
+                Purchased_before:
+                    name: "Purchased before"
+                    learnable: False
+                    shape:
+                        - ${state.agents.consumers.number}
+                        - ${state.objects.metadata.num_products}
+                    initialization_function: null
+                    value: 0.5
+                    dtype: "float"
+                
+                Q_exp:
+                    name: "Quality Experienced"
+                    learnable: False
+                    shape:
+                        - ${state.agents.consumers.number}
+                        - ${state.objects.metadata.num_products}
+                    initialization_function:
+                        generator: "random_normal_col_by_col"
+                        arguments:
+                            mu_0:
+                                name: "Q_exp mu_0"
+                                learnable: False
+                                shape:
+                                    - 1
+                                initialization_function: null
+                                value: 0.5
+                                dtype: "float"
+                            sigma_0:
+                                name: "Q_exp sigma_0"
+                                learnable: False
+                                shape:
+                                    - 1
+                                initialization_function: null
+                                value: 0.2
+                                dtype: "float"
+                            mu_1:
+                                name: "Q_exp mu_1"
+                                learnable: False
+                                shape:
+                                    - 1
+                                initialization_function: null
+                                value: 0.5
+                                dtype: "float"
+                            sigma_1:
+                                name: "Q_exp sigma_1"
+                                learnable: False
+                                shape:
+                                    - 1
+                                initialization_function: null
+                                value: 0.2
+                                dtype: "float"
+                    dtype: "float"
+                
+                Q_des:
+                    name: "Quality Experienced"
+                    learnable: False
+                    shape:
+                        - ${state.agents.consumers.number}
+                        - 1
+                    initialization_function: null
+                    value: 0.5
+                    dtype: "float"
+                    
+                                                            
+        marketers:
+            number: 2
+            properties: null
+                    
+    objects:
+        metadata:
+            num_products: 2
+        ProductA:
+            number: 1
+            properties:
+                cost:
+                    name: "Product Cost"
+                    shape:
+                        - ${state.objects.ProductA.number}
+                        - 1
+                    learnable: False
+                    initialization_function: null
+                    value: 1.0
+                    dtype: "float"
+                            
+                quality:
+                    name: "Product Quality"
+                    shape:
+                        - ${state.objects.ProductA.number}
+                        - 1
+                    learnable: False
+                    initialization_function: null
+                    value: 1.0
+                    dtype: "float"
+
+        ProductB:
+            number: 1
+            properties:
+                cost:
+                    name: "Product Cost"
+                    shape:
+                        - ${state.objects.ProductB.number}
+                        - 1
+                    learnable: False
+                    initialization_function: null
+                    value: 1.0
+                    dtype: "float"
+                            
+                quality:
+                    name: "Product Quality"
+                    shape:
+                        - ${state.objects.ProductB.number}
+                        - 1
+                    learnable: False
+                    initialization_function: null
+                    value: 1.0
+                    dtype: "float" 
+    
+    network:
+        agent_agent:
+            opinion_network:
+                type: "grid"
+                arguments:
+                    shape:
+                        - 80
+                        - 80   
+        agent_object: null
+        object_object: null
+
+
+substeps:
+    "0":
+        name: "New Purchase"
+        description: "Consumer makes a purchase decision"
+        active_agents:
+            - "consumers"
+        observation:
+            consumers:
+                get_from_state:
+                    generator: "GetFromState"
+                    arguments: null
+                    input_variables:
+                        F_t: "agents/consumers/F_t"
+                        Q_des: "agents/consumers/Q_des"
+                        Q_exp: "agents/consumers/Q_exp"
+                    output_variables:
+                        - F_t
+                        - Q_des
+                        - Q_exp
+                        
+                get_neighbors_sum:
+                    generator: "GetNeighborsSum"
+                    arguments:
+                        neighborhood:
+                            name: "Neighborhood Scope"
+                            shape:
+                                - 1
+                            learnable: False
+                            initialization_function: null
+                            value: 1
+                            dtype: "int"
+                    input_variables:
+                        adjacency_matrix: "network/agent_agent/opinion_network/adjacency_matrix"
+                        query_feature: "agents/consumers/Purchased_before"
+                    output_variables:
+                        - N_i
+                    
+                get_neighbors_sum_reduced:
+                    generator: "GetNeighborsSumReduced"
+                    arguments:
+                        neighborhood:
+                            name: "Neighborhood Scope"
+                            shape:
+                                - 1
+                            learnable: False
+                            initialization_function: null
+                            value: 1
+                            dtype: "int"
+                    input_variables:
+                        adjacency_matrix: "network/agent_agent/opinion_network/adjacency_matrix"
+                        query_feature: "agents/consumers/Purchased_before"
+                    output_variables:
+                        - N_p
+                        
+        policy:
+            consumers:
+                purchase_product:
+                    generator: "ProductPurchased"
+                    arguments: null
+                    input_variables: # from the observation
+                        N_i: "N_i"
+                        N_p: "N_p"
+                        F_t: "F_t"
+                        Q_des: "Q_des"
+                        Q_exp: "Q_exp"
+                    output_variables:
+                        - purchase_action
+
+        transition:
+            new_Q_exp:
+                generator: "NewQExp"
+                arguments:
+                    distribution_params_0_mu:
+                        name: "Resample dist mu 0 "
+                        shape:
+                            - 1
+                        learnable: False
+                        initialization_function: null
+                        value: 0.5
+                        dtype: "float"
+                    
+                    distribution_params_0_sigma:
+                        name: "Resample dist sigma 0 "
+                        shape:
+                            - 1
+                        learnable: False
+                        initialization_function: null
+                        value: 0.2
+                        dtype: "float"
+                    
+                    distribution_params_1_mu:
+                        name: "Resample dist mu 1 "
+                        shape:
+                            - 1
+                        learnable: False
+                        initialization_function: null
+                        value: 0.5
+                        dtype: "float"
+                    
+                    distribution_params_1_sigma:
+                        name: "Resample dist sigma 1 "
+                        shape:
+                            - 1
+                        learnable: False
+                        initialization_function: null
+                        value: 0.2
+                        dtype: "float"                    
+                input_variables:
+                    Q_exp: "agents/consumers/Q_exp"
+                output_variables:
+                    - Q_exp
+        
+            new_purchased_before:
+                generator: "NewPurchasedBefore"
+                arguments: null
+                input_variables: 
+                    Purchased_before: "agents/consumers/Purchased_before"
+                output_variables:
+                    - Purchased_before
+
+
+        reward: null

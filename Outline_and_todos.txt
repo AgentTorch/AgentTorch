@@ -1,0 +1,56 @@
+Pip Path: /u/ayushc/projects/COLLAB/surya_code/envs/planGradABM/bin/pip
+
+[For Ayush]: Run experiments with the planGradABM conda environment on matlabers.
+
+The current focus is to get the opinion dynamics simulator to successfully run with TorchABM. The basic forward Opinion Dynamics simulation works successfully from the runner.
+
++ Together:
+- Decide on figures and system architecture for the paper
+
++ Alone:
+- [Jayakumar]: Units Tests and Integration Tests
+- [Jayakumar]: torch.compile (and torch.vmap)
+
+- [Ayush]: create_config() python API {In Progress}
+- [Ayush]: refactor epidemiology code {TO-DO}
+
+A general simulator has the following modules:
+
+1. Config [NOT TEMPLATED]:
+    - state (only has variables or adjacency matrix) - the initializer may be a scalar or a distribution
+        - Environment 
+            - shared variables in global scope across the simulator.
+            - define the name, shape, initializer. (may be learnable)
+        - Agents
+            - properties specific to the agent.
+            - define the name, shape, initializer of each property (may be learnable)
+        - Objects
+            - properties specific to the object.
+            - define the name, shape, initializer of each property (may be learnable)
+        - Network
+            - agent_agent or agent_object
+            - defined by an adjacency matrix (which may be learnable)
+            
+    - substeps (only has function)
+        - Observation
+            - function for each property (may be learnable)
+        - Policy
+            - function for each action (may be learnable)
+        - Transition
+            - function for each transition (may be learnable)
+        - Reward
+
+2. Utils [NOT TEMPLATED] (every function is torch.nn.Module)
+3. Registry [TEMPLATED] (written as python wrapper api)
+4. Initializer [TEMPLATED] (follows from prior implementation)
+5. Controller [TEMPLATED]
+6. Runner [TEMPLATED]    
+
+Notes for learning:
+1. Policy learning happens at every K step [if TD]
+2. Calibration happens at every episode
+
+We would need to learn one of the following:
+1. Properties of the environment, agent, objects
+2. Parameters of the initializer of environment, agent, objects
+3. Arguments of the policy, observation or transition.
