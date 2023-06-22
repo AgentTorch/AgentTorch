@@ -4,6 +4,7 @@ import torch.nn as nn
 import numpy as np
 
 class Config(nn.Module):
+    '''TO BE DONE'''
     def __init__(self):
         super().__init__()
         

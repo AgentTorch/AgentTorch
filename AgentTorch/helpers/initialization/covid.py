@@ -89,9 +89,6 @@ def network_from_file(params):
 
         all_edgelist = torch.hstack((random_network_edgelist,))
         all_edgeattr = torch.hstack((random_network_edgeattr,))
-
-        # all_edgelist = all_edgelist.to(self.device)
-        # all_edgeattr = all_edgeattr.to(self.device)
         
         agents_data = Data(edge_index=all_edgelist, edge_attr=all_edgeattr)
         

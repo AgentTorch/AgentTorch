@@ -1,8 +1,8 @@
 import pandas as pd
 import torch
 import torch.nn as nn
-from utils.general import *
 
+from AgentTorch.helpers.general import *
 
 class Initializer(nn.Module):
     
@@ -18,9 +18,7 @@ class Initializer(nn.Module):
         self.fixed_parameters, self.learnable_parameters = {}, {}
         
         self.observation_function, self.policy_function, self.transition_function, self.reward_function = nn.ModuleDict(), nn.ModuleDict(), nn.ModuleDict(), nn.ModuleDict()
-                
-        self.initialize()
-    
+                    
     def _initialize_from_default(self, src_val, shape):
         processed_shape = shape
         if type(src_val) == str:
@@ -31,7 +29,7 @@ class Initializer(nn.Module):
         try:
             init_val = src_val*torch.ones(size=processed_shape)
         except:
-            import ipdb; ipdb.set_trace()
+            import pdb; pdb.set_trace()
         
         return init_val
     
