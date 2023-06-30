@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 
 from AgentTorch.helpers.general import *
 
-class Observation(nn.Module, ABC):
+class SubstepObservation(nn.Module, ABC):
     def __init__(self, config, input_variables, output_variables, arguments):
         super().__init__()
         self.config = config
@@ -21,7 +21,7 @@ class Observation(nn.Module, ABC):
     def forward(self, state):
         pass
 
-class Action(nn.Module, ABC):
+class SubstepAction(nn.Module, ABC):
     def __init__(self, config, input_variables, output_variables, arguments):
         super().__init__()
         self.config = config
@@ -37,7 +37,7 @@ class Action(nn.Module, ABC):
         pass
 
 
-class Transition(nn.Module, ABC):
+class SubstepTransition(nn.Module, ABC):
     def __init__(self, config, input_variables, output_variables, arguments):
         super().__init__()
         self.config = config

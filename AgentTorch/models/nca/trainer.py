@@ -5,10 +5,11 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F
 import imageio
+
 # *************************************************************************
 # Parsing command line arguments
 parser = argparse.ArgumentParser(
-    description="TorchABM - framework for scalable, differentiable agent based models."
+    description="AgentTorch: design, simulate and optimize agent-based models"
 )
 parser.add_argument(
     "-c", "--config", help="Name of the yaml config file with the parameters."
@@ -41,6 +42,7 @@ optimizer = optim.Adam(runner.parameters(),
 scheduler = optim.lr_scheduler.ExponentialLR(optimizer, 
                 runner.config['simulation_metadata']['learning_params']['lr_gamma'])
 loss_log = []
+
 for ix in range(runner.config['simulation_metadata']['num_episodes']):
     runner.reset()
     optimizer.zero_grad()

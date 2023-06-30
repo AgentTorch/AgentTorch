@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-class Config(nn.Module):
+class Configurator(nn.Module):
     '''TO BE DONE'''
     def __init__(self):
         super().__init__()
@@ -72,7 +72,7 @@ class Config(nn.Module):
             
 if __name__ == '__main__':
     
-    conf = Config()
+    conf = Configurator()
     
     # simulation parameters
     conf.add_metadata('num_episodes', 3)
