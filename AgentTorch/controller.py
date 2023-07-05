@@ -46,9 +46,6 @@ class Controller(nn.Module):
              
         return next_state
     
-    def learn(self):
-        pass
-    
     def learn_after_episode(self, episode_traj, initializer, optimizer):
         optimizer.zero_grad()
         ret_episode_all = sum([i[0]['agents']['consumers']['Q_exp'] for i in episode_traj['states']])
