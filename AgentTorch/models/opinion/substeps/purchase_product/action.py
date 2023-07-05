@@ -17,7 +17,8 @@ class PurchaseProduct(SubstepAction):
         if self.learnable_args is not None:
             self.learnable_args = nn.ParameterDict(self.learnable_args)
 
-    def forward(self, state, observation):        
+    def forward(self, state, observation):      
+
         Q_exp = observation['Q_exp']
         F_t = torch.nn.functional.softmax(self.learnable_args['F_t_params'], dim=0)
         F_t = F_t.unsqueeze(1).repeat(1, Q_exp.shape[1])
