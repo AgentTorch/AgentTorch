@@ -1,21 +1,19 @@
 Tasks to be done include:
 1. Reorganize the code into folders.
-    - Config
+    - config.py
+    - controller.py
+    - initializer.py
+    - registry.py
+    - runner.py
+    - substep.py [base class for substep functions]
+
+    - model [for each new ABM]
         - config_file.yaml
-    - Controller [not touched by the user]
-        - initializer.py
-        - controller.py
-        - registry.py
-    - Runners
-        - base_runner.py
-        - runner_file.py
-    - Trainer
-        - base_trainer.py
-        - trainer_experiment.py
-    - Substeps
-        - Observation
-        - Policy
-        - Transition
+        - substeps
+            - 
+        - custom_runner.py
+        - trainer.py
+
 2. Write base classes
 3. Unit Tests.
 4. Helper Functions.
