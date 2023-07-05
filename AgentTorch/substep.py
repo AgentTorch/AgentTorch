@@ -18,6 +18,8 @@ class SubstepObservation(nn.Module, ABC):
         if self.learnable_args:
             self.learnable_args = nn.ParameterDict(self.learnable_args)
 
+        self.args = {**self.fixed_args, **self.learnable_args}
+
     @abstractmethod
     def forward(self, state):
         pass
@@ -32,6 +34,8 @@ class SubstepAction(nn.Module, ABC):
         self.learnable_args, self.fixed_args = arguments['learnable'], arguments['fixed']
         if self.learnable_args:
             self.learnable_args = nn.ParameterDict(self.learnable_args)
+
+        self.args = {**self.fixed_args, **self.learnable_args}
 
     @abstractmethod
     def forward(self, state, observation):
@@ -48,6 +52,8 @@ class SubstepTransition(nn.Module, ABC):
         self.learnable_args, self.fixed_args = arguments['learnable'], arguments['fixed']
         if self.learnable_args:
             self.learnable_args = nn.ParameterDict(self.learnable_args)
+
+        self.args = {**self.fixed_args, **self.learnable_args}
 
     @abstractmethod
     def forward(self, state, action):
