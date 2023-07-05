@@ -89,4 +89,3 @@ class Runner(nn.Module):
         for episode in range(self.config['simulation_metadata']['num_episodes']):
             num_steps_per_episode = self.config["simulation_metadata"]["num_steps_per_episode"]
             self.step(num_steps_per_episode)
-
