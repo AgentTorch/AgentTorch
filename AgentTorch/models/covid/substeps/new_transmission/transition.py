@@ -7,8 +7,8 @@ import torch.nn.functional as F
 from AgentTorch.substep import SubstepTransitionMessagePassing
 
 class NewTransmission(SubstepTransitionMessagePassing):
-    def __init__(self, **args, **kwargs):
-        super().__init__(**args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.device = self.config['simulation_metadata']['device']
         self.SUSCEPTIBLE_VAR = self.config['simulation_metadata']['SUSCEPTIBLE_VAR']

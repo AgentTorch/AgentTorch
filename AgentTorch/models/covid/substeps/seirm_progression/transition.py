@@ -5,8 +5,8 @@ import torch.nn.functional as F
 from AgentTorch.substep import SubstepTransition
 
 class SEIRMProgression(SubstepTransition):
-    def __init__(self, **args, **kwargs):
-        super().__init__(**args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
             
         self.device = self.config['simulation_metadata']['device']
         
