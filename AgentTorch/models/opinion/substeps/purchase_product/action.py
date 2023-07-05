@@ -7,9 +7,6 @@ from AgentTorch.substep import SubstepAction
 class PurchaseProduct(SubstepAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.config = config
-        self.input_variables = input_variables
-        self.output_variables = output_variables
 
         arguments['learnable'] = {'F_t_params': torch.randn(self.config['state']['agents']['consumers']['number'])}
 
@@ -33,14 +30,11 @@ class PurchaseProduct(SubstepAction):
         else:
             utility = (1-F_t)*(Q_exp - Q_des)
         
-        # utility = ((1-F_t)*(Q_exp - Q_des) + 
-        #       torch.nan_to_num((step_id > 0)*F_t*N_i/N_p))
-        
         argmax_utility = torch.nn.functional.gumbel_softmax(utility, hard=True, tau=1)
         # max_utility_Q_exp = torch.take_along_dim(Q_exp, argmax_utility.reshape(-1,1), dim=1).reshape(-1)
         max_utility_Q_exp = (argmax_utility*Q_exp).sum(axis=1) #TODO: Check error here
 
-        action_multiplers = ((max_utility_Q_exp - Q_des.reshape(-1)) > 0)
+        action_multiplers = ((max_utility_Q_exp - Q_des.reshape(-1)) > 0) # to fix this indicator function - not differentiable
         action_multiplers = action_multiplers.unsqueeze(1).repeat(1, Q_exp.shape[1])
         actions = action_multiplers*argmax_utility
         return {self.output_variables[0] : actions}
