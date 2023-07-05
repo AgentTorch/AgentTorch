@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch_geometric.nn import MessagePassing
 import numpy as np
 import re
 from abc import ABC, abstractmethod
@@ -54,7 +55,7 @@ class SubstepTransition(nn.Module, ABC):
 
 class SubstepTransitionMessagePassing(MessagePassing, ABC):
     def __init__(self, config, input_variables, output_variables, arguments):
-        super(SubstepTransitionMessagePassing).__init__(aggr='add')
+        super(SubstepTransitionMessagePassing, self).__init__(aggr='add')
         self.config = config
         self.input_variables = input_variables
         self.output_variables = output_variables
