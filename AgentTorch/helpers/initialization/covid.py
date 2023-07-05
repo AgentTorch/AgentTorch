@@ -53,7 +53,6 @@ def get_next_stage_time(shape, params):
     agents_next_stage_time[agents_stages==2] = 5 # infected_to_recovered time
     
     return agents_next_stage_time.float()
-    
 
 def get_mean_agent_interactions(shape, params):
     agents_ages = torch.from_numpy(pd.read_csv(params['file_path']).values)

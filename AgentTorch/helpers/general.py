@@ -61,3 +61,20 @@ def read_config(config_file):
         raise ValueError(f"Could not load config file. Please check path ad file type. Error message is {str(e)}")
 
     return config
+
+def read_from_file(shape, params):    
+    file_path = params['file_path']
+    
+    if file_path[-3:] == 'csv':
+        data = pd.read_csv(file_path)
+    
+    data_values = data.values
+    try:
+        assert data_values.shape == tuple(shape)
+    except:
+        print("data: ", data_values.shape, shape)
+        ipdb; ipdb.set_trace()
+    
+    data_tensor = torch.from_numpy(data_values)
+        
+    return data_tensor

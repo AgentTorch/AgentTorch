@@ -9,15 +9,15 @@ from AgentTorch.helpers import *
 
 def create_registry():
     reg = Registry()
-    # transition
+
     from substeps.evolve_cell.transition import NCAEvolve
     reg.register(NCAEvolve, "NCAEvolve", key="transition")
 
-    from utils.initialization.nca import nca_initialize_state
-    from utils.initialization.opinion import grid_network
-    reg.register(nca_initialize_state, "nca_initialize_state", key="initialization")
-    
+    from AgentTorch.helpers.environment import grid_network
     reg.register(grid_network, "grid", key="network")
+    
+    from substeps.utils import nca_initialize_state
+    reg.register(nca_initialize_state, "nca_initialize_state", key="initialization")
     
     return reg
 

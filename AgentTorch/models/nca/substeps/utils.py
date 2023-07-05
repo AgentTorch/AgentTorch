@@ -1,6 +1,7 @@
 import numpy as np
 import torch
-from utils.general import *
+
+from AgentTorch.helpers import *
 
 def nca_initialize_state(shape, params):
     device = torch.device(params['device'])
