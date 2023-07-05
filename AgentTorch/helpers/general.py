@@ -69,11 +69,7 @@ def read_from_file(shape, params):
         data = pd.read_csv(file_path)
     
     data_values = data.values
-    try:
-        assert data_values.shape == tuple(shape)
-    except:
-        print("data: ", data_values.shape, shape)
-        ipdb; ipdb.set_trace()
+    assert data_values.shape == tuple(shape)
     
     data_tensor = torch.from_numpy(data_values)
         

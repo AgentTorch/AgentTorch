@@ -3,9 +3,9 @@ import torch.nn as nn
 from general import *
 
 dtype_dict = {
-        'int': torch.int32,
-        'float': torch.float32
-        }
+    'int': torch.int32,
+    'float': torch.float32
+}
 
 def zeros(shape, params):
     processed_shape = [s for s in shape]

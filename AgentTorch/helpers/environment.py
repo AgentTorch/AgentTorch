@@ -7,9 +7,3 @@ def grid_network(params):
     A = torch.tensor(nx.adjacency_matrix(G).todense())
     
     return G, A
-
-def watt_strogatz_network(params):
-    pass
-
-def custom_network(params):
-    pass
