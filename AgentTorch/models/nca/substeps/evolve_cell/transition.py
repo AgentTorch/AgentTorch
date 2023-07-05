@@ -1,4 +1,4 @@
-from AgentTorch.substep import SubstepObservation
+from AgentTorch.substep import SubstepTransition
 
 import numpy as np
 import torch
@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
-class EvolveCell(SubstepObservation):
+class EvolveCell(SubstepTransition):
     def __init__(self, **args, **kwargs):
         super().__init__(**args, **kwargs)
 
