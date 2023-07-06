@@ -4,21 +4,17 @@ import torch
 
 from AgentTorch import Runner, Registry
 
-print("Imports completed..")
-
-def create_registry():
+def get_registry():
     
     reg = Registry()
     
-    # transition
-    from substep.seirm_progression.transition import SEIRMProgression
+    from substeps.seirm_progression.transition import SEIRMProgression
     reg.register(SEIRMProgression, "seirm_progression", key="transition")
 
-    from substep.new_transmission.transition import NewTransmission
+    from substeps.new_transmission.transition import NewTransmission
     reg.register(NewTransmission, "new_transmission", key="transition")
          
-    # initialization and network
-    from substep.utils import network_from_file, get_lam_gamma_integrals, get_mean_agent_interactions, get_infected_time, get_next_stage_time
+    from substeps.utils import network_from_file, get_lam_gamma_integrals, get_mean_agent_interactions, get_infected_time, get_next_stage_time
     reg.register(network_from_file, "network_from_file", key="network")
     reg.register(get_lam_gamma_integrals, "get_lam_gamma_integrals", key="initialization")
     reg.register(get_mean_agent_interactions, "get_mean_agent_interactions", key="initialization")
@@ -30,17 +26,7 @@ def create_registry():
     
     return reg    
 
-if __name__ == '__main__':
-    print("The runner file..")
-    args = parser.parse_args()
-    
-    config_file = args.config
+def get_runner(config, registry):
+    CovidRunner = Runner(config, registry)
 
-    # create runner object
-    runner = Runner(config_file)    
-    runner.execute()
-    
-    for name, param in runner.named_parameters(): 
-        print(name, param.data)
-
-    import ipdb; ipdb.set_trace()    
+    return CovidRunner

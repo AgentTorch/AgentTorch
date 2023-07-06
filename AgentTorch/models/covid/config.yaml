@@ -4,10 +4,10 @@ simulation_metadata:
     num_substeps_per_step: 2
     device: "cpu"
     num_citizens: 70916
-    agent_id_file: "data/25011_id.csv"
-    age_group_file: "data/25011_age.csv"
-    disease_stage_file: "data/25011_stage.csv"
-    infection_network_file: "data/25011_network.csv"
+    agent_id_file: "AgentTorch/models/covid/data/25011_id.csv"
+    age_group_file: "AgentTorch/models/covid/data/25011_age.csv"
+    disease_stage_file: "AgentTorch/models/covid/data/25011_stage.csv"
+    infection_network_file: "AgentTorch/models/covid/data/25011_network.csv"
     SUSCEPTIBLE_VAR: 0
     EXPOSED_VAR: 1
     INFECTED_VAR: 2

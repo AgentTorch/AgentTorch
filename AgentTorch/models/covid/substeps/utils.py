@@ -8,6 +8,7 @@ import torch.nn as nn
 from torch_geometric.data import Data
 from torch_geometric.utils.convert import to_networkx
 
+from AgentTorch.helpers import read_from_file
 
 def get_lam_gamma_integrals(shape, params):
     scale, rate = params['scale'], params['rate']

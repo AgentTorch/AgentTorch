@@ -6,7 +6,7 @@ import re
 
 from AgentTorch.substep import SubstepTransitionMessagePassing
 from AgentTorch.helpers import *
-from substep.utils import *
+from substeps.utils import *
 
 class NewTransmission(SubstepTransitionMessagePassing):
     def __init__(self, *args, **kwargs):
