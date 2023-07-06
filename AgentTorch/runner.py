@@ -35,6 +35,12 @@ class Runner(nn.Module):
         self.initializer.initialize()
         self.state = self.initializer.state
 
+        self.state_trajectory = []
+        self.state_trajectory.append([self.state])
+        for traj_var in self.trajectory.keys():
+            self.trajectory[traj_var].append(deque())
+
+
     def reset(self):
         r"""
             reinitialize the simulator at the beginning of an episode
@@ -75,6 +81,8 @@ class Runner(nn.Module):
 
                 next_state = self.controller.progress(self.state, action_profile, self.initializer.transition_function)
                 self.state = next_state
+
+                self.state_trajectory[-1].append(self.state)
 
     def step_from_params(self, num_steps=None, params=None):
         r"""

@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import re
-from utils.general import get_by_path, set_by_path, copy_torch_dict
+from AgentTorch.helpers import get_by_path, set_by_path, copy_module
 
 class Controller(nn.Module):
     def __init__(self, config):
@@ -30,7 +30,7 @@ class Controller(nn.Module):
         return action
     
     def progress(self, state, action, transition_function):
-        next_state = copy_torch_dict(state)
+        next_state = copy_module(state)
             
         substep = state['current_substep']
         next_substep = (int(substep) + 1)%self.config["simulation_metadata"]["num_substeps_per_step"]

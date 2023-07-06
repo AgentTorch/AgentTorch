@@ -1,5 +1,4 @@
-'''Soft Approximations for AgentTorch modules'''
-
+'''Soft Approximations of functions used for AgentTorch modules'''
 import torch
 
 def compare_max(a, b, temp):

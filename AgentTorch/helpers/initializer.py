@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from general import *
+from .general import *
 
 dtype_dict = {
     'int': torch.int32,

@@ -6,7 +6,7 @@ from AgentTorch.helpers.general import *
 
 class Initializer(nn.Module):
     
-    def __init__(self, registry, config):
+    def __init__(self, config, registry):
         super().__init__()
         self.config = config
         self.registry = registry

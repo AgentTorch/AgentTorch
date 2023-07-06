@@ -3,8 +3,6 @@ import torch
 import torch.nn as nn
 import json
 
-import utils
-
 class Registry(nn.Module):
     
     def __init__(self):

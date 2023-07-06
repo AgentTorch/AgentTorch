@@ -1,3 +1,3 @@
-from config import Configurator
-from registry import Registry
-from runner import Runner
+from AgentTorch.config import Configurator
+from AgentTorch.registry import Registry
+from AgentTorch.runner import Runner
