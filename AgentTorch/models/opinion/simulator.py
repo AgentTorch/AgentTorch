@@ -5,7 +5,7 @@ import jax
 
 from AgentTorch import Runner, Registry
 
-def create_registry():
+def opdyn_registry():
     reg = Registry()
 
     from substep.purchase_product.transition import NewQExp, NewPurchasedBefore
@@ -29,6 +29,7 @@ def create_registry():
     from substep.utils import random_normal_col_by_col
     reg.register(random_normal_col_by_col, "random_normal_col_by_col", key="initialization")
 
+    return reg
 
 class OpDynRunner(Runner):
     def __init__(self, *args, **kwargs):
@@ -37,9 +38,13 @@ class OpDynRunner(Runner):
     def forward():
         for episode in range(self.config['simulation_metadata']['num_episodes']):
             num_steps_per_episode = self.config["simulation_metadata"]["num_steps_per_episode"]
+            self.reset()
             self.step(num_steps_per_episode)
 
             self.controller.learn_after_episode(jax.tree_map(lambda x: x[-1], self.trajectory), self.initializer, self.optimizer)
+
+    def execute(self):
+        self.forward()
 
 
 if __name__ == '__main__':

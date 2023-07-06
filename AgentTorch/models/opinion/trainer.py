@@ -1,38 +1,36 @@
-### Debugging pseudocode only
+import argparse
+import numpy as np
+import torch
+import torch.optim as optim
+import torch.nn.functional as F 
 
-from runner import Runner
-import torch.nn as nn
+from simulator import OpDynRunner, opdyn_registry
+from AgentTorch.helpers import read_config
+
+# *************************************************************************
+# Parsing command line arguments
+parser = argparse.ArgumentParser(
+    description="AgentTorch: design, simulate and optimize agent-based models"
+)
+parser.add_argument(
+    "-c", "--config", help="Name of the yaml config file with the parameters."
+)
+# *************************************************************************
 
 args = parser.parse_args()
 config_file = args.config
 
-runner1 = Runner(config_file)
-runner2 = Runner(config_file)
+config = read_config(config_file)
+registry = opdyn_registry()
 
-# calibration logic
-calib_nn = CalibNN()
+runner = OpDynRunner(config, registry)
 
-opt = my_optimizer([runner1.parameters() + runner2.parameters() + calibNN.parameters()], lr=0.01)
+device = torch.device(runner.config['simulation_metadata']['device'])
 
-for ix in range(num_train_steps):
-        
-    opt.zero_grad()
-    
-    learning_params = CalibNN(metadata)
-    runner1.execute_from_parameters(learning_params)
-    runner2.execute_from_parameters(learning_params)
-    
-    output1 = runner1.output_variable
-    output2 = runner2.output_variable
-    
-    loss = nn.MSELoss()((output1 + output2)/2, ground_truth)
-    
-    loss.backward()
-    opt.step()
-    
-    runner2.set_parameters()
-    
-    for name, param in runner.named_parameters(): 
-        print(name, param.data)
+runner.init()
 
+optimizer = optim.Adam(runner.parameters(), lr=1e-1)
 
+loss_log = []
+
+print('IN PROGRESS: To fix the RL optimization logic!!!!!!1')
