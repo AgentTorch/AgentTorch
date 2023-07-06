@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np 
 import torch
-# import jax
+import jax
 
 from AgentTorch import Runner, Registry
 
@@ -41,7 +41,7 @@ class OpDynRunner(Runner):
             self.reset()
             self.step(num_steps_per_episode)
 
-            #self.controller.learn_after_episode(jax.tree_map(lambda x: x[-1], self.trajectory), self.initializer, self.optimizer)
+            self.controller.learn_after_episode(jax.tree_map(lambda x: x[-1], self.trajectory), self.initializer, self.optimizer)
 
     def execute(self):
         self.forward()
