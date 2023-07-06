@@ -1,17 +1,18 @@
 '''Define simulator structure in this file'''
+import torch
+import numpy as np
 
 from AgentTorch import Runner, Registry, Configurator
-from substeps import evolve_cell
 
 class NCARunner(Runner):
-    def __init__(self, **args, **kwargs):
-        super().__init__(**args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def _nca_initialize_state(self, shape, params):
         device = torch.device(params['device'])
         batch_size = params['batch_size']
         n_channels = int(params['n_channels'].item())
-        processed_shape = [process_shape_omega(s) for s in shape]
+        processed_shape = shape #[process_shape_omega(s) for s in shape]
         grid_shape = [np.sqrt(processed_shape[0]).astype(int), np.sqrt(processed_shape[0]).astype(int), processed_shape[1]]
         seed_x = np.zeros(grid_shape, np.float32)
         seed_x[grid_shape[0]//2, grid_shape[1]//2, 3:] = 1.0

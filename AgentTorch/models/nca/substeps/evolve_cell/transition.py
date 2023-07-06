@@ -6,9 +6,9 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
-class EvolveCell(SubstepTransition):
-    def __init__(self, **args, **kwargs):
-        super().__init__(**args, **kwargs)
+class NCAEvolve(SubstepTransition):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.device = torch.device(self.config['simulation_metadata']['device'])
         self.channel_n = self.config['simulation_metadata']['n_channels']
