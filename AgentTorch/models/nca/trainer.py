@@ -24,9 +24,9 @@ config = read_config(config_file)
 registry = get_registry()
 
 runner = NCARunner(config, registry)
-device = torch.device(runner.config['simulation_metadata']['device'])
-
 runner.init()
+
+device = torch.device(runner.config['simulation_metadata']['device'])
 
 # *************************************************************************
 # Generating target
