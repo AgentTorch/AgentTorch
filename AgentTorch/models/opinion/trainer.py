@@ -32,5 +32,4 @@ runner.init()
 optimizer = optim.Adam(runner.parameters(), lr=1e-1)
 
 loss_log = []
-
-print('IN PROGRESS: To fix the RL optimization logic!!!!!!1')
+print('IN PROGRESS: To fix the RL optimization logic!!!!!!')
