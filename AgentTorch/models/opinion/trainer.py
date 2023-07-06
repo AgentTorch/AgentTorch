@@ -24,12 +24,14 @@ config = read_config(config_file)
 registry = opdyn_registry()
 
 runner = OpDynRunner(config, registry)
-
 device = torch.device(runner.config['simulation_metadata']['device'])
-
 runner.init()
 
 optimizer = optim.Adam(runner.parameters(), lr=1e-1)
 
 loss_log = []
 print('IN PROGRESS: To fix the RL optimization logic!!!!!!')
+
+import ipdb; ipdb.set_trace()
+
+runner.execute()

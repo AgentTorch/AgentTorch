@@ -8,12 +8,6 @@ class PurchaseProduct(SubstepAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        arguments['learnable'] = {'F_t_params': torch.randn(self.config['state']['agents']['consumers']['number'])}
-
-        self.learnable_args, self.fixed_args = arguments['learnable'], arguments['fixed']
-        if self.learnable_args is not None:
-            self.learnable_args = nn.ParameterDict(self.learnable_args)
-
     def forward(self, state, observation):      
 
         Q_exp = observation['Q_exp']

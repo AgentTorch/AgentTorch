@@ -2,6 +2,7 @@ simulation_metadata:
     num_episodes: 10
     num_steps_per_episode: 25
     num_substeps_per_step: 1
+    device: 'cpu'
     
 state:
     environment: null
@@ -11,7 +12,7 @@ state:
             properties:
                 F_t:
                     name: "Follower tendency"
-                    learnable: False
+                    learnable: True
                     shape:
                         - ${state.agents.consumers.number}
                         - 1
