@@ -4,6 +4,7 @@ import operator
 import torch
 import copy
 from omegaconf import OmegaConf
+import pandas as pd
 
 def get_by_path(root, items):
     r"""
