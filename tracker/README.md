@@ -1,4 +1,4 @@
-Tasks to be done include:
+Done tasks:
 1. Reorganize the code into folders.
     - config.py
     - controller.py
@@ -15,8 +15,10 @@ Tasks to be done include:
         - trainer.py
 
 2. Write base classes
-3. Unit Tests.
-4. Helper Functions.
+3. Helper Functions.
+
+To be done:
+4. Unit Tests.
 5. Config python wrapper.
 
 Pip Release deadline: July 20. Next 4 weeks.
