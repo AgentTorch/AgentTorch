@@ -5,7 +5,6 @@ import torch
 from AgentTorch import Runner, Registry
 
 def get_registry():
-    
     reg = Registry()
     
     from substeps.seirm_progression.transition import SEIRMProgression

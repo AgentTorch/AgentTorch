@@ -6,6 +6,7 @@ from AgentTorch.substep import SubstepTransition
 from AgentTorch.helpers import *
 
 class Quarantine(SubstepTransition):
+    '''Logic: exposed or infected agents can start quarantine'''
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -13,6 +14,11 @@ class Quarantine(SubstepTransition):
         self.num_agents = self.config['simulation_metatdata']['num_citizens']
         self.quarantine_days = self.config['simulation_metadata']['quarantine_days']
         self.num_steps = self.config['simulation_metadata']['num_steps']
+
+        self.SUSCEPTIBLE_VAR = self.config['simulation_metadata']['SUSCEPTIBLE_VAR']
+        self.EXPOSED_VAR = self.config['simulation_metadata']['EXPOSED_VAR']
+        self.INFECTED_VAR = self.config['simulation_metadata']['INFECTED_VAR']
+        self.RECOVERED_VAR = self.config['simulation_metadata']['RECOVERED_VAR']
 
     def end_quarantine(self, t, is_quarantined, quarantine_start_date):
         agents_quarantine_end_date = quarantine_start_date + self.quarantine_days
@@ -24,10 +30,10 @@ class Quarantine(SubstepTransition):
         
         return is_quarantined, quarantine_start_date
 
-    def start_quarantine(self, t, is_quarantined, quarantine_start_date, quarantine_start_prob):
+    def start_quarantine(self, t, is_quarantined, exposed_infected_agents, quarantine_start_date, quarantine_start_prob):
         agents_quarantine_start = diff_sample(quarantine_start_prob,size=self.num_agents).to(self.device)
-         agents_quarantine_start = torch.logical_and(
-            torch.logical_not(is_quarantined[t]), agents_quarantine_start)
+        agents_quarantine_start = torch.logical_and(agents_quarantine_start, exposed_infected_agents)
+        agents_quarantine_start = torch.logical_and(torch.logical_not(is_quarantined[t]), agents_quarantine_start)
         if agents_quarantine_start.sum() >= 0:
             is_quarantined[t, agents_quarantine_start.bool()] = 1
             quarantine_start_date[agents_quarantine_start.bool()] = t
@@ -44,9 +50,9 @@ class Quarantine(SubstepTransition):
 
         return is_quarantined, quarantine_start_date
 
-    def update_quarantine_status(self, t, is_quarantined, quarantine_start_date, quarantine_start_prob, quarantine_break_prob):
+    def update_quarantine_status(self, t, is_quarantined, infected_agents, quarantine_start_date, quarantine_start_prob, quarantine_break_prob):
         is_quarantined, quarantine_start_date = self.end_quarantine(t, is_quarantined, quarantine_start_date)
-        is_quarantined, quarantine_start_date = self.start_quarantine(t, is_quarantined, quarantine_start_date, quarantine_start_prob)
+        is_quarantined, quarantine_start_date = self.start_quarantine(t, is_quarantined, infected_agents, quarantine_start_date, quarantine_start_prob)
         is_quarantined, quarantine_start_date = self.break_quarantine(t, is_quarantined, quarantine_start_date, quarantine_break_prob)
 
         return is_quarantined, quarantine_start_date
@@ -58,9 +64,12 @@ class Quarantine(SubstepTransition):
         is_quarantined = get_by_path(state, re.split("/", input_variables['is_quarantined']))
         quarantine_start_date = get_by_path(state, re.split("/", input_variables['quarantine_start_date']))
 
+        disease_stage = get_by_path(state, re.split("/", input_variables['disease_stage']))
+        infected_agents = torch.logical_and(disease_stage > self.SUSCEPTIBLE_VAR, disease_stage < self.RECOVERED_VAR)
+
         quarantine_start_prob = get_by_path(state, re.split("/", input_variables['quarantine_start_prob']))
         quarantine_break_prob = get_by_path(state, re.split("/", input_variables['quarantine_break_prob']))
 
-        new_is_quarantined, new_quarantine_start_date = update_quarantine_status(self, t, is_quarantined, quarantine_start_date, quarantine_start_prob, quarantine_break_prob)
+        new_is_quarantined, new_quarantine_start_date = update_quarantine_status(self, t, is_quarantined, infected_agents, quarantine_start_date, quarantine_start_prob, quarantine_break_prob)
 
-        return {self.output_variables[0]: new_is_quarantined, self.output_variablesp[1]: new_quarantine_start_date}
+        return {self.output_variables[0]: new_is_quarantined, self.output_variables[1]: new_quarantine_start_date}
