@@ -20,6 +20,7 @@ Done tasks:
 To be done:
 4. Unit Tests.
 5. Config python wrapper.
+6. LangChain integration and UI interface.
 
 Pip Release deadline: July 20. Next 4 weeks.
 - Release as a pip package
