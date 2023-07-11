@@ -1,11 +1,19 @@
 '''Soft Approximations of functions used for AgentTorch modules'''
 import torch
+'''rewriting hard functions with smooth approximations'''
 
-def compare_max(a, b, temp):
-    return torch.log(torch.exp(temp * a) + torch.exp(temp * b)) / temp
+def compare(a, b):
+    def compare_soft(a, b, hardness=0.8):
+        return torch.sigmoid(hardness * (a - b))
 
-def compare_min(a, b, temp):
-    return -compare_max(-a, -b, temp)
+    def compare_hard(a, b):
+        return (a > b).float()
+    
+    soft = compare_soft(a, b)
+    return compare_hard(a, b) + soft - soft.detach()
+
+def max(a, b):
+    return a*compare(a, b) + b*compare(a, b)
 
 def discrete_sample(sample_prob, size, hard=True):
     probs = sample_prob * torch.ones(size)
