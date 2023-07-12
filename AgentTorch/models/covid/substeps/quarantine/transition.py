@@ -3,7 +3,7 @@ import torch.nn as nn
 import re
 
 from AgentTorch.substep import SubstepTransition
-from AgentTorch.helpers import *
+from AgentTorch.helpers import discrete_sample, logical_and, logical_not, get_by_path
 
 class Quarantine(SubstepTransition):
     '''Logic: exposed or infected agents can start quarantine'''
@@ -31,9 +31,9 @@ class Quarantine(SubstepTransition):
         return is_quarantined, quarantine_start_date
 
     def start_quarantine(self, t, is_quarantined, exposed_infected_agents, quarantine_start_date, quarantine_start_prob):
-        agents_quarantine_start = diff_sample(quarantine_start_prob,size=self.num_agents).to(self.device)
-        agents_quarantine_start = torch.logical_and(agents_quarantine_start, exposed_infected_agents)
-        agents_quarantine_start = torch.logical_and(torch.logical_not(is_quarantined[t]), agents_quarantine_start)
+        agents_quarantine_start = discrete_sample(quarantine_start_prob,size=self.num_agents).to(self.device)
+        agents_quarantine_start = logical_and(agents_quarantine_start, exposed_infected_agents)
+        agents_quarantine_start = logical_and(logical_not(is_quarantined[t]), agents_quarantine_start)
         if agents_quarantine_start.sum() >= 0:
             is_quarantined[t, agents_quarantine_start.bool()] = 1
             quarantine_start_date[agents_quarantine_start.bool()] = t
@@ -41,8 +41,8 @@ class Quarantine(SubstepTransition):
         return is_quarantined, quarantine_start_date
 
     def break_quarantine(self, t, is_quarantined, quarantine_start_date, quarantine_break_prob):
-        agents_quarantine_break = diff_sample(quarantine_start_prob, size=self.num_agents).to(self.device)
-        agents_quarantine_break = torch.logical_and(is_quarantined[t], agents_quarantine_break)
+        agents_quarantine_break = discrete_sample(quarantine_break_prob, size=self.num_agents).to(self.device)
+        agents_quarantine_break = logical_and(is_quarantined[t], agents_quarantine_break)
         
         if agents_quarantine_break.sum() >= 0:
             is_quarantined[t, agents_quarantine_break.bool()] = 0
@@ -56,7 +56,7 @@ class Quarantine(SubstepTransition):
         is_quarantined, quarantine_start_date = self.break_quarantine(t, is_quarantined, quarantine_start_date, quarantine_break_prob)
 
         return is_quarantined, quarantine_start_date
-
+    
     def forward(self, state, action=None):
         input_variables = self.input_variables
         t = state['current_step']
@@ -64,12 +64,12 @@ class Quarantine(SubstepTransition):
         is_quarantined = get_by_path(state, re.split("/", input_variables['is_quarantined']))
         quarantine_start_date = get_by_path(state, re.split("/", input_variables['quarantine_start_date']))
 
-        disease_stage = get_by_path(state, re.split("/", input_variables['disease_stage']))
-        infected_agents = torch.logical_and(disease_stage > self.SUSCEPTIBLE_VAR, disease_stage < self.RECOVERED_VAR)
-
         quarantine_start_prob = get_by_path(state, re.split("/", input_variables['quarantine_start_prob']))
         quarantine_break_prob = get_by_path(state, re.split("/", input_variables['quarantine_break_prob']))
 
-        new_is_quarantined, new_quarantine_start_date = update_quarantine_status(self, t, is_quarantined, infected_agents, quarantine_start_date, quarantine_start_prob, quarantine_break_prob)
+        disease_stage = get_by_path(state, re.split("/", input_variables['disease_stage']))
+        infected_agents = logical_and(disease_stage > self.SUSCEPTIBLE_VAR, disease_stage < self.RECOVERED_VAR)
+
+        new_is_quarantined, new_quarantine_start_date = self.update_quarantine_status(self, t, is_quarantined, infected_agents, quarantine_start_date, quarantine_start_prob, quarantine_break_prob)
 
         return {self.output_variables[0]: new_is_quarantined, self.output_variables[1]: new_quarantine_start_date}
