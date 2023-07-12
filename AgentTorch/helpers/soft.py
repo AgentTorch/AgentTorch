@@ -14,7 +14,6 @@ def compare(a, b):
 def max(a, b):
     return a*compare(a, b) + b*compare(b, a)
 
-
 def logical_not(a, grad=True):
     def hard_not(a):
         assert a.dtype == torch.long
