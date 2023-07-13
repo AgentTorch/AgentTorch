@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 from collections import deque
 import argparse
+import re
 
 from abc import ABC, abstractmethod
 
@@ -11,7 +12,7 @@ from AgentTorch.controller import Controller
 from AgentTorch.registry import Registry
 from AgentTorch.initializer import Initializer
 
-from AgentTorch.helpers import *
+from AgentTorch.helpers import set_by_path
 
 class Runner(nn.Module):
     def __init__(self, config, registry) -> None:
@@ -84,11 +85,17 @@ class Runner(nn.Module):
 
                 self.state_trajectory[-1].append(self.state)
 
+    def _set_parameters(self, params):
+        for param in params:
+            set_by_path(root=self.state, items=re.split('.', param), value=params[param])
+        
     def step_from_params(self, num_steps=None, params=None):
         r"""
             execute simulation episode with custom parameters
         """
-        pass
+        self._set_parameters(params)
+        self.step(num_steps)
+
 
     def forward(self):
         r"""
