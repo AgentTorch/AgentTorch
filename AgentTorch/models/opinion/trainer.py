@@ -32,6 +32,8 @@ optimizer = optim.Adam(runner.parameters(), lr=1e-1)
 loss_log = []
 print('IN PROGRESS: To fix the RL optimization logic!!!!!!')
 
+print(runner.parameters())
+
 import ipdb; ipdb.set_trace()
 
 runner.execute()
