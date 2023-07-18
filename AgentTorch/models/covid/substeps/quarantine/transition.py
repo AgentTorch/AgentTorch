@@ -20,7 +20,7 @@ class Quarantine(SubstepTransition):
         self.INFECTED_VAR = self.config['simulation_metadata']['INFECTED_VAR']
         self.RECOVERED_VAR = self.config['simulation_metadata']['RECOVERED_VAR']
 
-    def end_quarantine(self, t, is_quarantined, quarantine_start_date):
+    def _end_quarantine(self, t, is_quarantined, quarantine_start_date):
         agents_quarantine_end_date = quarantine_start_date + self.quarantine_days
         agent_quarantine_ends =  (t>= agents_quarantine_end_date)
 
@@ -30,7 +30,7 @@ class Quarantine(SubstepTransition):
         
         return is_quarantined, quarantine_start_date
 
-    def start_quarantine(self, t, is_quarantined, exposed_infected_agents, quarantine_start_date, quarantine_start_prob):
+    def _start_quarantine(self, t, is_quarantined, exposed_infected_agents, quarantine_start_date, quarantine_start_prob):
         agents_quarantine_start = discrete_sample(quarantine_start_prob,size=self.num_agents).to(self.device)
         agents_quarantine_start = logical_and(agents_quarantine_start, exposed_infected_agents)
         agents_quarantine_start = logical_and(logical_not(is_quarantined[t]), agents_quarantine_start)
@@ -40,7 +40,7 @@ class Quarantine(SubstepTransition):
 
         return is_quarantined, quarantine_start_date
 
-    def break_quarantine(self, t, is_quarantined, quarantine_start_date, quarantine_break_prob):
+    def _break_quarantine(self, t, is_quarantined, quarantine_start_date, quarantine_break_prob):
         agents_quarantine_break = discrete_sample(quarantine_break_prob, size=self.num_agents).to(self.device)
         agents_quarantine_break = logical_and(is_quarantined[t], agents_quarantine_break)
         
@@ -51,9 +51,9 @@ class Quarantine(SubstepTransition):
         return is_quarantined, quarantine_start_date
 
     def update_quarantine_status(self, t, is_quarantined, infected_agents, quarantine_start_date, quarantine_start_prob, quarantine_break_prob):
-        is_quarantined, quarantine_start_date = self.end_quarantine(t, is_quarantined, quarantine_start_date)
-        is_quarantined, quarantine_start_date = self.start_quarantine(t, is_quarantined, infected_agents, quarantine_start_date, quarantine_start_prob)
-        is_quarantined, quarantine_start_date = self.break_quarantine(t, is_quarantined, quarantine_start_date, quarantine_break_prob)
+        is_quarantined, quarantine_start_date = self._end_quarantine(t, is_quarantined, quarantine_start_date)
+        is_quarantined, quarantine_start_date = self._start_quarantine(t, is_quarantined, infected_agents, quarantine_start_date, quarantine_start_prob)
+        is_quarantined, quarantine_start_date = self._break_quarantine(t, is_quarantined, quarantine_start_date, quarantine_break_prob)
 
         return is_quarantined, quarantine_start_date
     

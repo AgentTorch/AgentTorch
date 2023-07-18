@@ -5,18 +5,23 @@ import torch.nn.functional as F
 import re
 
 from AgentTorch.substep import SubstepTransitionMessagePassing
-from AgentTorch.helpers import *
+from AgentTorch.helpers import get_by_path
 from substeps.utils import *
 
 class NewTransmission(SubstepTransitionMessagePassing):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, config, input_variables, output_variables, arguments):
+        super().__init__(config, input_variables, output_variables, arguments)
+
+        print("To fix this class!!!!!")
 
         self.device = self.config['simulation_metadata']['device']
         self.SUSCEPTIBLE_VAR = self.config['simulation_metadata']['SUSCEPTIBLE_VAR']
         self.EXPOSED_VAR = self.config['simulation_metadata']['EXPOSED_VAR']
         self.RECOVERED_VAR = self.config['simulation_metadata']['RECOVERED_VAR']
-    
+
+        self.STAGE_UPDATE_VAR = 1
+        self.INFINITY_TIME = self.config['simulation_metatdata']['num_steps'] + 20
+
     def _lam(self, x_i, x_j, edge_attr, t, R, SFSusceptibility, SFInfector, lam_gamma_integrals):
         S_A_s = SFSusceptibility[x_i[:,0].long()]
         A_s_i = SFInfector[x_j[:,1].long()]
@@ -38,22 +43,27 @@ class NewTransmission(SubstepTransitionMessagePassing):
         return self._lam(x_i, x_j, edge_attr, t, R, SFSusceptibility, SFInfector, lam_gamma_integrals)
 
     def update_stages(self, current_stages, newly_exposed_today):
-        updated_stages = newly_exposed_today*self.EXPOSED_VAR + (1 - newly_exposed_today)*current_stages.squeeze()
+        new_stages = current_stages + self.STAGE_UPDATE_VAR*newly_exposed_today.unsqueeze(dim=1)
+        # updated_stages = newly_exposed_today*self.EXPOSED_VAR + (1 - newly_exposed_today)*current_stages.squeeze()
         
-        return updated_stages
+        return new_stages
     
-    def update_times(self, t, current_transition_times, newly_exposed_today, exposed_to_infected_time):        
-        updated_stage_times = torch.clone(current_transition_times)
-        updated_stage_times[newly_exposed_today] = t + 1 + exposed_to_infected_time
+    def update_transition_times(self, t, current_transition_times, newly_exposed_today, exposed_to_infected_time):
+        print("verify this logic")        
+        # updated_stage_times = torch.clone(current_transition_times)
+        new_stage_times = current_transition_times + newly_exposed_today*(t + exposed_to_infected_time + 1 - current_transition_times[newly_exposed_today])
+
+        # updated_stage_times = (newly_exposed_today)*(t+1+exposed_to_infected_time) + (1-newly_exposed_today)*current_transition_times
+        # updated_stage_times[newly_exposed_today] = t + 1 + exposed_to_infected_time
         
-        return updated_stage_times
+        return new_stage_times
     
-    def update_infected_times(self, t, agents_infected_time, newly_exposed_today):
-        updated_infected_times = torch.clone(agents_infected_time)
-        updated_infected_times[newly_exposed_today] = t
+    def update_infected_times(self, t, current_infected_times, newly_exposed_today):
+        print("verify this logic")
+        new_infected_times = current_infected_times + newly_exposed_today*(t - current_infected_times[newly_exposed_today])
+        #updated_infected_times[newly_exposed_today] = t
         
-        return updated_infected_times
-        
+        return new_infected_times
     
     def forward(self, state, action=None):
         input_variables = self.input_variables
@@ -97,7 +107,7 @@ class NewTransmission(SubstepTransitionMessagePassing):
         newly_exposed_today = (current_stages==self.SUSCEPTIBLE_VAR).squeeze()*potentially_exposed_today
                 
         updated_stages = self.update_stages(current_stages, newly_exposed_today).unsqueeze(1)
-        updated_next_stage_times = self.update_times(t, current_transition_times, newly_exposed_today.long(), exposed_to_infected_time)
+        updated_next_stage_times = self.update_transition_times(t, current_transition_times, newly_exposed_today.long(), exposed_to_infected_time)
         updated_infected_times = self.update_infected_times(t, agents_infected_time, newly_exposed_today.long())
             
         return {self.output_variables[0]: updated_stages, 
