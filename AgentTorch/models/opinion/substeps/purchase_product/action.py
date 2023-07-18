@@ -5,8 +5,8 @@ import re
 from AgentTorch.substep import SubstepAction
 
 class PurchaseProduct(SubstepAction):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, config, input_variables, output_variables, arguments):
+        super().__init__(config, input_variables, output_variables, arguments)
 
     def forward(self, state, observation):      
 
@@ -31,4 +31,5 @@ class PurchaseProduct(SubstepAction):
         action_multiplers = ((max_utility_Q_exp - Q_des.reshape(-1)) > 0) # to fix this indicator function - not differentiable
         action_multiplers = action_multiplers.unsqueeze(1).repeat(1, Q_exp.shape[1])
         actions = action_multiplers*argmax_utility
+
         return {self.output_variables[0] : actions}
