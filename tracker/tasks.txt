@@ -1,5 +1,5 @@
 1. Implementation interventions:
-    - Quarantine [DONE] - replace logical_ops with differentiable version
+    - Fix Transmission and Progression Updates: to ensure consistent gradient flow
     - StimulusPayment, PUA, ExpenseManagement
     - Testing, Vaccination
 
