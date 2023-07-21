@@ -59,11 +59,10 @@ def logical_and(a, b, grad=True):
     soft = soft_and(a, b)
     return hard_and(a.long(), b.long()) + (soft - soft.detach())
 
-def discrete_sample(sample_prob, size, hard=True):
-    probs = sample_prob * torch.ones(size)
-    probs = torch.hstack((probs, 1 - probs))
-    prob_logits = torch.log(probs+1e-9)
-    sampled_output = torch.nn.functional.gumbel_softmax(prob_logits,
+def discrete_sample(sample_prob, size, device, hard=True):
+    probs = sample_prob * torch.ones(size).to(device)
+    probs = torch.vstack((probs, 1.0 - probs)).transpose(0, 1)
+    sampled_output = torch.nn.functional.gumbel_softmax(probs.log(),
                                                         tau=0.1,
-                                                        hard=hard, dim=1)[:, 0]
+                                                        hard=hard)[:, 0]
     return sampled_output
