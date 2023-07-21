@@ -67,8 +67,11 @@ class Quarantine(SubstepTransition):
         quarantine_start_date = get_by_path(state, re.split("/", input_variables['quarantine_start_date']))
         disease_stage = get_by_path(state, re.split("/", input_variables['disease_stage']))
 
-        quarantine_start_prob = get_by_path(state, re.split("/", input_variables['quarantine_start_prob']))
-        quarantine_break_prob = get_by_path(state, re.split("/", input_variables['quarantine_break_prob']))
+        quarantine_start_prob = self.args['quarantine_start_prob']
+        quarantine_break_prob = self.args['quarantine_break_prob']
+
+        # quarantine_start_prob = get_by_path(state, re.split("/", input_variables['quarantine_start_prob']))
+        # quarantine_break_prob = get_by_path(state, re.split("/", input_variables['quarantine_break_prob']))
 
         not_susceptible = (disease_stage > self.SUSCEPTIBLE_VAR).long()
         not_recovered = (disease_stage < self.RECOVERED_VAR).long()
