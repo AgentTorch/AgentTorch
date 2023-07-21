@@ -261,7 +261,7 @@ substeps:
         transition:
             new_transmission:
                 generator: "NewTransmission"
-                arguments:
+                arguments: null
                 input_variables:
                     R: 'environment/R'
                     SFSusceptibility: 'environment/SFSusceptibility'

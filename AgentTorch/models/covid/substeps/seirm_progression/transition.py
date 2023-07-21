@@ -9,8 +9,6 @@ from AgentTorch.helpers import get_by_path
 class SEIRMProgression(SubstepTransition):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        print("To fix this class!!!!!")
             
         self.device = self.config['simulation_metadata']['device']
         
@@ -27,7 +25,6 @@ class SEIRMProgression(SubstepTransition):
 
     def update_current_stages(self, t, current_stages, current_transition_times):
         transit_agents = (current_transition_times > t)*self.STAGE_SAME_VAR + (current_transition_times<= t)*self.STAGE_UPDATE_VAR
-
         stage_transition = (current_stages == self.EXPOSED_VAR)*transit_agents + (current_stages == self.INFECTED_VAR)*transit_agents
 
         new_stages = current_stages + stage_transition
