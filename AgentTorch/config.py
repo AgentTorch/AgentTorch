@@ -2,6 +2,10 @@ from omegaconf import OmegaConf
 import torch
 import torch.nn as nn
 import numpy as np
+import types
+
+from registry import Registry
+
 
 class Configurator(nn.Module):
     '''TO BE DONE'''
@@ -19,10 +23,11 @@ class Configurator(nn.Module):
         
         self.state = OmegaConf.create({'environment': self.environment, 'agents': self.agents, 'objects': self.objects, 'network': self.network})
         
-        self.config = OmegaConf.create({'metadata': self.metadata, 'state': self.state, 'substeps': self.substeps})
+        self.config = OmegaConf.create({'simulation_metadata': self.metadata, 'state': self.state, 'substeps': self.substeps})
 
+        self.reg = Registry()
 
-    def create_variable(self, key, name, shape, dtype, initialization_function, learnable=False, value=None):
+    def create_variable(self, key, name, shape, dtype, initialization_function=None, learnable=False, value=None):
         '''Fundamental unit of an AgentTorch simulator which is learnable or not'''
         variable_dict = OmegaConf.create()
         variable_dict.update({'name': name})
@@ -32,6 +37,7 @@ class Configurator(nn.Module):
         variable_dict.update({'dtype': dtype})
         
         if initialization_function is None:
+            assert value is not None
             variable_dict.update({'value': value})
                                         
         return OmegaConf.create({key: variable_dict})
@@ -39,18 +45,22 @@ class Configurator(nn.Module):
     def create_initializer(self, generator, arguments):
         initializer = OmegaConf.create()
         
-        initializer.update({'generator': generator})
+        if isinstance(generator, types.FunctionType):
+            generator_name = generator.__name__
+            self.reg.register(generator, generator_name, key="initialization")
+            initializer.update({'generator': generator_name})
         
-        arguments_dict = arguments[0]
-        for argument in arguments[1:]:
-            argument_dict = OmegaConf.merge(argument_dict, argument)
+        else:
+            initializer.update({'generator': generator})
+        
+        arguments_dict = OmegaConf.merge(*arguments)
         
         initializer.update({'arguments': arguments_dict})
         
         return initializer
         
     def add_metadata(self, key, value):
-        self.config['metadata'].update({key: value})
+        self.config['simulation_metadata'].update({key: value})
     
     def get(self, variable_name):
         return OmegaConf.select(self.config, variable_name)
@@ -63,12 +73,15 @@ class Configurator(nn.Module):
         _created_agent.update({'number': number, 'properties': all_properties})
         self.agents.update({key: _created_agent})
         
-    def add_property(self, agent_name, key, name, shape, dtype, initialization_function, learnable=False, value=None):
-        root_object = conf.get(agent_name)
+    def add_property(self, root, key, name, shape, dtype, initialization_function, learnable=False, value=None):
+        root_object = self.get(root)
         property_object = self.create_variable(key=key, name=name, shape=shape, dtype=dtype, initialization_function=initialization_function, learnable=learnable, value=value)
         
         root_object['properties'].update({property_object.key(): property})
-        
+    
+    def render(self, config_path):
+        OmegaConf.save(self.config, config_path)
+
             
 if __name__ == '__main__':
     
