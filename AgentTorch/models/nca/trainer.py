@@ -27,7 +27,6 @@ runner = NCARunner(config, registry)
 runner.init()
 
 device = torch.device(runner.config['simulation_metadata']['device'])
-
 # *************************************************************************
 # Generating target
 def load_emoji(index, path="AgentTorch/models/nca/data/emoji.png"):
