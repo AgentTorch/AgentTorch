@@ -17,6 +17,12 @@ The follwoing componets need to be provided for creating a new ABM
 # 3. Running examples
 You can use the following commands for running each of the three examples presented in the paper:
 
-1. ```python ```
-2. ```python ```
-3. ```python ```
+```
+python 
+```
+```
+python 
+```
+```
+python 
+```
