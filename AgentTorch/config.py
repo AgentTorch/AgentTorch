@@ -4,10 +4,9 @@ import torch.nn as nn
 import numpy as np
 import types
 
-from registry import Registry
+from AgentTorch.registry import Registry
 
 class Configurator(nn.Module):
-    '''TO BE DONE'''
     def __init__(self):
         super().__init__()
         
@@ -87,8 +86,14 @@ class Configurator(nn.Module):
         root_object = self.get(root)
         property_object = self.create_variable(key=key, name=name, shape=shape, dtype=dtype, initialization_function=initialization_function, learnable=learnable, value=value)
         
-        root_object['properties'].update({key: property_object})
-        
+        root_object['properties'].update({key: property_object[key]})
+
+    def add_function(self, root, generator, fn_type, active_agent, arguments=None, input_variables=None, output_variables=None):
+        root_object = self.get(root)
+
+        function_object = self.create_variable(generator, fn_type, arguments=arguments, input_variables=input_variables, output_variables=output_variables)        
+        root_object[fn_type][active_agent].update({generator.__name__ : function_object})
+
     def add_metadata(self, key, value):
         self.config['simulation_metadata'].update({key: value})
         
@@ -131,7 +136,7 @@ class Configurator(nn.Module):
                 observation_fn_obj.update({agent: None})
             _created_substep.update({'observation': observation_fn_obj})
         else:
-            _created_substep.update({'observation': observation_fn})
+            _created_substep.update({'observation': OmegaConf.merge(*observation_fn)})
 
         if policy_fn is None:
             policy_fn_obj = OmegaConf.create()
@@ -139,15 +144,15 @@ class Configurator(nn.Module):
                 policy_fn_obj.update({agent: None})
             _created_substep.update({'policy': policy_fn_obj})
         else:
-            _created_substep.update({'policy': policy_fn})
+            _created_substep.update({'policy': OmegaConf.merge(*policy_fn)})
         
         if transition_fn is None:
             transition_fn_obj = OmegaConf.create()
             _created_substep.update({'transition': transition_fn_obj})
         else:
-            _created_substep.update({'transition': transition_fn})
+            _created_substep.update({'transition': OmegaConf.merge(*transition_fn)})
 
-        self.config['substeps'].update({self.substep_counter: _created_substep})
+        self.config['substeps'].update({str(self.substep_counter): _created_substep})
         self.substep_counter += 1
             
 if __name__ == '__main__':
