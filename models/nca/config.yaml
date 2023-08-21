@@ -1,6 +1,6 @@
 simulation_metadata:
-    num_episodes: 20
-    num_steps_per_episode: 20
+    num_episodes: 1
+    num_steps_per_episode: 10
     num_substeps_per_step: 1
     w: 72
     h: 72

@@ -24,8 +24,6 @@ parser.add_argument(
 args = parser.parse_args()
 config_file = args.config
 
-print("Config file: ", config_file)
-
 config = read_config(config_file)
 registry = get_registry()
 

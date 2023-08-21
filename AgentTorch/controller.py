@@ -17,16 +17,19 @@ class Controller(nn.Module):
                 observation = {**observation_function[substep][agent_type][obs](state), **observation}
         except:
             observation = None
+
         return observation
             
     def act(self, state, observation, policy_function, agent_type):
         action = {}
         substep, step = state['current_substep'], state['current_step']
+
         try:
             for policy in self.config["substeps"][substep]["policy"][agent_type].keys():
                 action = {**policy_function[substep][agent_type][policy](state, observation), **action}
         except:
             action = None
+            
         return action
     
     def progress(self, state, action, transition_function):

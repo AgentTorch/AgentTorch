@@ -36,6 +36,4 @@ class PurchaseProduct(SubstepAction):
         action_multiplers = action_multiplers.unsqueeze(1).repeat(1, Q_exp.shape[1])
         actions = action_multiplers*argmax_utility
 
-        import pdb; pdb.set_trace()
-
         return {self.output_variables[0] : actions}

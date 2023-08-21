@@ -24,8 +24,6 @@ class NewQExp(SubstepTransition):
                 
         current_Q_exp = get_by_path(state, re.split("/", input_variables['Q_exp']))
         num_agents, num_products = current_Q_exp.shape[0], current_Q_exp.shape[1]
-
-        import pdb; pdb.set_trace()
         
         new_Q_exp = ((1.0 - action['consumers']['purchase_action'].sum(axis=1)).unsqueeze(1))*(current_Q_exp)
         add_Q_exp_list = []

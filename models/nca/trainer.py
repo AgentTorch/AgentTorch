@@ -13,12 +13,12 @@ from AgentTorch.helpers import read_config
 parser = argparse.ArgumentParser(
     description="AgentTorch: design, simulate and optimize agent-based models"
 )
-# parser.add_argument(
-#     "-c", "--config", help="Name of the yaml config file with the parameters."
-# )
+parser.add_argument(
+    "-c", "--config", help="Name of the yaml config file with the parameters."
+)
 # # *************************************************************************
-# args = parser.parse_args()
-# config_path = args.config
+args = parser.parse_args()
+config_path = args.config
 
 config, registry = configure_nca('new_config.yaml')
 

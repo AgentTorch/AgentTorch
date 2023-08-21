@@ -22,3 +22,7 @@ You can use a sample experiment with the following command:
 cd models/nca
 python trainer.py --c config.yaml
 ```
+```
+cd models/opinion
+python trainer.py --c config.yaml
+```
