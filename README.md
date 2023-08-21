@@ -4,7 +4,7 @@ This repository contains code corresponding to the paper: "AgentTorch: a framewo
 
 # 1. Installation
 
-The easiest way to install AgentTorch is to install it from the PyPI repository. Upon Public release, AgentTorch will be made available at:
+The easiest way to install AgentTorch is to install it from the PyPI repository. Upon public release, AgentTorch will be made available at:
 ```
 pip install torch_agent
 ```
@@ -20,5 +20,5 @@ Creating a new simulator using AgentTorch involves the following steps:
 You can use a sample experiment with the following command:
 ```
 cd models/nca
-python trainer.py
+python trainer.py --c config.yaml
 ```
