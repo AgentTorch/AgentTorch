@@ -4,7 +4,7 @@ This repository contains code corresponding to the paper: "AgentTorch: a framewo
 
 # 1. Installation
 
-The easiest way to install AgentTorch is to install it from the PyPI repository
+The easiest way to install AgentTorch is to install it from the PyPI repository. Upon Public release, AgentTorch will be made available at:
 ```
 pip install torch_agent
 ```

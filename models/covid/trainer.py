@@ -1,3 +1,5 @@
+'''Command: python trainer.py --c config.yaml'''
+
 import argparse
 import numpy as np
 import torch
@@ -8,8 +10,6 @@ import sys
 sys.path.insert(0, '../../')
 from simulator import get_registry, get_runner
 from AgentTorch.helpers import read_config
-
-'''Command: python trainer.py --c config.yaml'''
 
 # *************************************************************************
 # Parsing command line arguments
