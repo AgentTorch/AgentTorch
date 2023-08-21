@@ -1,6 +1,6 @@
 This repository contains code corresponding to the paper: "AgentTorch: a framework for agent-based modeling with automatic differentiation". The basic framework is given in the figure below:
 
-![Agent Torch Framework](https://github.com/AgentTorch/AgentTorch/blob/eb567e3aa2ffcf6f74aafc1c4801267f3b8eada1/Figure2_Framework_final.pdf "AgentTorch Framework")
+![Agent Torch Framework](./Figure2_Framework_final.png "AgentTorch Framework")
 
 # 1. Installation
 
