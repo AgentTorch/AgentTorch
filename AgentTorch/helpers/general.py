@@ -50,8 +50,11 @@ def process_shape(config, s):
 
 def read_config(config_file):
     # register OmegaConf resolvers for composite questions in OmegaConf
-    OmegaConf.register_new_resolver("sum", lambda x, y: x + y)
-    OmegaConf.register_new_resolver("multiply", lambda x, y: x*y)
+    try:
+        OmegaConf.register_new_resolver("sum", lambda x, y: x + y)
+        OmegaConf.register_new_resolver("multiply", lambda x, y: x*y)
+    except:
+        print("resolvers already registered..")
     
     if config_file[-5:] != ".yaml":
         raise ValueError("Config file type should be yaml")

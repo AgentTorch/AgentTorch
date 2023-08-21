@@ -62,7 +62,7 @@ state:
     network:
         agent_agent:
             evolution_network:
-                type: "grid"
+                type: "grid_network"
                 arguments:
                     shape:
                         - ${simulation_metadata.w} #72

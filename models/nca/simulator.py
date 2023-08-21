@@ -1,6 +1,9 @@
 import torch
 import numpy as np
+import sys
+sys.path.insert(0, '../../')
 from AgentTorch import Configurator, Runner
+from AgentTorch.helpers import read_config
 
 def configure_nca(config_path):
     conf = Configurator()
@@ -46,11 +49,11 @@ def configure_nca(config_path):
     # add substep
     from substeps.evolve_cell.transition import NCAEvolve
     evolve_transition = conf.create_function(NCAEvolve, input_variables={'cell_state':'agents/automata/cell_state'}, output_variables=['cell_state'], fn_type="transition")
-    conf.add_substep(name="Evolution", active_agents=["automata"], transition_fn=evolve_transition)
+    conf.add_substep(name="Evolution", active_agents=["automata"], transition_fn=[evolve_transition])
 
     conf.render(config_path)
 
-    return conf.registry
+    return read_config(config_path), conf.reg
 
 class NCARunner(Runner):
     def __init__(self, *args, **kwargs):

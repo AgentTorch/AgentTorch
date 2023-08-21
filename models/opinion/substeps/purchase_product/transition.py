@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 from torch.distributions import Normal
 from AgentTorch.substep import SubstepTransition
+from AgentTorch.helpers import get_by_path
+import re
 
 class NewPurchasedBefore(SubstepTransition):
     def __init__(self, *args, **kwargs):

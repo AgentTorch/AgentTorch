@@ -1,8 +1,15 @@
 simulation_metadata:
-    num_episodes: 10
+    num_episodes: 2
     num_steps_per_episode: 25
     num_substeps_per_step: 1
     device: 'cpu'
+    learning_params:
+        lr: 2e-3
+        betas:
+            - 0.5
+            - 0.5
+        lr_gamma:  0.9999
+        model_path: "saved_model.pth"
     
 state:
     environment: null

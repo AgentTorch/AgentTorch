@@ -4,8 +4,12 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F 
 
+import sys
+sys.path.insert(0, '../../')
 from simulator import OpDynRunner, opdyn_registry
 from AgentTorch.helpers import read_config
+
+'''Command: python trainer.py --c config.yaml'''
 
 # *************************************************************************
 # Parsing command line arguments
@@ -27,13 +31,15 @@ runner = OpDynRunner(config, registry)
 device = torch.device(runner.config['simulation_metadata']['device'])
 runner.init()
 
-optimizer = optim.Adam(runner.parameters(), lr=1e-1)
-
 loss_log = []
-print('IN PROGRESS: To fix the RL optimization logic!!!!!!')
 
-print(runner.parameters())
+optimizer = optim.Adam(runner.parameters(), 
+                lr=runner.config['simulation_metadata']['learning_params']['lr'], 
+                betas=runner.config['simulation_metadata']['learning_params']['betas'])
+scheduler = optim.lr_scheduler.ExponentialLR(optimizer, 
+                runner.config['simulation_metadata']['learning_params']['lr_gamma'])
 
-import ipdb; ipdb.set_trace()
+num_steps_per_episode = runner.config["simulation_metadata"]["num_steps_per_episode"]
 
+# execute all simulation episodes with a utility function in OpDynRunner
 runner.execute()

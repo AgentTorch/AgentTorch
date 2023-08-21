@@ -17,17 +17,8 @@ Creating a new simulator using AgentTorch involves the following steps:
 4. Using helpers: AgentTorch has several useful functions defined in "AgentTorch/helpers" that can be used in defining the various functions. These include library of utilities to support differentiability of substeps, loading public data sources such as from US census and, initialization of state properties and environment networks. 
 
 # 3. Running examples
-You can use the following commands for running each of the three examples presented in the paper:
-
+You can use a sample experiment with the following command:
 ```
 cd models/nca
-python trainer.py
-```
-```
-cd models/covid
-python trainer.py
-```
-```
-cd models/opinion
 python trainer.py
 ```

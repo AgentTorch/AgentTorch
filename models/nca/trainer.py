@@ -5,32 +5,31 @@ import torch.optim as optim
 import torch.nn.functional as F
 import imageio
 
-from create_simulator import NCARunner, configure_nca
+from simulator import NCARunner, configure_nca
 from AgentTorch.helpers import read_config
 
-# import torcheck
 # *************************************************************************
 # Parsing command line arguments
 parser = argparse.ArgumentParser(
     description="AgentTorch: design, simulate and optimize agent-based models"
 )
-parser.add_argument(
-    "-c", "--config", help="Name of the yaml config file with the parameters."
-)
-# *************************************************************************
-args = parser.parse_args()
-config_path = args.config
+# parser.add_argument(
+#     "-c", "--config", help="Name of the yaml config file with the parameters."
+# )
+# # *************************************************************************
+# args = parser.parse_args()
+# config_path = args.config
 
-registry = configure_nca(config_path)
+config, registry = configure_nca('new_config.yaml')
 
-runner = NCARunner(config_path, registry)
+runner = NCARunner(read_config('config.yaml'), registry)
 runner.init()
 
 device = torch.device(runner.config['simulation_metadata']['device'])
 
 # *************************************************************************
 # Generating target
-def load_emoji(index, path="AgentTorch/models/nca/data/emoji.png"):
+def load_emoji(index, path="./data/emoji.png"):
     im = imageio.imread(path)
     emoji = np.array(im[:, index*40:(index+1)*40].astype(np.float32))
     emoji /= 255.0
@@ -54,13 +53,6 @@ scheduler = optim.lr_scheduler.ExponentialLR(optimizer,
 loss_log = []
 
 num_steps_per_episode = runner.config["simulation_metadata"]["num_steps_per_episode"]
-
-# torcheck.register(optimizer)
-# torcheck.add_module_changing_check(runner, module_name="runner")
-# # torcheck.add_module_unchanging_check(runner.initializer, module_name="runner_initializer")
-# torcheck.add_module_nan_check(runner)
-# torcheck.add_module_inf_check(runner)
-# torcheck.verbose_on()
 
 for ix in range(runner.config['simulation_metadata']['num_episodes']):
     runner.reset()
