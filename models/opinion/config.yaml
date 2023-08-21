@@ -230,7 +230,7 @@ substeps:
         policy:
             consumers:
                 purchase_product:
-                    generator: "ProductPurchased"
+                    generator: "PurchaseProduct"
                     arguments: null
                     input_variables: # from the observation
                         N_i: "N_i"

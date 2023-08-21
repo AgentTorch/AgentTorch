@@ -3,6 +3,7 @@ import torch.nn as nn
 import numpy as np
 import re
 from AgentTorch.substep import SubstepObservation
+from AgentTorch.helpers import get_by_path
 
 class GetFromState(SubstepObservation):
     def __init__(self, *args, **kwargs):

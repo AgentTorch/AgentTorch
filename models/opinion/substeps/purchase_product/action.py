@@ -8,6 +8,10 @@ class PurchaseProduct(SubstepAction):
     def __init__(self, config, input_variables, output_variables, arguments):
         super().__init__(config, input_variables, output_variables, arguments)
 
+        self.learnable_args = {'F_t_params': torch.randn(self.config['state']['agents']['consumers']['number'])}
+        if self.learnable_args is not None:
+            self.learnable_args = nn.ParameterDict(self.learnable_args)
+
     def forward(self, state, observation):      
 
         Q_exp = observation['Q_exp']
@@ -31,5 +35,7 @@ class PurchaseProduct(SubstepAction):
         action_multiplers = ((max_utility_Q_exp - Q_des.reshape(-1)) > 0) # to fix this indicator function - not differentiable
         action_multiplers = action_multiplers.unsqueeze(1).repeat(1, Q_exp.shape[1])
         actions = action_multiplers*argmax_utility
+
+        import pdb; pdb.set_trace()
 
         return {self.output_variables[0] : actions}
