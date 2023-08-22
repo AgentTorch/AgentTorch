@@ -51,9 +51,10 @@ pip3 install -r requirements.txt
 Creating a new simulator using AgentTorch involves the following steps:
 1. Defining the configuration: Here we define the variables and functions to be used in the simulator. In this module a `Configurator` object is to be created to which the variables and functions to be used in the simulator are added as properties. These are then used to instantiate a `Runner` object. An example for this can be found in [nca_simulator.py](models/nca/simulator.py"). 
 2. Defining the trainer: This module loads the configuration, the various variables and functions that form the substeps and executes the main simulation and learning loop. Any learning related loss and optimization function need to be defined here. An example for this can be found in "models/nca/trainer.py"
-3. Defining substeps: As described in the figure above, each simulation comprises of multiple substeps. Each substep comprises of the following four functions: observation, action, transition and reward. Each of these need to be defined in a separate module, using the base classes for `SubstepObservation`, `SubstepTransition`, `SubstepPolicy` provided in [substep.py](AgentTorch/substep.py). Since these functions need to be differentiable, we provide several differentiable utilities in [helpers_soft.py](AgentTorch/helpers/soft.py). These can be used to create differentiable variants of operations such as maximum, logical comparison etc. An example for substep definition can be found in [nca.py](models/nca/substeps/evolve_cell/transition.py) [quarantine.py](models/covid/substeps/quarantine/transition.py)
-4. Using helpers: AgentTorch has several useful functions defined in [helpers](AgentTorch/helpers) that can be used in defining the various functions. These include library of utilities to support differentiability of substeps, loading public data sources such as from US census and, initialization of state properties and environment networks. For instance, [helpers_soft.py](AgentTorch/helpers/soft.py) include differentiable utilities implemented using the [straight-through estimator](https://arxiv.org/abs/1308.3432), [helpers_general.py](AgentTorch/helpers/general.py) includes uitilies for data reading and writing.
+3. Defining substeps: As described in the figure above, each simulation comprises of multiple substeps. Each substep comprises of the following four functions: observation, action, transition and reward. Each of these need to be defined in a separate module, using the base classes for `SubstepObservation`, `SubstepTransition`, `SubstepPolicy` provided in [substep.py](AgentTorch/substep.py). Since these functions need to be differentiable, we provide several differentiable utilities in [helpers_soft.py](AgentTorch/helpers/soft.py). These can be used to create differentiable variants of operations such as maximum, logical comparison etc. An example for substep definition can be found in [nca_evolve.py](models/nca/substeps/evolve_cell/transition.py), [covid_quarantine.py](models/covid/substeps/quarantine/transition.py)
+4. Using helpers: AgentTorch has several useful functions defined in [helpers](AgentTorch/helpers) that can be used in defining the various functions. These include library of utilities to support differentiability of substeps, loading public data sources such as from US census and, initialization of state properties and environment networks. For instance, [helpers_soft.py](AgentTorch/helpers/soft.py) include differentiable utilities and [helpers_general.py](AgentTorch/helpers/general.py) includes uitilies for data reading and writing.
 
+A detailed code specific documentation is provided in [create model docs](docs/create.md)
 
 # 4. Running examples
 You can run a sample experiment with the following command:
@@ -66,9 +67,13 @@ cd models/opinion
 python trainer.py --c config.yaml
 ```
 
-# 5. Documentation
+# 5. Starter Guide
 
 # Generate and Interpret `config.yaml` file
-Each model is AgentTorch is described using a `config.yaml`. These config files are generated using `Configurator` API in [config.py](AgentTorch/config.py). An interactive jupyter notebook with step-by-step guidance to define the config for [nca example](models/nca/config.yaml) in [config_example_docs](docs/examples/config/config_nca.ipynb).
+An interactive notebook with step-by-step guide to define and understand a `config.yaml` is given in [config_example_docs](docs/examples/config/config_nca.ipynb).
 
 # Build your own AgentTorch model
+A step-by-step guide to start a new AgentTorch project is given in [starter documentation](docs/create.md)
+
+# 6. Issues
+The AgentTorch project is under active development and are continually fixing issues. Please feel free to leave a comment at [Troubleshooting issues](https://github.com/AgentTorch/AgentTorch/issues/1)
