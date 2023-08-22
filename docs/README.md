@@ -57,6 +57,8 @@ from AgentTorch.helpers import discrete_sample, logical_and, get_by_path, read_c
 * Below is an example pseudocode to use the runner for executing the simulation logic described in `models/my_new_model/trainer.py`. An implemented runner for NCA is given in [models/nca/simulator.py](../models/nca/simulator.py). 
 
 ```
+## This is pseudocode for defining a runner
+ 
 from my_new_model.simulator import my_config
 from AgentTorch import Runner
 import torch
