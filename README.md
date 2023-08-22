@@ -24,7 +24,7 @@ source agent_torch_env/bin/activate
 To install python3.8, follow these tutorials for [Mac](https://www.laptopmag.com/how-to/install-python-on-macos) and [Ubuntu](https://linux.how2shout.com/install-python-3-9-or-3-8-on-ubuntu-22-04-lts-jammy-jellyfish/) respectively. To install pip, follow these tutorials for [Mac](https://phoenixnap.com/kb/install-pip-mac) and [Ubuntu](https://linuxize.com/post/how-to-install-pip-on-ubuntu-20.04/) respectively. 
 
 
-> Step 2: Install pytorch and pytorch geometric. We recommend using Pytorch 2.0 and corresponding Pytorch geometric bindings.
+> Step 2: Install pytorch and pytorch geometric. We recommend using Pytorch 2.0 and corresponding Pytorch geometric bindings. We recommend following the guides for [offical pytorch install](https://pytorch.org/get-started/locally/) and [official pytorch-geometric install](https://github.com/pyg-team/pytorch_geometric#pytorch-20). We summarize the commands below:
 
 Mac:
 ```
@@ -38,7 +38,7 @@ Ubuntu:
 pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/${CUDA}
 pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.0.0+${CUDA}.html
 ```
-where ${CUDA} is the CUDA version. We have tested our code on cu118. For details, please follow the guides for [offical pytorch install](https://pytorch.org/get-started/locally/) and [official pytorch-geometric install](https://github.com/pyg-team/pytorch_geometric#pytorch-20).
+where ${CUDA} is the CUDA version. We have tested our code on cu118. 
 
 
 > Step 3: Install AgentTorch specific dependencies as below:
