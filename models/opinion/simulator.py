@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np 
 import torch
 import jax
+import torch.optim as optim
 
 from AgentTorch import Runner, Registry
 
@@ -35,13 +36,17 @@ class OpDynRunner(Runner):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # self.optimizer = optim.Adam(self.parameters(), 
+        #         lr=self.config['simulation_metadata']['learning_params']['lr'], 
+        #         betas=self.config['simulation_metadata']['learning_params']['betas'])
+
     def forward(self):
         for episode in range(self.config['simulation_metadata']['num_episodes']):
             num_steps_per_episode = self.config["simulation_metadata"]["num_steps_per_episode"]
             self.reset()
             self.step(num_steps_per_episode)
 
-            self.controller.learn_after_episode(jax.tree_map(lambda x: x[-1], self.trajectory), self.initializer, self.optimizer)
+            #self.controller.learn_after_episode(jax.tree_map(lambda x: x[-1], self.trajectory), self.initializer, self.optimizer)
 
     def execute(self):
         self.forward()

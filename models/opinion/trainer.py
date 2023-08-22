@@ -43,3 +43,7 @@ num_steps_per_episode = runner.config["simulation_metadata"]["num_steps_per_epis
 
 # execute all simulation episodes with a utility function in OpDynRunner
 runner.execute()
+
+torch.save(runner.state_dict(), runner.config['simulation_metadata']['learning_params']['model_path'])
+
+print("Execution complete")
