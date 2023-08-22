@@ -9,7 +9,7 @@ mkdir models/my_new_model
 cd models/my_new_model
 touch __init__.py
  
-touch simulator.py # will contain the `config.yaml` for your simulator
+touch simulator.py # will contain the `config` for your simulator
 
 touch trainer.py # # will contain the `runner` and execution loop
 ```
@@ -17,8 +17,8 @@ touch trainer.py # # will contain the `runner` and execution loop
 ## Step 2: Create a config using `Configurator`
 
 * Config is used to describe the simulator state comprising agents, objects, interaction environments, execution metadata and register substeps that execute in each step. 
-* The config is described using the [Configurator](../AgentTorch/config.py) API and maintained in `models/my_new_model/simulator.py`. 
-* A step-by-step guide on how to generate and intepret a config for your project given in [example_config](examples/config/config_nca.ipynb). Further, you may see an example config file in [configure_nca](../models/nca/simulator.py).
+* The config is generated using the [Configurator](../AgentTorch/config.py) API and maintained in `models/my_new_model/simulator.py`. 
+* A step-by-step guide on how to generate and intepret a config for your project given in [example_config_notebook](examples/config/config_nca.ipynb). Further, you may see an sample config generator for `models/nca` in [configure_nca](../models/nca/simulator.py).
 
 ## Step 3: Create substeps
 
