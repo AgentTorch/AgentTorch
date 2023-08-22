@@ -70,3 +70,5 @@ for ix in range(runner.config['simulation_metadata']['num_episodes']):
     loss_log.append(loss.item())
 
 torch.save(runner.state_dict(), runner.config['simulation_metadata']['learning_params']['model_path'])
+
+print("Execution complete")
