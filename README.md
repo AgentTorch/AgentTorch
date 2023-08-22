@@ -69,10 +69,10 @@ python trainer.py --c config.yaml
 
 # 5. Starter Guide
 
-# Generate and Interpret `config.yaml` file
+## Generate and Interpret `config.yaml` file
 An interactive notebook with step-by-step guide to define and understand a `config.yaml` is given in [config_example_docs](docs/examples/config/config_nca.ipynb).
 
-# Build your own AgentTorch model
+## Build your own AgentTorch model
 A step-by-step guide to start a new AgentTorch project is given in [starter documentation](docs/create.md)
 
 # 6. Issues
