@@ -58,7 +58,7 @@ from AgentTorch.helpers import discrete_sample, logical_and, get_by_path, read_c
 
 ```
 ## This is pseudocode for defining a runner
- 
+
 from my_new_model.simulator import my_config
 from AgentTorch import Runner
 import torch
@@ -89,5 +89,5 @@ for epi in range(config.get('simulation_metadata.num_episodes')):
 ```  
 
 
-# Step 5: Reach out if any issues or would like to contribute.
+## Step 5: Reach out if any issues or would like to contribute.
 We are glad you considered AgentTorch to build your simulation project. If you encounter any challenge or would like to contribute, please do [create an issue here](https://github.com/AgentTorch/AgentTorch/issues) and we would reach out as soon as possible.
