@@ -7,7 +7,7 @@ This repository contains code corresponding to the paper: "AgentTorch: a Framewo
 ## Download
 To get the latest version of AgentTorch, you can install it directly from git at:
 ```
-git clone https://github.com/AgentTorch/AgentTorch.git
+pip install git+https://github.com/AgentTorch/AgentTorch
 ```
 
 # 2. Setup
