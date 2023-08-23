@@ -21,7 +21,7 @@ setup(
     url="https://github.com/AgentTorch/AgentTorch",
     long_description_content_type="text/markdown",
     long_description=long_description,
-    author="Ayush Chopra and Jayakumar Subramanian",
+    author="Ayush Chopra, Jayakumar Subramanian and Ramesh Raskar",
     author_email="ayushc@mit.edu",
     license="MIT License",
     install_requires=requirements,
