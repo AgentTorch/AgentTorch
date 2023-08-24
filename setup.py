@@ -22,7 +22,7 @@ setup(
     long_description_content_type="text/markdown",
     long_description=long_description,
     author="Ayush Chopra, Jayakumar Subramanian and Ramesh Raskar",
-    author_email="ayushc@mit.edu",
+    author_email="ayushchopra96@gmail.com",
     license="MIT License",
     install_requires=requirements,
     packages=find_packages(exclude=["docs"]),
