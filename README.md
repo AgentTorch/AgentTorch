@@ -5,6 +5,11 @@ This repository contains code corresponding to the paper: "AgentTorch: a Framewo
 # 1. Installation
 
 ## Download
+The simplest way to install AgentTorch is from PyPi at:
+```
+pip install agent-torch
+```
+
 To get the latest version of AgentTorch, you can install it directly from git at:
 ```
 pip install git+https://github.com/AgentTorch/AgentTorch
