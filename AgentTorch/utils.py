@@ -62,3 +62,6 @@ def create_dicts_list(params):
         dict_list.append(new_dict)
     
     return dict_list
+
+def assign_method(runner, method_name, method):
+        setattr(runner, method_name, types.MethodType(method, runner))
