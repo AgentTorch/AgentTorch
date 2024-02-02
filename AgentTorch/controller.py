@@ -15,7 +15,10 @@ class Controller(nn.Module):
         try:
             for obs in self.config["substeps"][substep]['observation'][agent_type].keys():
                 observation = {**observation_function[substep][agent_type][obs](state), **observation}
-        except:
+        except Exception as e:
+            print(e)
+            print(state)
+            print(observation_function[substep][agent_type][obs])
             observation = None
 
         return observation
@@ -40,13 +43,13 @@ class Controller(nn.Module):
         next_state['current_substep'] = str(next_substep)
                         
         for trans_func in self.config['substeps'][substep]["transition"].keys():
-            updated_vals = transition_function[substep][trans_func](state=state, action=action)
+            updated_vals = {**transition_function[substep][trans_func](state=state, action=action)}
             for var_name in updated_vals:
                 assert self.config["substeps"][substep]["transition"][trans_func]['input_variables'][var_name]
                 
                 source_path =  self.config["substeps"][substep]["transition"][trans_func]["input_variables"][var_name]
                 set_by_path(next_state, re.split("/", source_path), updated_vals[var_name])
-             
+                
         return next_state
     
     def learn_after_episode(self, episode_traj, initializer, optimizer):
