@@ -1,0 +1,90 @@
+simulation_metadata:
+    num_episodes: 1
+    num_steps_per_episode: 10
+    num_substeps_per_step: 1
+    w: 72
+    h: 72
+    n_channels: 16
+    batch_size: 8
+    hidden_size: 128
+    device: "cpu"
+    fire_rate: 0.5
+    angle: 0.0
+    learning_params:
+        lr: 2e-3
+        betas:
+            - 0.5
+            - 0.5
+        lr_gamma:  0.9999
+        model_path: "saved_model.pth"
+state:
+    environment: null
+    agents:
+        automata:
+            number: ${multiply:${simulation_metadata.w},${simulation_metadata.h}} #5184
+            properties:
+                cell_state:
+                    name: "cell_state"
+                    learnable: True
+                    shape:
+                        - ${state.agents.automata.number}
+                        - ${simulation_metadata.n_channels}
+                    initialization_function:
+                        generator: "nca_initialize_state"
+                        arguments:
+                            n_channels: 
+                                name: "n_channels"
+                                learnable: False
+                                shape:
+                                    - 1
+                                initialization_function: null
+                                value: ${simulation_metadata.n_channels}
+                                dtype: "int"
+                            batch_size: 
+                                name: "batch_size"
+                                learnable: False
+                                shape:
+                                    - 1
+                                initialization_function: null
+                                value: ${simulation_metadata.batch_size}
+                                dtype: "int"
+                            device: 
+                                name: "device"
+                                learnable: False
+                                shape:
+                                    - 1
+                                initialization_function: null
+                                value: ${simulation_metadata.device}
+                                dtype: "str"
+
+                    dtype: "float"   
+    objects: null
+    network:
+        agent_agent:
+            evolution_network:
+                type: "grid_network"
+                arguments:
+                    shape:
+                        - ${simulation_metadata.w} #72
+                        - ${simulation_metadata.h} #72
+        agent_object: null
+        object_object: null
+substeps:
+    "0":
+        name: "Evolution"
+        description: "All automata cell states evolve by one step"
+        active_agents:
+            - "automata"
+        observation:
+            automata: null
+        policy:
+            automata: null
+        transition:
+            NCAEvolve:
+                generator: "NCAEvolve"
+                arguments: null
+                input_variables:
+                    cell_state: "agents/automata/cell_state"
+                output_variables:
+                    - cell_state
+        reward: null
