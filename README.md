@@ -1,6 +1,4 @@
-This repository contains code corresponding to the paper: "AgentTorch: a Framework for Agent-based Modeling with Automatic Differentiation". The basic framework is given in the figure below:
-
-![Agent Torch Framework](./Figure2_Framework_final.png "AgentTorch Framework")
+Differentiable agent-based learning for million-scale populations - inside the body, around us and beyond.
 
 # 1. Installation
 
@@ -83,3 +81,14 @@ A step-by-step guide to start a new AgentTorch project is given in [starter docu
 
 # 6. Issues
 The AgentTorch project is under active development and are continually fixing issues. Please feel free to leave a comment at [Troubleshooting issues](https://github.com/AgentTorch/AgentTorch/issues/1)
+
+
+## Citation
+If you use this project or code in your work, please cite it using the following BibTeX entry:
+
+@misc{authorlastname,
+title = {A framework for learning in agent-based models},
+author = {Chopra, Ayush; Subramanian, Jayakumar; Krishnamurthy, Balaji; Raskar, Ramesh},
+year = {2024},
+howpublished = {23rd International Conference on Autonomous Agents and Multi-agent Systems},
+}
