@@ -88,9 +88,10 @@ The AgentTorch project is under active development and are continually fixing is
 ## Citation
 If you use this project or code in your work, please cite it using the following BibTeX entry:
 
-@misc{authorlastname,
-title = {A framework for learning in agent-based models},
-author = {Chopra, Ayush; Subramanian, Jayakumar; Krishnamurthy, Balaji; Raskar, Ramesh},
-year = {2024},
-howpublished = {23rd International Conference on Autonomous Agents and Multi-agent Systems (AAMAS 2024)},
+@inproceedings{chopra2024framework,
+  title = {A Framework for Learning in Agent-Based Models},
+  author = {Chopra, Ayush and Subramanian, Jayakumar and Krishnamurthy, Balaji and Raskar, Ramesh},
+  booktitle = {Proceedings of the 23rd International Conference on Autonomous Agents and Multi-agent Systems},
+  year = {2024},
+  organization = {International Foundation for Autonomous Agents and Multiagent Systems},
 }
