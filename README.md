@@ -1,7 +1,5 @@
 Differentiable agent-based learning for million-scale populations - inside the body, around us and beyond.
 
-![Demo](demo.mp4)
-
 # 1. Installation
 
 ## Download
