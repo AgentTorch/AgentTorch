@@ -1,5 +1,7 @@
 Differentiable agent-based learning for million-scale populations - inside the body, around us and beyond.
 
+![Demo](demo.mp4)
+
 # 1. Installation
 
 ## Download
@@ -90,5 +92,5 @@ If you use this project or code in your work, please cite it using the following
 title = {A framework for learning in agent-based models},
 author = {Chopra, Ayush; Subramanian, Jayakumar; Krishnamurthy, Balaji; Raskar, Ramesh},
 year = {2024},
-howpublished = {23rd International Conference on Autonomous Agents and Multi-agent Systems},
+howpublished = {23rd International Conference on Autonomous Agents and Multi-agent Systems (AAMAS 2024)},
 }
