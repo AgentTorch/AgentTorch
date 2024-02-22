@@ -1,6 +1,6 @@
 Differentiable agent-based learning for million-scale populations - inside the body, around us and beyond.
 
-https://web.media.mit.edu:/~ayushc/neo.mp4
+![Demo](https://github.com/AgentTorch/AgentTorch/raw/master/.github/images/demo.mp4)
 
 # 1. Installation
 
