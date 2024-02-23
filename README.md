@@ -1,6 +1,6 @@
-Differentiable agent-based learning for million-scale populations - inside the body, around us and beyond.
+Differentiable agent-based learning for million-scale populations - inside the body, around us and beyond. [Paper](https://web.media.mit.edu/~ayushc/flame.pdf). [Motivation](https://web.media.mit.edu/~ayushc/motivation.pdf).
 
-![Demo](https://github.com/AgentTorch/AgentTorch/raw/master/.github/images/demo.mp4)
+<!-- ![Demo](https://github.com/AgentTorch/AgentTorch/raw/master/.github/images/demo.mp4) -->
 
 # 1. Installation
 
@@ -83,7 +83,6 @@ A step-by-step guide to start a new AgentTorch project is given in [starter docu
 
 # 6. Issues
 The AgentTorch project is under active development and are continually fixing issues. Please feel free to leave a comment at [Troubleshooting issues](https://github.com/AgentTorch/AgentTorch/issues/1)
-
 
 ## Citation
 If you use this project or code in your work, please cite it using the following BibTeX entry:
