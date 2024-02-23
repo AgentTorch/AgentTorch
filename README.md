@@ -1,6 +1,6 @@
 Differentiable agent-based learning for million-scale populations - inside the body, around us and beyond. [Paper](https://web.media.mit.edu/~ayushc/flame.pdf). [Motivation](https://web.media.mit.edu/~ayushc/motivation.pdf).
 
-![Demo](https://github.com/AgentTorch/AgentTorch/raw/master/neo_demo.mp4)
+<!-- ![Demo](https://github.com/AgentTorch/AgentTorch/raw/master/neo_demo.mp4) -->
 
 # 1. Installation
 
