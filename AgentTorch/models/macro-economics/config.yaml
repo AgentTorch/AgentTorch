@@ -129,6 +129,18 @@ state:
         consumers:
             number : 16573530
             properties:
+                ID: 
+                    name: ID
+                    learnable: false
+                    shape:
+                        - ${state.agents.consumers.number} # to verify this. number of networks
+                        - 1
+                    initialization_function:
+                        generator: "initialize_id"
+                        arguments:
+                            pop_size:
+                                name: "population size"
+                                value: ${state.agents.consumers.number}
                 Gender:
                     name: Gender
                     learnable: False
@@ -139,19 +151,10 @@ state:
                         generator: "load_population_attribute"
                         arguments:
                             file_path:
-                                name: "Filepath for age group stage"
-                                learnable: False
-                                shape: null
-                                initialization_function: null
                                 value: ${simulation_metadata.population_file} 
                             attribute:
-                                name: "Age"
-                                learnable: False
-                                shape: null
-                                initialization_function: null
                                 value: 'gender'             
                     dtype: "float"
-                
                 Age:
                     name: Age
                     learnable: False
@@ -162,16 +165,8 @@ state:
                         generator: "load_population_attribute"
                         arguments:
                             file_path:
-                                name: "Filepath for age group stage"
-                                learnable: False
-                                shape: null
-                                initialization_function: null
                                 value: ${simulation_metadata.population_file}
                             attribute:
-                                name: "Age"
-                                learnable: False
-                                shape: null
-                                initialization_function: null
                                 value: 'age'         
                     dtype: "float"
 
@@ -185,16 +180,8 @@ state:
                         generator: "load_population_attribute"
                         arguments:
                             file_path:
-                                name: "Filepath for age group stage"
-                                learnable: False
-                                shape: null
-                                initialization_function: null
                                 value: ${simulation_metadata.population_file} 
                             attribute:
-                                name: "Ethnicity"
-                                learnable: False
-                                shape: null
-                                initialization_function: null     
                                 value: 'ethnicity'     
                     dtype: "float"
                 
@@ -208,16 +195,8 @@ state:
                         generator: "load_population_attribute"
                         arguments:
                             file_path:
-                                name: "Filepath for age group stage"
-                                learnable: False
-                                shape: null
-                                initialization_function: null
                                 value: ${simulation_metadata.population_file} 
                             attribute:
-                                name: "Area"
-                                learnable: False
-                                shape: null
-                                initialization_function: null
                                 value: 'area'     
                     dtype: "float"
 

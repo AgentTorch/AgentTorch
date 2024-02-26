@@ -21,12 +21,8 @@ class UpdateSavings(SubstepTransition):
         super().__init__(config, input_variables, output_variables, arguments)
     
     def forward(self, state, action):
-        number_of_months = get_by_path(state, re.split("/", self.input_variables['Month_Counter']))
-        if number_of_months % 12 == 0:
-            savings = self.increaseSavingsAnnualy(state,action)
-            savings = self.calculateSavings(state, action, savings)
-        else:
-            savings,monthly_income = self.calculateSavings(state, action)
+        
+        savings,monthly_income = self.calculateSavings(state, action)
         return {self.output_variables[0] : savings, self.output_variables[1] : monthly_income}
     
     def calculateMonthlyIncome(self, state, action):
@@ -78,8 +74,12 @@ class UpdateSavings(SubstepTransition):
     def calculateSavings(self, state, action,savings = None):
         if savings is None:
             savings = get_by_path(state, re.split("/", self.input_variables['Savings']))
+        number_of_months = get_by_path(state, re.split("/", self.input_variables['Month_Counter']))
+        if number_of_months % 12 == 0:
+            savings = self.increaseSavingsAnnualy(state,action)
         monthly_income,total_tax = self.calculatePostTaxIncome(state,action)
         post_distribution_income = self.distributeTax(state,action,total_tax,monthly_income)
+        
         total_savings = savings + post_distribution_income
         return total_savings, post_distribution_income
     
@@ -87,7 +87,7 @@ class UpdateSavings(SubstepTransition):
         # Calculate new savings
         s = get_by_path(state, re.split("/", self.input_variables['Savings']))
         r = get_by_path(state, re.split("/", self.input_variables['Interest_Rate']))
-        new_savings = s(1+r)
+        new_savings = s * (1+r)
         return new_savings
     
 

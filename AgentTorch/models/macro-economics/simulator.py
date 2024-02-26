@@ -10,13 +10,13 @@ from AgentTorch import Runner, Registry
 def opdyn_registry():
     reg = Registry()
 
-    from substeps.purchase_product.transition import UpdateMacroeconomics, UpdateFinancialMarket, UpdateMonthCounter, UpdateSavings
+    from substeps.macro_economics.transition import UpdateMacroeconomics, UpdateFinancialMarket, UpdateMonthCounter, UpdateSavings
     reg.register(UpdateMacroeconomics, "UpdateMacroeconomics", key="transition")
     reg.register(UpdateFinancialMarket, "UpdateFinancialMarket", key="transition")
     reg.register(UpdateMonthCounter, "UpdateMonthCounter", key="transition")
     reg.register(UpdateSavings, "UpdateSavings", key="transition")
 
-    from substeps.purchase_product.action import CalculateWorkPropensity, CalculateConsumptionPropensity
+    from substeps.macro_economics.action import CalculateWorkPropensity, CalculateConsumptionPropensity
     reg.register(CalculateWorkPropensity, "CalculateWorkPropensity", key="policy")
     reg.register(CalculateConsumptionPropensity, "CalculateConsumptionPropensity", key="policy")
 
@@ -26,9 +26,10 @@ def opdyn_registry():
     reg.register(constant, "constant", key="initialization")
     reg.register(grid_network, "grid", key="network")
 
-    from substeps.utils import random_normal_col_by_col, load_population_attribute, get_population_size
+    from substeps.utils import random_normal_col_by_col, load_population_attribute,initialize_id
     reg.register(random_normal_col_by_col, "random_normal_col_by_col", key="initialization")
     reg.register(load_population_attribute, "load_population_attribute", key="initialization")
+    reg.register(initialize_id, "initialize_id", key="initialization")
 
 
     return reg
