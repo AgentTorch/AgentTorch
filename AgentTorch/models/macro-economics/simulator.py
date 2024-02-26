@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np 
 import sys
-sys.path.insert(0, '/Users/shashankkumar/Documents/AgentTorch_Official/AgentTorch')
+sys.path.insert(0, '/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch')
 import torch
 import torch.optim as optim
 
@@ -26,8 +26,10 @@ def opdyn_registry():
     reg.register(constant, "constant", key="initialization")
     reg.register(grid_network, "grid", key="network")
 
-    from substeps.utils import random_normal_col_by_col
+    from substeps.utils import random_normal_col_by_col, load_population_attribute, get_population_size
     reg.register(random_normal_col_by_col, "random_normal_col_by_col", key="initialization")
+    reg.register(load_population_attribute, "load_population_attribute", key="initialization")
+
 
     return reg
 

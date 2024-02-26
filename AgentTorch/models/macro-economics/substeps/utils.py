@@ -1,6 +1,9 @@
 import torch
 import torch.nn as nn
 
+import pandas as pd
+
+
 def random_normal_col_by_col(shape, params):
     processed_shape = shape
     value_dims = []
@@ -11,3 +14,23 @@ def random_normal_col_by_col(shape, params):
                          torch.randn(size=(processed_shape[0],)), min=0.0))
     value = torch.stack(value_dims, dim=1)
     return value
+
+def load_population_attribute(shape, params):
+    """
+    Load population data from a pandas dataframe
+    """
+    # Load population data
+    df = pd.read_pickle(params['file_path'])
+    df = df['synpop'][params['attribute']
+    df,mapping = pd.factorize(df)
+    att_tensor = torch.from_numpy(df).float()
+    return att_tensor
+
+def get_population_size(shape, params):
+    """
+    Get the population size from a pandas dataframe
+    """
+    # Load population data
+    df = pd.read_pickle(params['file_path'])
+    pop_size = df['synpop'].shape[0]
+    return pop_size

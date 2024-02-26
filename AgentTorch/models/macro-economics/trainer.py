@@ -26,7 +26,7 @@ if not args:
         config_file = args.config
     
 else:
-        config_file = "/Users/shashankkumar/Documents/AgentTorch_Official/AgentTorch/models/macro-economics/config.yaml"
+        config_file = "/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch/models/macro-economics/config.yaml"
 
 config = read_config(config_file)
 registry = opdyn_registry()
