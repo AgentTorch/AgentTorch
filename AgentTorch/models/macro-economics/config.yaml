@@ -24,7 +24,8 @@ simulation_metadata:
     hours_worked: 168.0
     tax_brackets : [0, 50, 100, 500]
     tax_rates : [0.1, 0.2, 0.3,0.35]
-    population_file: '/tmp/syspop_test/NYC/1/tmp/synpop.pickle'
+    population_file : '/tmp/syspop_test/NYC/1/tmp/synpop.pickle'
+    population_dir: '/tmp/syspop_test/NYC/1/tmp'   
     population_size: 16573530
 state:
     environment:
@@ -116,18 +117,10 @@ state:
             initialization_function: null
             value: 0.0
             dtype: float
-        Num_Agents:
-            name: "Number of Agents"
-            learnable: false
-            shape:
-                - 1
-            initialization_function: null
-            value: 16573530
-            dtype: float
             
     agents:
         consumers:
-            number : 16573530
+            number: 16573530
             properties:
                 ID: 
                     name: ID
@@ -140,33 +133,55 @@ state:
                         arguments:
                             pop_size:
                                 name: "population size"
+                                learnable: false
+                                shape:
+                                    - 1
+                                initialization_function: null
                                 value: ${state.agents.consumers.number}
+                    dtype: "float"
                 Gender:
                     name: Gender
                     learnable: False
                     shape:
                         - ${state.agents.consumers.number} # to verify this. number of networks
-                        - 2
+                        - 1
                     initialization_function:
                         generator: "load_population_attribute"
                         arguments:
                             file_path:
-                                value: ${simulation_metadata.population_file} 
+                                name: "Filepath for age group stage"
+                                learnable: False
+                                shape: null
+                                initialization_function: null
+                                value: ${simulation_metadata.population_dir}/gender.pickle
                             attribute:
+                                name: "Age"
+                                learnable: False
+                                shape: null
+                                initialization_function: null
                                 value: 'gender'             
                     dtype: "float"
+                
                 Age:
                     name: Age
                     learnable: False
                     shape:
                         - ${state.agents.consumers.number} # to verify this. number of networks
-                        - 2
+                        - 1
                     initialization_function:
                         generator: "load_population_attribute"
                         arguments:
                             file_path:
-                                value: ${simulation_metadata.population_file}
+                                name: "Filepath for age group stage"
+                                learnable: False
+                                shape: null
+                                initialization_function: null
+                                value: ${simulation_metadata.population_dir}/age.pickle
                             attribute:
+                                name: "Age"
+                                learnable: False
+                                shape: null
+                                initialization_function: null
                                 value: 'age'         
                     dtype: "float"
 
@@ -175,13 +190,21 @@ state:
                     learnable: False
                     shape:
                         - ${state.agents.consumers.number} # to verify this. number of networks
-                        - 2
+                        - 1
                     initialization_function:
                         generator: "load_population_attribute"
                         arguments:
                             file_path:
-                                value: ${simulation_metadata.population_file} 
+                                name: "Filepath for age group stage"
+                                learnable: False
+                                shape: null
+                                initialization_function: null
+                                value: ${simulation_metadata.population_dir}/ethnicity.pickle
                             attribute:
+                                name: "Ethnicity"
+                                learnable: False
+                                shape: null
+                                initialization_function: null     
                                 value: 'ethnicity'     
                     dtype: "float"
                 
@@ -189,14 +212,22 @@ state:
                     name: Area
                     learnable: False
                     shape:
-                        - ${state.agents.consumers.number} \
-                        - 2
+                        - ${state.agents.consumers.number}
+                        - 1
                     initialization_function:
                         generator: "load_population_attribute"
                         arguments:
                             file_path:
-                                value: ${simulation_metadata.population_file} 
+                                name: "Filepath for age group stage"
+                                learnable: False
+                                shape: null
+                                initialization_function: null
+                                value: ${simulation_metadata.population_dir}/area.pickle 
                             attribute:
+                                name: "Area"
+                                learnable: False
+                                shape: null
+                                initialization_function: null
                                 value: 'area'     
                     dtype: "float"
 
@@ -334,7 +365,9 @@ substeps:
                 CalculateWorkPropensity:
                     generator: CalculateWorkPropensity
                     arguments: null
-                    input_variables: null
+                    input_variables: 
+                        - Age : 'agents/consumers/Age'
+                        - Gender : 'agents/consumers/Gender'
                     output_variables:
                         - Whether_to_Work
                         - Work_Propensity
