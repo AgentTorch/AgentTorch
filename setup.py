@@ -16,8 +16,8 @@ with open(join(this_dir, "requirements.txt")) as f:
 
 setup(
     name="agent_torch",
-    version="0.1.0",
-    description="Design, Simulate and Optimize Agent-based Models with Automatic Differentiation.",
+    version="0.2.4",
+    description="large population models",
     url="https://github.com/AgentTorch/AgentTorch",
     long_description_content_type="text/markdown",
     long_description=long_description,
