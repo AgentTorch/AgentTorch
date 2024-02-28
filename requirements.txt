@@ -32,7 +32,6 @@ folium==0.14.0
 fonttools==4.40.0
 google-auth==2.22.0
 google-auth-oauthlib==1.0.0
-grad-june==0.1.8
 h5py==3.8.0
 idna==3.4
 imageio==2.31.1
