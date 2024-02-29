@@ -21,9 +21,7 @@ def load_population_attribute(shape, params):
     """
     # Load population data
     df = pd.read_pickle(params['file_path'])
-    df = df['synpop'][params['attribute']
-    df,mapping = pd.factorize(df)
-    att_tensor = torch.from_numpy(df).float()
+    att_tensor = torch.from_numpy(df.values).float()
     return att_tensor
 
 def get_population_size(shape, params):
@@ -34,3 +32,9 @@ def get_population_size(shape, params):
     df = pd.read_pickle(params['file_path'])
     pop_size = df['synpop'].shape[0]
     return pop_size
+
+def initialize_id(shape, params):
+    """
+    Initialize a unique ID for each agent
+    """
+    return torch.arange(0, shape[0]).reshape(-1, 1).int()

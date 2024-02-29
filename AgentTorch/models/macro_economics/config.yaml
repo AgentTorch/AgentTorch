@@ -366,8 +366,8 @@ substeps:
                     generator: CalculateWorkPropensity
                     arguments: null
                     input_variables: 
-                        - Age : 'agents/consumers/Age'
-                        - Gender : 'agents/consumers/Gender'
+                        Age : 'agents/consumers/Age'
+                        Gender : 'agents/consumers/Gender'
                     output_variables:
                         - Whether_to_Work
                         - Work_Propensity
