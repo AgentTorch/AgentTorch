@@ -75,7 +75,7 @@ save_data = dict()
 
 all_nta_dict = dict()
 nonagent_ntas = []
-DATA_MODE = 'estimate'
+DATA_MODE = 'estimate' # probability
 
 for nta_indx in range(all_nta_ids.shape[0]):
     NTA_ID = all_nta_ids[nta_indx]
