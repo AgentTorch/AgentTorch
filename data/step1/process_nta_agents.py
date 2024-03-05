@@ -56,6 +56,8 @@ def get_feature_mapping():
     feature_maps['race'] = list(race_mapping.keys())
     feature_maps['education'] = list(education_mapping.keys())
     feature_maps['employment_insurance'] = list(employment_insurance_mapping.keys())
+    feature_maps['age'] = list(age_mapping.keys())
+    feature_maps['gender'] = ['Male','Female']
     
     feature_maps['age_gender'] = []
     for key in age_mapping.keys():
