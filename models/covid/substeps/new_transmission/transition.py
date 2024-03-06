@@ -12,15 +12,13 @@ class NewTransmission(SubstepTransitionMessagePassing):
     def __init__(self, config, input_variables, output_variables, arguments):
         super().__init__(config, input_variables, output_variables, arguments)
 
-        print("To fix this class!!!!!")
-
         self.device = self.config['simulation_metadata']['device']
         self.SUSCEPTIBLE_VAR = self.config['simulation_metadata']['SUSCEPTIBLE_VAR']
         self.EXPOSED_VAR = self.config['simulation_metadata']['EXPOSED_VAR']
         self.RECOVERED_VAR = self.config['simulation_metadata']['RECOVERED_VAR']
 
         self.STAGE_UPDATE_VAR = 1
-        self.INFINITY_TIME = self.config['simulation_metatdata']['num_steps'] + 20
+        self.INFINITY_TIME = self.config['simulation_metadata']['num_steps_per_episode'] + 20
 
     def _lam(self, x_i, x_j, edge_attr, t, R, SFSusceptibility, SFInfector, lam_gamma_integrals):
         S_A_s = SFSusceptibility[x_i[:,0].long()]
@@ -49,25 +47,20 @@ class NewTransmission(SubstepTransitionMessagePassing):
         return new_stages
     
     def update_transition_times(self, t, current_transition_times, newly_exposed_today, exposed_to_infected_time):
-        print("verify this logic")        
-        # updated_stage_times = torch.clone(current_transition_times)
         new_stage_times = current_transition_times + newly_exposed_today*(t + exposed_to_infected_time + 1 - current_transition_times[newly_exposed_today])
-
-        # updated_stage_times = (newly_exposed_today)*(t+1+exposed_to_infected_time) + (1-newly_exposed_today)*current_transition_times
-        # updated_stage_times[newly_exposed_today] = t + 1 + exposed_to_infected_time
         
         return new_stage_times
     
     def update_infected_times(self, t, current_infected_times, newly_exposed_today):
-        print("verify this logic")
         new_infected_times = current_infected_times + newly_exposed_today*(t - current_infected_times[newly_exposed_today])
-        #updated_infected_times[newly_exposed_today] = t
         
         return new_infected_times
     
     def forward(self, state, action=None):
         input_variables = self.input_variables
         t = state['current_step']
+        
+        print("Executing disease transmission")
         
         R = get_by_path(state, re.split("/", input_variables['R']))
         SFSusceptibility = get_by_path(state, re.split("/", input_variables['SFSusceptibility']))

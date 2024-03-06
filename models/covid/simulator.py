@@ -1,7 +1,11 @@
+AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/AgentTorch'
+
 import pandas as pd
 import numpy as np 
 import torch
 
+import sys
+sys.path.insert(0, AGENT_TORCH_PATH)
 from AgentTorch import Runner, Registry
 
 def get_registry():
