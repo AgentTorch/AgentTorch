@@ -1,6 +1,6 @@
 simulation_metadata:
     num_episodes: 1
-    num_steps_per_episode: 8
+    num_steps_per_episode: 4
     num_substeps_per_step: 2
     device: "cpu"
     num_citizens: 70916
@@ -13,6 +13,9 @@ simulation_metadata:
     INFECTED_VAR: 2
     RECOVERED_VAR: 3
     MORTALITY_VAR: 4
+    EXPOSED_TO_INFECTED_TIME: 3
+    INFECTED_TO_RECOVERED_TIME: 5
+    INFINITY_TIME: 100
     
 state:
     environment:

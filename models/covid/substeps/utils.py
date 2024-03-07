@@ -17,23 +17,24 @@ def get_lam_gamma_integrals(shape, params):
     a = scale / b
         
     res = [(gamma.cdf(t_i, a=a, loc=0, scale=b) - gamma.cdf(t_i-1, a=a, loc=0, scale=b)) for t_i in range(int(t.item()))]
+    res = np.array(res)
     return torch.tensor(res).float()
 
 def get_infected_time(shape, params):
     agents_stages = read_from_file(shape, params)
     
-    agents_infected_time = (params['num_steps']+1)*torch.ones_like(agents_stages)
+    agents_infected_time = (100)*torch.ones_like(agents_stages) # init all values to infinity time
     agents_infected_time[agents_stages==1] = -1 # set previously infected agents to -1
     agents_infected_time[agents_stages==2] = -3 # -1*exposed_to_infected_time
     
     return agents_infected_time.float()
 
-def get_next_stage_time(shape, params):
+def get_next_stage_time(shape, params, exposed_to_infected_times=3, infected_to_recovered_times=5):
     agents_stages = read_from_file(shape, params)
     
-    agents_next_stage_time = (params['num_steps']+1)*torch.ones_like(agents_stages).long()
-    agents_next_stage_time[agents_stages==1] = 3
-    agents_next_stage_time[agents_stages==2] = 5 # infected_to_recovered time
+    agents_next_stage_time = (100)*torch.ones_like(agents_stages) # init all values to infinity time
+    agents_next_stage_time[agents_stages==1] = exposed_to_infected_times
+    agents_next_stage_time[agents_stages==2] = infected_to_recovered_times # infected_to_recovered time
     
     return agents_next_stage_time.float()
 
