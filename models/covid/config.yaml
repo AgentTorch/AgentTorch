@@ -1,7 +1,7 @@
 simulation_metadata:
     num_episodes: 1
     num_steps_per_episode: 4
-    num_substeps_per_step: 2
+    num_substeps_per_step: 3
     device: "cuda"
     num_citizens: 70916
     agent_id_file: "data/25011_id.csv"
@@ -16,6 +16,7 @@ simulation_metadata:
     EXPOSED_TO_INFECTED_TIME: 3
     INFECTED_TO_RECOVERED_TIME: 5
     INFINITY_TIME: 100
+    quarantine_days: 12
     
 state:
     environment:
@@ -85,6 +86,24 @@ state:
                 - 1
             initialization_function: null
             value: 5
+            dtype: "float"
+        
+        quarantine_start_prob:
+            name: "Probability of complying to a quarantine mandate"
+            learnable: False
+            shape:
+                - 1
+            initialization_function: null
+            value: 0.7
+            dtype: "float"
+        
+        quarantine_break_prob:
+            name: "Probability of breaking a quarantine mandate prior to recovery"
+            learnable: False
+            shape:
+                - 1
+            initialization_function: null
+            value: 0.1
             dtype: "float"
             
         lam_gamma_integrals:
@@ -241,6 +260,26 @@ state:
                                 value: ${simulation_metadata.num_steps_per_episode}
                     value: 0
                     dtype: "int"
+                    
+                is_quarantined:
+                    name: "Quarantine status for a citizen"
+                    shape:
+                        - ${state.agents.citizens.number}
+                        - 1
+                    learnable: False
+                    initialization_function: null
+                    value: False
+                    dtype: "bool"
+                    
+                quarantine_start_date:
+                    name: "Start date for last quarantine of agent"
+                    shape:
+                        - ${state.agents.citizens.number}
+                        - 1
+                    learnable: False
+                    initialization_function: null
+                    value: ${simulation_metadata.INFINITY_TIME}
+                    dtype: "int"
 
     objects: null
     
@@ -284,7 +323,7 @@ substeps:
         reward: null
         
     "1":
-        name: "Progression"
+        name: "Disease Progression"
         description: "Evolution of previously infected agents"
         active_agents:
             - "citizens"
@@ -305,3 +344,48 @@ substeps:
                     - disease_stage
                     - next_stage_time
         reward: null
+        
+    "2":
+        name: "Quarantine"
+        description: "Quarantining of infected agents"
+        active_agents:
+            - "citizens"
+        observation:
+            citizens:
+                get_from_state:
+                    generator: "GetFromState"
+                    arguments: null
+                    input_variables:
+                        quarantine_start_prob: "environment/quarantine_start_prob"
+                        quarantine_break_prob: "environment/quarantine_break_prob"
+                        disease_stage: "agents/citizens/disease_stage"
+                        is_quarantined: "agents/citizens/is_quarantined"
+                    output_variables:
+                        - quarantine_start_prob
+                        - quarantine_break_prob
+                        - disease_stage
+                        - is_quarantined         
+        policy:
+            citizens:
+                start_compliance:
+                    generator: "StartCompliance"
+                    arguments: null
+                    input_variables: null # from observation (implicit) + state (explicit)
+                    output_variables:
+                        - start_compliance_action
+                break_compliance:
+                    generator: "BreakCompliance"
+                    arguments: null
+                    input_variables: null # from observation (implicit) + state (explicit)
+                    output_variables:
+                        - break_compliance_action             
+        transition:
+            update_quarantine_status:
+                generator: "UpdateQuarantineStatus"
+                arguments: null
+                input_variables:
+                    is_quarantined: "agents/citizens/is_quarantined"
+                    quarantine_start_date: "agents/citizens/quarantine_start_date"
+                output_variables:
+                    - is_quarantined
+                    - quarantine_start_date
