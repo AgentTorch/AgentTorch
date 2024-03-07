@@ -215,11 +215,8 @@ class Initializer(nn.Module):
         self.state["current_step"] = 0
         self.state["current_substep"] = '0' # use string not int for nn.ModuleDict
         
-        self.simulator()
-        
-        print("Simulator initialization done..")
-        
-        self.substeps()
+        self.simulator() # initialize simulator        
+        self.substeps() # initialize simulation substeps
         
         print("initialization complete..")
         

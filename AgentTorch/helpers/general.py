@@ -71,6 +71,9 @@ def read_from_file(shape, params):
     
     if file_path[-3:] == 'csv':
         data = pd.read_csv(file_path)
+    else:
+        print("Missing .csv file")
+        return
     
     data_values = data.values
     assert data_values.shape == tuple(shape)
