@@ -13,7 +13,6 @@ class GetFromState(SubstepObservation):
         self.output_variables = output_variables
 
     def forward(self, state):
-        print("Substep Observation: Quarantine")
         input_variables = self.input_variables
                 
         return {ix: get_by_path(state, re.split("/", input_variables[ix])) for ix in input_variables.keys()}

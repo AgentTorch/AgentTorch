@@ -60,7 +60,6 @@ class NewTransmission(SubstepTransitionMessagePassing):
     def forward(self, state, action=None):
         input_variables = self.input_variables
         t = state['current_step']
-        
         print("Substep: Disease Transmission")
         
         R = get_by_path(state, re.split("/", input_variables['R']))

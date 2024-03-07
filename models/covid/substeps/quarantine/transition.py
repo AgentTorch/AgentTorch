@@ -63,12 +63,8 @@ class UpdateQuarantineStatus(SubstepTransition):
     
     def forward(self, state, action):
         input_variables = self.input_variables
-        t = state['current_step']
-        print("t: ", t)
-        
+        t = state['current_step']        
         print("Substep: Quarantine")
-
-        pdb.set_trace()
         
         is_quarantined = get_by_path(state, re.split("/", input_variables['is_quarantined']))
         quarantine_start_date = get_by_path(state, re.split("/", input_variables['quarantine_start_date']))

@@ -42,7 +42,6 @@ class SEIRMProgression(SubstepTransition):
         '''Update stage and transition times for already infected agents'''
         input_variables = self.input_variables
         t = state['current_step']
-        
         print("Substep: SEIRM progression!")
         
         current_stages = get_by_path(state, re.split("/", input_variables['disease_stage']))

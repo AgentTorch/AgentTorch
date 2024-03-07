@@ -18,7 +18,6 @@ class StartCompliance(SubstepAction):
         self.INFECTED_VAR = self.config['simulation_metadata']['INFECTED_VAR']
         
     def forward(self, state, observation):
-        print("SubstepAction: Start compliance")
         quarantine_start_prob = observation['quarantine_start_prob']
         is_quarantined = observation['is_quarantined']
         disease_stage = observation['disease_stage']
@@ -41,7 +40,6 @@ class BreakCompliance(SubstepAction):
         self.device = torch.device(self.config['simulation_metadata']['device'])
         
     def forward(self, state, observation):
-        print("SubstepAction: Break compliance")
         quarantine_break_prob = observation['quarantine_break_prob']
         is_quarantined = observation['is_quarantined']
         
