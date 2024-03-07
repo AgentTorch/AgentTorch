@@ -10,6 +10,7 @@ class Initializer(nn.Module):
         super().__init__()
         self.config = config
         self.registry = registry
+        self.device = torch.device(self.config['simulation_metadata']['device'])
         
         self.state = {}
         for key in self.config["state"].keys():
@@ -30,12 +31,14 @@ class Initializer(nn.Module):
             init_val = src_val*torch.ones(size=processed_shape)
         except:
             import pdb; pdb.set_trace()
+            
+        init_val = init_val.to(self.device)
         
         return init_val
     
     def _initialize_from_generator(self, initializer_object, initialize_shape, name_root):
         function = initializer_object["generator"]
-
+        
         params = {}
         for argument in initializer_object["arguments"].keys():
             arg_object = initializer_object["arguments"][argument]
@@ -59,6 +62,7 @@ class Initializer(nn.Module):
                 self.fixed_parameters[arg_name] = arg_value
         
         init_value = self.registry.initialization_helpers[function](initialize_shape, params)
+        init_value = init_value.to(self.device)
         
         return init_value
 
@@ -73,7 +77,9 @@ class Initializer(nn.Module):
             property_value = self._initialize_from_default(property_object["value"], property_shape)
         else:
             property_value = self._initialize_from_generator(property_initializer, property_shape, property_key)
-            
+        
+        property_value = property_value.to(self.device)
+        
         if property_is_learnable:
             self.learnable_parameters[property_key] = property_value
         else:
@@ -161,7 +167,10 @@ class Initializer(nn.Module):
                 network_type = self.config["state"][key][interaction_type][contact_network]["type"]
                 params = self.config["state"][key][interaction_type][contact_network]["arguments"]
                 
-                self.state[key][interaction_type][contact_network]["graph"], self.state[key][interaction_type][contact_network]["adjacency_matrix"] = self.registry.network_helpers[network_type](params)
+                graph, (edge_list, attr_list) = self.registry.network_helpers[network_type](params)
+                
+                self.state[key][interaction_type][contact_network]["graph"] = graph
+                self.state[key][interaction_type][contact_network]["adjacency_matrix"] = edge_list.to(self.device), attr_list.to(self.device)
                 
     def simulator(self):
         self.environment()
@@ -170,9 +179,8 @@ class Initializer(nn.Module):
         self.agents_objects(key="objects")
         self.network()
         
+        # track learnable parameters
         self.parameters = nn.ParameterDict(self.learnable_parameters)
-        
-        print("Simulator done..")
     
     def substeps(self):
         '''
@@ -217,8 +225,6 @@ class Initializer(nn.Module):
         
         self.simulator() # initialize simulator        
         self.substeps() # initialize simulation substeps
-        
-        print("initialization complete..")
         
     def forward(self):
         self.initialize()
