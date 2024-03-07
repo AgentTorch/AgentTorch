@@ -3,6 +3,7 @@ from torch import distributions, nn
 from torch_geometric.data import Data
 import torch.nn.functional as F
 import re
+import pdb
 
 from AgentTorch.substep import SubstepTransitionMessagePassing
 from AgentTorch.helpers import get_by_path
@@ -18,16 +19,17 @@ class NewTransmission(SubstepTransitionMessagePassing):
         self.RECOVERED_VAR = self.config['simulation_metadata']['RECOVERED_VAR']
 
         self.STAGE_UPDATE_VAR = 1
-        self.INFINITY_TIME = self.config['simulation_metadata']['num_steps_per_episode'] + 20
+        self.INFINITY_TIME = self.config['simulation_metadata']['INFINITY_TIME']
+        self.EXPOSED_TO_INFECTED_TIME = self.config['simulation_metadata']['EXPOSED_TO_INFECTED_TIME']
 
     def _lam(self, x_i, x_j, edge_attr, t, R, SFSusceptibility, SFInfector, lam_gamma_integrals):
         S_A_s = SFSusceptibility[x_i[:,0].long()]
         A_s_i = SFInfector[x_j[:,1].long()]
         B_n = edge_attr[1, :]
         integrals = torch.zeros_like(B_n)
-        infected_idx = x_j[:, 2].bool()
-        infected_times = t - x_j[infected_idx, 3]
-        
+        infected_idx = x_j[:, 2].bool()        
+        infected_times = t - x_j[infected_idx, 3] - 1
+                
         integrals[infected_idx] =  lam_gamma_integrals[infected_times.long()]
         edge_network_numbers = edge_attr[0, :]
         
@@ -41,26 +43,24 @@ class NewTransmission(SubstepTransitionMessagePassing):
         return self._lam(x_i, x_j, edge_attr, t, R, SFSusceptibility, SFInfector, lam_gamma_integrals)
 
     def update_stages(self, current_stages, newly_exposed_today):
-        new_stages = current_stages + self.STAGE_UPDATE_VAR*newly_exposed_today.unsqueeze(dim=1)
-        # updated_stages = newly_exposed_today*self.EXPOSED_VAR + (1 - newly_exposed_today)*current_stages.squeeze()
-        
+        new_stages = current_stages + newly_exposed_today * self.STAGE_UPDATE_VAR        
         return new_stages
     
-    def update_transition_times(self, t, current_transition_times, newly_exposed_today, exposed_to_infected_time):
-        new_stage_times = current_transition_times + newly_exposed_today*(t + exposed_to_infected_time + 1 - current_transition_times[newly_exposed_today])
-        
-        return new_stage_times
+    def update_transition_times(self, t, current_transition_times, newly_exposed_today):
+        '''Note: not differentiable'''
+        current_transition_times[newly_exposed_today] = t + 1 + self.EXPOSED_TO_INFECTED_TIME
+        return current_transition_times
     
-    def update_infected_times(self, t, current_infected_times, newly_exposed_today):
-        new_infected_times = current_infected_times + newly_exposed_today*(t - current_infected_times[newly_exposed_today])
-        
-        return new_infected_times
+    def update_infected_times(self, t, agents_infected_times, newly_exposed_today):
+        '''Note: not differentiable'''
+        agents_infected_times[newly_exposed_today] = t
+        return agents_infected_times
     
     def forward(self, state, action=None):
         input_variables = self.input_variables
         t = state['current_step']
         
-        print("Executing disease transmission")
+        print("Substep: Disease Transmission")
         
         R = get_by_path(state, re.split("/", input_variables['R']))
         SFSusceptibility = get_by_path(state, re.split("/", input_variables['SFSusceptibility']))
@@ -73,13 +73,10 @@ class NewTransmission(SubstepTransitionMessagePassing):
         current_stages = get_by_path(state, re.split("/", input_variables['disease_stage']))
         current_transition_times = get_by_path(state, re.split("/", input_variables['next_stage_time']))
         exposed_to_infected_time = get_by_path(state, re.split("/", input_variables['exposed_to_infected_time']))
-        
         all_edgelist, all_edgeattr = get_by_path(state, re.split("/", input_variables["adjacency_matrix"]))
         
         agents_infected_index = torch.logical_and(current_stages > self.SUSCEPTIBLE_VAR, current_stages < self.RECOVERED_VAR)
-        
-        print("read all inputs...")
-                             
+                
         all_node_attr = torch.stack((
                 agents_ages,  #0
                 current_stages.detach(),  #1
@@ -96,13 +93,17 @@ class NewTransmission(SubstepTransitionMessagePassing):
         prob_not_infected = torch.exp(-1*new_transmission)
         p = torch.hstack((1-prob_not_infected,prob_not_infected))
         cat_logits = torch.log(p+1e-9)
-        potentially_exposed_today = F.gumbel_softmax(logits=cat_logits,tau=1,hard=True,dim=1)[:,0]
+        
+        potentially_exposed_today = F.gumbel_softmax(logits=cat_logits,tau=1,hard=True,dim=1)[:,0]        
         newly_exposed_today = (current_stages==self.SUSCEPTIBLE_VAR).squeeze()*potentially_exposed_today
-                
-        updated_stages = self.update_stages(current_stages, newly_exposed_today).unsqueeze(1)
-        updated_next_stage_times = self.update_transition_times(t, current_transition_times, newly_exposed_today.long(), exposed_to_infected_time)
+        
+        newly_exposed_today = newly_exposed_today.unsqueeze(1)
+        potentially_exposed_today = potentially_exposed_today.unsqueeze(1)
+        
+        updated_stages = self.update_stages(current_stages, newly_exposed_today)    
+        updated_next_stage_times = self.update_transition_times(t, current_transition_times, newly_exposed_today.long())
         updated_infected_times = self.update_infected_times(t, agents_infected_time, newly_exposed_today.long())
-            
+                                    
         return {self.output_variables[0]: updated_stages, 
                 self.output_variables[1]: updated_next_stage_times, 
                 self.output_variables[2]: updated_infected_times}
