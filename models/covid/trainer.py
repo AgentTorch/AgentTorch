@@ -4,7 +4,9 @@ import argparse
 import numpy as np
 import torch
 import torch.optim as optim
-import torch.nn.functional as F 
+import torch.nn.functional as F
+import torch.autograd.profiler as profiler
+import pdb
 
 import sys
 # sys.path.insert(0, '../../')
@@ -28,9 +30,17 @@ print("Running experiment with config file: ", config_file)
 
 config = read_config(config_file)
 registry = get_registry()
-
 runner = get_runner(config, registry)
-runner.init()
+
+profiler_obj = profiler.profile(record_shapes=True, use_cuda=torch.cuda.is_available())
+profiler_started = False
+
+if not profiler_started:
+    profiler_obj.__enter__()
+    profiler_started = True
+
+with profiler.record_function("init_runner"):
+    runner.init()
 
 print("Runner initialized!")
 
@@ -40,9 +50,23 @@ num_episodes = runner.config['simulation_metadata']['num_episodes']
 num_steps_per_episode = runner.config['simulation_metadata']['num_steps_per_episode']
 
 for episode in range(num_episodes):
-    print("Executing episode: ", episode)
-    # execute forward step
-    runner.step(num_steps_per_episode)
+    with profiler.record_function("step_episode"):
+        runner.step(num_steps_per_episode)
     
-    # reset the state configuration
     runner.reset()
+    
+if profiler_started:
+    profiler_obj.__exit__(None, None, None)
+            
+print(profiler_obj.key_averages().table(sort_by="self_cpu_memory_usage", row_limit=10))
+
+pdb.set_trace()
+
+# for episode in range(num_episodes):
+#     print("Executing episode: ", episode)
+#     # execute forward step
+    
+#     runner.step(num_steps_per_episode)
+    
+#     # reset the state configuration
+#     runner.reset()
