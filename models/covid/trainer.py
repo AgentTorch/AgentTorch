@@ -1,5 +1,9 @@
 '''Command: python trainer.py --c config.yaml'''
 
+import warnings
+# Suppress all warnings
+warnings.filterwarnings("ignore")
+
 import argparse
 import numpy as np
 import torch
@@ -8,8 +12,6 @@ import torch.nn.functional as F
 import torch.autograd.profiler as profiler
 import pdb
 
-import sys
-# sys.path.insert(0, '../../')
 from simulator import get_registry, get_runner
 from AgentTorch.helpers import read_config
 
@@ -42,8 +44,6 @@ if not profiler_started:
 with profiler.record_function("init_runner"):
     runner.init()
 
-print("Runner initialized!")
-
 device = torch.device(runner.config['simulation_metadata']['device'])
 
 num_episodes = runner.config['simulation_metadata']['num_episodes']
@@ -59,14 +59,3 @@ if profiler_started:
     profiler_obj.__exit__(None, None, None)
             
 print(profiler_obj.key_averages().table(sort_by="self_cpu_memory_usage", row_limit=10))
-
-pdb.set_trace()
-
-# for episode in range(num_episodes):
-#     print("Executing episode: ", episode)
-#     # execute forward step
-    
-#     runner.step(num_steps_per_episode)
-    
-#     # reset the state configuration
-#     runner.reset()

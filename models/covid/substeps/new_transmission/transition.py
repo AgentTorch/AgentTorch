@@ -32,8 +32,9 @@ class NewTransmission(SubstepTransitionMessagePassing):
                 
         integrals[infected_idx] =  lam_gamma_integrals[infected_times.long()]
         edge_network_numbers = edge_attr[0, :]
-        
-        I_bar = torch.gather(x_i[:, 4:27], 1, edge_network_numbers.view(-1,1).long()).view(-1)
+                
+        I_bar = torch.gather(x_i[:, 4], 0, edge_network_numbers.long()).view(-1)
+#         I_bar = torch.gather(x_i[:, 4], 0, edge_network_numbers.view(-1,1).long()).view(-1)
         
         res = R*S_A_s*A_s_i*B_n*integrals #/I_bar
 
@@ -72,22 +73,22 @@ class NewTransmission(SubstepTransitionMessagePassing):
         agents_ages = get_by_path(state, re.split("/", input_variables['age']))                     
         current_stages = get_by_path(state, re.split("/", input_variables['disease_stage']))
         current_transition_times = get_by_path(state, re.split("/", input_variables['next_stage_time']))
-        exposed_to_infected_time = get_by_path(state, re.split("/", input_variables['exposed_to_infected_time']))
+        
         all_edgelist, all_edgeattr = get_by_path(state, re.split("/", input_variables["adjacency_matrix"]))
         
         agents_infected_index = torch.logical_and(current_stages > self.SUSCEPTIBLE_VAR, current_stages < self.RECOVERED_VAR)
-                
+                        
         all_node_attr = torch.stack((
                 agents_ages,  #0
                 current_stages.detach(),  #1
-                agents_infected_index.to(self.device), #2
-                agents_infected_time.to(self.device), #3
-                *agents_mean_interactions_split,
+                agents_infected_index, #2
+                agents_infected_time, #3
+                agents_mean_interactions_split, # *agents_mean_interactions_split,
                 torch.unsqueeze(torch.arange(self.config['simulation_metadata']['num_citizens']), 1).to(self.device)
                 ,)).transpose(0,1).squeeze() #.t()
-        
+            
         agents_data = Data(all_node_attr, edge_index=all_edgelist, edge_attr=all_edgeattr, t=t)
-        
+                
         new_transmission = self.propagate(agents_data.edge_index, x=agents_data.x, edge_attr=agents_data.edge_attr, t=agents_data.t, R=R, SFSusceptibility=SFSusceptibility, SFInfector=SFInfector, lam_gamma_integrals=all_lam_gamma.squeeze())
         
         prob_not_infected = torch.exp(-1*new_transmission)
