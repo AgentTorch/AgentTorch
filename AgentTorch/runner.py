@@ -63,6 +63,7 @@ class Runner(nn.Module):
 
         assert self.state is not None
         self.reset_state_before_episode()
+        
         for traj_var in self.trajectory.keys():
             self.trajectory[traj_var].append(deque())
 

@@ -16,7 +16,6 @@ class Controller(nn.Module):
             for obs in self.config["substeps"][substep]['observation'][agent_type].keys():
                 observation = {**observation_function[substep][agent_type][obs](state), **observation}
         except Exception as e:
-            print("Observation Exception: ", e)
             observation = None
 
         return observation
@@ -30,7 +29,6 @@ class Controller(nn.Module):
             for policy in self.config["substeps"][substep]["policy"][agent_type].keys():
                 action = {**policy_function[substep][agent_type][policy](state, observation), **action}
         except Exception as e:
-            print("Action exception: ", e)
             action = None
             
         return action
