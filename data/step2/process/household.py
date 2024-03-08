@@ -1,6 +1,11 @@
 '''
 Source: https://github.com/sneakatyou/Syspop/tree/NYC/syspop/process
 '''
+import random
+import sys
+sys.path.append('/Users/shashankkumar/Documents/GitHub/MacroEcon/data/')
+from address import add_random_address
+
 
 from copy import deepcopy
 from datetime import datetime
@@ -16,8 +21,7 @@ from numpy.random import randint
 from numpy.random import randint as numpy_randint
 from pandas import DataFrame, concat, isna
 from pandas import merge as pandas_merge
-from process.address import add_random_address
-
+import pandas as pd
 logger = getLogger()
 
 def add_people(
@@ -704,9 +708,12 @@ def rename_household_id(df: DataFrame, proc_area: str,adult_list: list) -> DataF
     # Drop the temporary 'is_adult' column and other intermediate columns if needed
     return df.drop(["is_adult", "num_adults", "num_children"], axis=1)
 
-
+@ray.remote
+def create_household_composition_v3_remote(proc_houshold_dataset: DataFrame, proc_base_pop: DataFrame, proc_area: int or str, adult_list: list, children_list: list):
+    create_household_composition_v3(proc_houshold_dataset, proc_base_pop, proc_area, adult_list, children_list)
+    
 def create_household_composition_v3(
-    proc_houshold_dataset: DataFrame, proc_base_pop: DataFrame, proc_area: int or str, adult_list: list
+    proc_houshold_dataset: DataFrame, proc_base_pop: DataFrame, proc_area: int or str, adult_list: list, children_list: list
 ) -> DataFrame:
     """Create household composition (V3)
 
@@ -721,21 +728,47 @@ def create_household_composition_v3(
     sorted_proc_houshold_dataset = proc_houshold_dataset.sort_values(
         by="household_num", ascending=False, inplace=False
     )
+    
+    household_types = proc_houshold_dataset[["Family_households", "Nonfamily_households"]]
+    household_types['Family_households_prob'] = household_types['Family_households'] / proc_houshold_dataset['household_num']
+    household_types['Nonfamily_households_prob'] = household_types['Nonfamily_households'] / proc_houshold_dataset['household_num']
+    household_proportions = household_types[['Family_households_prob',
+                                        'Nonfamily_households_prob']]
+    
+    # Calculate average number of children per family
+    avg_children_per_family = proc_houshold_dataset["children_num"] / proc_houshold_dataset["Family_households"]
+    num_households = proc_houshold_dataset['household_num'][0]
 
-    unassigned_adults = proc_base_pop[proc_base_pop["age"] in adult_list].copy()
-    unassigned_children = proc_base_pop[proc_base_pop["age"] not in adult_list].copy()
-
+    unassigned_adults = proc_base_pop[proc_base_pop["age"].isin(adult_list)].copy()
+    unassigned_children = proc_base_pop[proc_base_pop["age"].isin(children_list)].copy()
+    household_types_choices = ['Family','Nonfamily']
     household_id = 0
     for _, row in sorted_proc_houshold_dataset.iterrows():
-        for _ in range(row["household_num"]):
+        for _ in range(num_households):
+            household_type = random.choices(
+            household_types_choices, weights=household_proportions.values.flatten())[0]
+
+            # Simulate family composition (if family household)
+            if household_type == "Family":
+                children_num = int(random.randint(0,10) * avg_children_per_family) if proc_houshold_dataset["children_num"][0]> 0 else 0
+            else:
+                children_num = 0
+    # Simulate number of individuals
+            total_individuals = int(random.randint(0,10) * proc_houshold_dataset["Average_household_size"][0])
+            if (total_individuals - children_num) <= 0:
+                adults_num = total_individuals
+                children_num = 0
+            else:
+                adults_num = total_individuals - children_num
+            
             if (
-                len(unassigned_adults) < row["adult_num"]
-                or len(unassigned_children) < row["children_num"]
+                len(unassigned_adults) < adults_num
+                or len(unassigned_children) < children_num
             ):
                 print("Not enough adults or children to assign.")
                 continue
 
-            adult_ids = unassigned_adults.sample(row["adult_num"])["index"].tolist()
+            adult_ids = unassigned_adults.sample(adults_num)["index"].tolist()
 
             try:
                 adult_majority_ethnicity = (
@@ -749,7 +782,7 @@ def create_household_composition_v3(
                     unassigned_children[
                         unassigned_children["ethnicity"] == adult_majority_ethnicity
                     ]
-                    .sample(row["children_num"])["index"]
+                    .sample(children_num)["index"]
                     .tolist()
                 )
             except (
@@ -758,7 +791,7 @@ def create_household_composition_v3(
             ):
                 # Value Error: not enough children for a particular ethnicity to be sampled from;
                 # IndexError: len(adults_id) = 0 so mode() does not work
-                children_ids = unassigned_children.sample(row["children_num"])[
+                children_ids = unassigned_children.sample(children_num)[
                     "index"
                 ].tolist()
 
@@ -790,6 +823,7 @@ def household_wrapper(
     houshold_dataset: DataFrame,
     base_pop: DataFrame,
     adult_list: list,
+    children_list: list,
     map_age_to_range,
     base_address: DataFrame,
     geo_address_data: DataFrame or None = None,
@@ -802,6 +836,8 @@ def household_wrapper(
         houshold_dataset (DataFrame): _description_
         base_pop (DataFrame): _description_
     """
+    if use_parallel:
+            ray.init(num_cpus=n_cpu, include_dashboard=False)
     start_time = datetime.utcnow()
 
     base_pop["household"] = NaN
@@ -823,9 +859,14 @@ def household_wrapper(
         if len(proc_base_pop) == 0:
             continue
 
-        proc_base_pop = create_household_composition_v3(
-            proc_houshold_dataset, proc_base_pop, proc_area,adult_list
+        # proc_base_pop = create_household_composition_v3(
+        #     proc_houshold_dataset, proc_base_pop, proc_area,adult_list, children_list
+        # )
+        
+        proc_base_pop = create_household_composition_v3_remote.remote(
+            proc_houshold_dataset, proc_base_pop, proc_area,adult_list, children_list
         )
+        
 
         results.append(proc_base_pop)
 
@@ -925,8 +966,50 @@ def household_prep(
             "household_num"
         ].apply(lambda x: max(1, round(x)))
 
-    proc_household_data = proc_household_data[
-        ["area", "adult_num", "children_num", "household_num"]
-    ]
+    # proc_household_data = proc_household_data[
+    #     ["area", "adult_num", "children_num", "household_num"]
+    # ]
 
     return proc_household_data
+
+def map_age_to_range(age):
+    if age < 20:
+        return 'U19'
+    elif 20 <= age <= 29:
+        return '20t29'
+    elif 30 <= age <= 39:
+        return '30t39'
+    elif 40 <= age <= 49:
+        return '40t49'
+    elif 50 <= age <= 64:
+        return '50t64'
+    else:
+        return '65A'
+    
+if __name__ == "__main__":
+    adult_list = ['20t29','30t39', '40t49', '50t64', '65A']
+    children_list = ['U19']
+    base_pop_path = "/Users/shashankkumar/Documents/GitHub/MacroEcon/base_population.pkl"
+    base_pop = pd.read_pickle(base_pop_path)
+
+    household_data_path = "/Users/shashankkumar/Documents/GitHub/MacroEcon/housing_v2.pkl"
+    household_data = pd.read_pickle(household_data_path)
+
+    #load if available
+    geo_address_data = None
+    use_parallel = True
+    n_cpu = 8
+
+    base_pop, base_address = household_wrapper(
+        household_data,
+        base_pop,
+        base_address = None,
+        adult_list=adult_list,
+        children_list=children_list,
+        map_age_to_range = map_age_to_range,
+        geo_address_data=geo_address_data,
+        use_parallel=use_parallel,
+        n_cpu=n_cpu,
+    )
+
+    base_pop.to_pickle("data/step2/synpop.pkl")
