@@ -4,15 +4,15 @@ import json
 
 def can(df_path = '/tmp/syspop_test/NYC/1/tmp/synpop.pickle'):
     df = pd.read_pickle(df_path)
-    attributes = df['synpop'].keys()
+    attributes = df.keys()
     mapping_collection = {}
     for attribute in attributes:
-        df['synpop'][attribute],mapping = pd.factorize(df['synpop'][attribute])
-        df['synpop'][attribute].to_pickle(f'/tmp/syspop_test/NYC/1/tmp/{attribute}.pickle')
+        df[attribute],mapping = pd.factorize(df[attribute])
+        df[attribute].to_pickle(f'/Users/shashankkumar/Documents/GitHub/MacroEcon/{attribute}.pickle')
         mapping_collection[attribute] = mapping.tolist()
     with open('mapping.json', 'w') as f:
         json.dump(mapping_collection, f)
-    return df
+
 
 if __name__ == '__main__':
-    loadAndSaveAttributes()
+    can("/Users/shashankkumar/Documents/GitHub/MacroEcon/base_population.pkl")

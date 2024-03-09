@@ -22,6 +22,7 @@ from numpy.random import randint as numpy_randint
 from pandas import DataFrame, concat, isna
 from pandas import merge as pandas_merge
 import pandas as pd
+import numpy as np
 logger = getLogger()
 
 def add_people(
@@ -640,7 +641,7 @@ def assign_any_remained_people(
     existing_households = [
         x
         for x in existing_households
-        if x != "NaN" and not (isinstance(x, float) and isnan(x))
+        if x != "NaN" and not (isinstance(x, float) and np.isnan(x))
     ]
 
     while len(adults) > 0:
@@ -683,7 +684,7 @@ def rename_household_id(df: DataFrame, proc_area: str,adult_list: list) -> DataF
     """
     # Compute the number of adults and children in each household
 
-    df["is_adult"] = df["age"] not in adult_list
+    df["is_adult"] = df["age"].isin(adult_list)
     df["household"] = df["household"].astype(int)
 
     grouped = (
@@ -696,7 +697,7 @@ def rename_household_id(df: DataFrame, proc_area: str,adult_list: list) -> DataF
     df = pandas_merge(df, grouped, on="household")
 
     # Create the new household_id column based on the specified format
-    df["household"] = (
+    df["household_new_id"] = (
         f"{proc_area}_"
         + df["num_adults"].astype(str)
         + "_"
@@ -750,11 +751,11 @@ def create_household_composition_v3(
 
             # Simulate family composition (if family household)
             if household_type == "Family":
-                children_num = int(random.randint(0,10) * avg_children_per_family) if proc_houshold_dataset["children_num"][0]> 0 else 0
+                children_num = int(random.randint(0,5) * avg_children_per_family) if proc_houshold_dataset["children_num"][0]> 0 else 0
             else:
                 children_num = 0
     # Simulate number of individuals
-            total_individuals = int(random.randint(0,10) * proc_houshold_dataset["Average_household_size"][0])
+            total_individuals = int(random.randint(0,2) * proc_houshold_dataset["Average_household_size"][0])
             if (total_individuals - children_num) <= 0:
                 adults_num = total_individuals
                 children_num = 0
@@ -836,9 +837,10 @@ def household_wrapper(
         houshold_dataset (DataFrame): _description_
         base_pop (DataFrame): _description_
     """
+    start_time = datetime.utcnow()
     if use_parallel:
             ray.init(num_cpus=n_cpu, include_dashboard=False)
-    start_time = datetime.utcnow()
+    
 
     base_pop["household"] = NaN
 
@@ -858,24 +860,31 @@ def household_wrapper(
 
         if len(proc_base_pop) == 0:
             continue
-
-        # proc_base_pop = create_household_composition_v3(
-        #     proc_houshold_dataset, proc_base_pop, proc_area,adult_list, children_list
-        # )
         
-        proc_base_pop = create_household_composition_v3_remote.remote(
+        if use_parallel:
+            result = create_household_composition_v3_remote.remote(
             proc_houshold_dataset, proc_base_pop, proc_area,adult_list, children_list
-        )
+            )
+        else:
+            result = create_household_composition_v3(
+                proc_houshold_dataset, proc_base_pop, proc_area,adult_list, children_list
+            )
+        
+        results.append(result)
+    
+    if use_parallel:
+        results = ray.get(results)
+        ray.shutdown()
+    
+    try:
+        for result in results:
+            result_index = result["index"]
+            result_content = result.drop("index", axis=1)
+            base_pop.iloc[result_index] = result_content
+    except Exception as e:
+        print(e)
         
 
-        results.append(proc_base_pop)
-
-    for result in results:
-        result_index = result["index"]
-        result_content = result.drop("index", axis=1)
-        base_pop.iloc[result_index] = result_content
-
-    base_pop[["area", "age"]] = base_pop[["area", "age"]].astype(int)
     end_time = datetime.utcnow()
 
     total_mins = round((end_time - start_time).total_seconds() / 60.0, 3)
@@ -997,7 +1006,7 @@ if __name__ == "__main__":
 
     #load if available
     geo_address_data = None
-    use_parallel = True
+    use_parallel = False
     n_cpu = 8
 
     base_pop, base_address = household_wrapper(
@@ -1012,4 +1021,4 @@ if __name__ == "__main__":
         n_cpu=n_cpu,
     )
 
-    base_pop.to_pickle("data/step2/synpop.pkl")
+    base_pop.to_pickle("base_population.pkl")

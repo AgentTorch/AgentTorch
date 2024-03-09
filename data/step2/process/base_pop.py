@@ -30,11 +30,11 @@ def create_base_pop_remote(area_data,input_mapping, output_area,age):
     return create_base_pop(area_data,input_mapping, output_area,age)
 
 
-def create_base_pop(area_data,input_mapping, output_area,current_age):
+def create_base_pop(area_data,input_mapping, output_area,age):
     population = []
     # number_of_individuals = area_data[number_of_individuals]
     
-    age_index = input_mapping['age'].index(current_age)
+    age_index = input_mapping['age'].index(age) * 2
     number_of_individuals = area_data['age_gender'][age_index] + area_data['age_gender'][age_index+1]
     if number_of_individuals == 0:
         return []
@@ -73,7 +73,7 @@ def create_base_pop(area_data,input_mapping, output_area,current_age):
     for gender, ethnicity,education,employment_insurance in zip(genders, ethnicities,education,employment_insurance):
         individual = {
             "area": output_area,
-            "age": current_age,
+            "age": age,
             "gender": gender,
             "ethnicity": ethnicity,
             "education": education,
@@ -87,6 +87,7 @@ def create_base_pop(area_data,input_mapping, output_area,current_age):
 def base_pop_wrapper(
     input_data: dict,
     input_mapping: dict,
+    area_filter = None,
     use_parallel: bool = False,
     n_cpu: int = 8,
 ) -> DataFrame:
@@ -107,13 +108,16 @@ def base_pop_wrapper(
         ray.init(num_cpus=n_cpu, include_dashboard=False)
 
     results = []
-
-    output_areas = list(input_data.keys())
+    if area_filter is None:
+        output_areas = list(input_data.keys())
+    else:
+        output_areas = area_filter
     total_output_area = len(output_areas)
     for i, output_area in enumerate(output_areas):
+        
         logger.info(f"Processing: {i}/{total_output_area}")
+        total_individuals = 0
         for age in input_mapping['age']:
-            age_index = input_mapping['age'].index(age)
             if use_parallel:
                 result = create_base_pop_remote.remote(
                     area_data=input_data[output_area], output_area=output_area,age=age,input_mapping=input_mapping
@@ -122,7 +126,9 @@ def base_pop_wrapper(
                 result = create_base_pop(
                     area_data=input_data[output_area], output_area=output_area,age=age,input_mapping=input_mapping
                 )
+            # total_individuals+=num_individuals
             results.append(result)
+        # assert total_individuals == input_data[output_area]['num_agents']
 
     if use_parallel:
         results = ray.get(results)
@@ -142,14 +148,14 @@ def base_pop_wrapper(
     return DataFrame(population), base_address
 
 if __name__ == "__main__":
-    
-    output_dir = "/tmp/syspop_test/NYC/1"
+    area_filter = ['BK0101']
+    output_dir = "/Users/shashankkumar/Documents/GitHub/MacroEcon"
     if not exists(output_dir):
         makedirs(output_dir)
-    file = np.load("/Users/shashankkumar/Documents/GitHub/MacroEcon/all_nta_agents.npy", allow_pickle=True)
+    file = np.load("/Users/shashankkumar/Documents/GitHub/MacroEcon/data/step1/all_nta_agents.npy", allow_pickle=True)
     file_dict = file.item()
     
-    base_population,base_address = base_pop_wrapper(input_data=file_dict['valid_ntas'],input_mapping=file_dict['mapping'],use_parallel=True,n_cpu=8)
+    base_population,base_address = base_pop_wrapper(input_data=file_dict['valid_ntas'],input_mapping=file_dict['mapping'],use_parallel=True,n_cpu=10,area_filter=area_filter)
     base_population.to_pickle(output_dir + "/base_population.pkl")
     
     
