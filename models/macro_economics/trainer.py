@@ -26,8 +26,8 @@ args = parser.parse_args()
 if not args:
     config_file = args.config
 else:
-    #config_file = "/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch/models/macro-economics/config.yaml"
-    config_file = os.path.join(os.getcwd(), 'config.yaml')
+    config_file = "/Users/shashankkumar/Documents/GitHub/MacroEcon/models/macro_economics/config.yaml"
+    # config_file = os.path.join(os.getcwd(), 'config.yaml')
     
 config = read_config(config_file)
 registry = opdyn_registry()
