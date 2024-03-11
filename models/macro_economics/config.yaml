@@ -24,9 +24,8 @@ simulation_metadata:
     hours_worked: 168.0
     tax_brackets : [0, 50, 100, 500]
     tax_rates : [0.1, 0.2, 0.3,0.35]
-    population_file : '/tmp/syspop_test/NYC/1/tmp/synpop.pickle'
-    population_dir: '/tmp/syspop_test/NYC/1/tmp'   
-    population_size: 16573530
+    population_dir: '/Users/shashankkumar/Documents/GitHub/MacroEcon/'   
+    mapping_path: "/Users/shashankkumar/Documents/GitHub/MacroEcon/data/step2/process/mapping.json"
 state:
     environment:
         P: 
@@ -120,7 +119,7 @@ state:
             
     agents:
         consumers:
-            number: 16573530
+            number: 37518
             properties:
                 ID: 
                     name: ID
@@ -247,7 +246,7 @@ state:
                         - ${state.agents.consumers.number}
                         - 1
                     initialization_function: null
-                    value: 0.5
+                    value: 0.0
                     dtype: float
                 Savings:
                     name: Savings
@@ -256,7 +255,7 @@ state:
                         - ${state.agents.consumers.number}
                         - 1
                     initialization_function: null
-                    value: 1.0
+                    value: 0.0
                     dtype: float
                 Work_Propensity:
                     name: Work_Propensity
@@ -362,21 +361,20 @@ substeps:
             consumers: null
         policy:
             consumers:
-                CalculateWorkPropensity:
-                    generator: CalculateWorkPropensity
+                CalculateWorkAndConsumptionPropensity:
+                    generator: CalculateWorkAndConsumptionPropensity
                     arguments: null
                     input_variables: 
                         Age : 'agents/consumers/Age'
                         Gender : 'agents/consumers/Gender'
+                        Consumption_Propensity: 'agents/consumers/Conpsumption_Propensity'
+                        Work_Propensity: 'agents/consumers/Work_Propensity'
+                        Whether_to_Work: 'agents/consumers/Whether_to_Work'
                     output_variables:
                         - Whether_to_Work
                         - Work_Propensity
-                CalculateConsumptionPropensity:
-                    generator: CalculateConsumptionPropensity
-                    arguments: null
-                    input_variables: null
-                    output_variables:
-                        - Conpsumption_Propensity
+                        - Consumption_Propensity
+
         transition:
             UpdateMacroeconomics:
                 generator: UpdateMacroeconomics

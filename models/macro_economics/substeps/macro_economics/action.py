@@ -12,7 +12,7 @@ from AgentTorch.helpers import get_by_path
 from macro_economics.prompt import prompt_template_var,agent_profile
 import itertools
 OPENAI_API_KEY = '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'
-class CalculateWorkPropensity(SubstepAction):
+class CalculateWorkAndConsumptionPropensity(SubstepAction):
     def __init__(self, config, input_variables, output_variables, arguments):
         super().__init__(config, input_variables, output_variables, arguments)
         self.agent = LLMAgent(agent_profile = agent_profile,openai_api_key = OPENAI_API_KEY )
@@ -36,11 +36,13 @@ class CalculateWorkPropensity(SubstepAction):
         output_values = []
         
         for target_values in self.combinations_of_prompt_variables_with_index:
-            masks_for_dict = [globals()[key] == value for key, value in target_values.items()]
-            mask = torch.all(torch.stack(masks_for_dict), dim=0).float()
-            masks.append(mask)
+            gender_mask = gender == target_values['gender']
+            age_mask = age == target_values['age']
+            mask = torch.logical_and(gender_mask, age_mask)
+            float_mask = mask.float()
+            masks.append(float_mask)
         
-        for en,_ in enumerate(self.combinations_of_prompt_variables_with_index.keys()):
+        for en,_ in enumerate(self.combinations_of_prompt_variables_with_index):
             age = self.combinations_of_prompt_variables[en]['age']
             gender = self.combinations_of_prompt_variables[en]['gender']
             prompt = prompt_template_var.format(age = age,gender = gender)
@@ -48,15 +50,18 @@ class CalculateWorkPropensity(SubstepAction):
             output_values.append(output_value)
         
         for en,output_value in enumerate(output_values):
+            # output_value = re.search(r'\{(.+?)\}', output_value, re.DOTALL)
             output_value = json.loads(output_value)
             group_work_propensity = output_value['work']
             group_consumption_propensity = output_value['consumption']
-            consumption_propensity = consumption_propensity + (masks[en]*group_consumption_propensity)
-            work_propensity = work_propensity + (mask[en]*group_work_propensity)
+            consumption_propensity_for_group = masks[en]*group_consumption_propensity
+            consumption_propensity = torch.add(consumption_propensity,consumption_propensity_for_group)
+            work_propensity_for_group = masks[en]*group_work_propensity
+            work_propensity = torch.add(work_propensity,work_propensity_for_group)
 
         # work_propensity = torch.rand(16573530,1)
         whether_to_work = torch.bernoulli(work_propensity)
-        return {self.output_variables[0] : whether_to_work, self.output_variables[1] : work_propensity}
+        return {self.output_variables[0] : whether_to_work, self.output_variables[1] : work_propensity, self.output_variables[2] : consumption_propensity}
         
     def get_variables(self,prompt_template):
         variables = re.findall(r'\{(.+?)\}', prompt_template)
@@ -74,14 +79,3 @@ class CalculateWorkPropensity(SubstepAction):
         return dict_combinations, index_combinations
         
         
-class CalculateConsumptionPropensity(SubstepAction):
-    def __init__(self, config, input_variables, output_variables, arguments):
-        super().__init__(config, input_variables, output_variables, arguments)
-        self.agent = LLMAgent(config)
-        
-    def forward(self, state, observation):
-        prompt = self.config['simulation_metadata']['consumption_prompt']
-        #TODO format prompt with current state properties
-        # consumption_propensity = self.agent(input = prompt)
-        consumption_propensity = torch.rand(16573530,1)
-        return {self.output_variables[0] : consumption_propensity}

@@ -16,9 +16,8 @@ def opdyn_registry():
     reg.register(UpdateMonthCounter, "UpdateMonthCounter", key="transition")
     reg.register(UpdateSavings, "UpdateSavings", key="transition")
 
-    from substeps.macro_economics.action import CalculateWorkPropensity, CalculateConsumptionPropensity
-    reg.register(CalculateWorkPropensity, "CalculateWorkPropensity", key="policy")
-    reg.register(CalculateConsumptionPropensity, "CalculateConsumptionPropensity", key="policy")
+    from substeps.macro_economics.action import CalculateWorkAndConsumptionPropensity
+    reg.register(CalculateWorkAndConsumptionPropensity, "CalculateWorkAndConsumptionPropensity", key="policy")
 
     from AgentTorch.helpers import zeros, random_normal, constant, grid_network
     reg.register(zeros, "zeros", key="initialization")

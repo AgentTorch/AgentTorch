@@ -14,8 +14,12 @@ from langchain.prompts import (
     MessagesPlaceholder,
 )
 from langchain_core.messages import SystemMessage
+import sys
+sys.path.append('/Users/shashankkumar/Documents/GitHub/MacroEcon/models')
+from macro_economics.prompt import complete_final_report_prompt
 # define open AI key
-OPENAI_API_KEY = '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'
+
+
 
 def format_financial_report(config):
     month = config.get("month")
@@ -30,8 +34,20 @@ def format_financial_report(config):
     essential_price = config.get("essential_price")
     savings_balance = config.get("savings_balance")
     interest_rate = config.get("interest_rate")
-
-    report = f"Now it’s {month}.{year}. In the previous month, you worked as a(an) {profession}. If you continue working this month, your expected income will be ${income:.2f}, which is decreased compared to the last month due to the deflation of the labor market. Besides, your consumption was ${consumption:.2f}. Your tax deduction amounted to ${tax_deduction:.2f}. However, as part of the government’s redistribution program, you received a credit of ${tax_credit:.2f}. In this month, the government sets the brackets: {tax_brackets} and their corresponding rates: {tax_rates}. Income earned within each bracket is taxed only at that bracket’s rate. Meanwhile, deflation has led to a price decrease in the consumption market, with the average price of essential goods now at ${essential_price:.2f}. Your current savings account balance is ${savings_balance:.2f}. Interest rates, as set by your bank, stand at {interest_rate:.2f}%. With all these factors in play, and considering aspects like your living costs, any future aspirations, and the broader economic trends, how is your willingness to work this month? Furthermore, how would you plan your expenditures on essential goods, keeping in mind goods price? Please share your decisions in a JSON format. The format should have two keys: ’work’ (a value between 0 and 1 with intervals of 0.02, indicating the willingness or propensity to work) and ’consumption’ (a value between 0 and 1 with intervals of 0.02, indicating the proportion of all your savings and income you intend to spend on essential goods."
+    report = complete_final_report_prompt.format(
+        month=month,
+        year=year,
+        profession=profession,
+        income=income,
+        consumption=consumption,
+        tax_deduction=tax_deduction,
+        tax_credit=tax_credit,
+        tax_brackets=tax_brackets,
+        tax_rates=tax_rates,
+        essential_price=essential_price,
+        savings_balance=savings_balance,
+        interest_rate=interest_rate,
+    )
     return report
 
 class LLMAgent():
