@@ -27,7 +27,13 @@ def get_registry():
     reg.register(BreakCompliance, "break_compliance", key="policy")
     from substeps.quarantine.observation import GetFromState
     reg.register(GetFromState, "get_from_state", key="observation")
-         
+    
+    # Substep: Testing Intervention
+    from substeps.testing.transition import UpdateTestStatus
+    reg.register(UpdateTestStatus, "update_test_status", key="transition")
+    from substeps.testing.action import AcceptTest
+    reg.register(AcceptTest, "accept_test", key="policy")
+    
     from substeps.utils import network_from_file, get_lam_gamma_integrals, get_mean_agent_interactions, get_infected_time, get_next_stage_time
     reg.register(network_from_file, "network_from_file", key="network")
     reg.register(get_lam_gamma_integrals, "get_lam_gamma_integrals", key="initialization")

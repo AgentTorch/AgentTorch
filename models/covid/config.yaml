@@ -1,7 +1,7 @@
 simulation_metadata:
     num_episodes: 1
     num_steps_per_episode: 4
-    num_substeps_per_step: 3
+    num_substeps_per_step: 4
     device: "cuda"
     num_citizens: 70916
     agent_id_file: "data/25011_id.csv"
@@ -17,6 +17,8 @@ simulation_metadata:
     INFECTED_TO_RECOVERED_TIME: 5
     INFINITY_TIME: 100
     quarantine_days: 12
+    test_result_delay_days: 3
+    test_ineligible_days: 2
     
 state:
     environment:
@@ -106,6 +108,33 @@ state:
             value: 0.1
             dtype: "float"
             
+        test_true_positive_prob:
+            name: "Probability of true positive test result"
+            learnable: False
+            shape:
+                - 1
+            initialization_function: null
+            value: 0.8
+            dtype: "float"
+            
+        test_false_positive_prob:
+            name: "Probability of false positive test result"
+            learnable: False
+            shape:
+                - 1
+            initialization_function: null
+            value: 0.3
+            dtype: "float"
+        
+        test_compliance_prob:
+            name: "Probability of complying to test recommendation"
+            learnable: False
+            shape:
+                - 1
+            initialization_function: null
+            value: 0.95
+            dtype: "float"
+
         lam_gamma_integrals:
             name: "Lam Gamma Integrals"
             learnable: False
@@ -280,7 +309,37 @@ state:
                     initialization_function: null
                     value: ${simulation_metadata.INFINITY_TIME}
                     dtype: "int"
-
+                    
+                awaiting_test_result:
+                    name: "agent is awaiting test result currently"
+                    shape:
+                        - ${state.agents.citizens.number}
+                        - 1
+                    learnable: False
+                    initialization_function: null
+                    value: False
+                    dtype: "bool"
+                
+                test_result_date:
+                    name: "Date when agent receives test result"
+                    shape:
+                        - ${state.agents.citizens.number}
+                        - 1
+                    learnable: False
+                    initialization_function: null
+                    value: ${simulation_metadata.INFINITY_TIME}
+                    dtype: "int"
+                
+                test_re_eligble_date:
+                    name: "Date when agent becomes eligible for taking a test again"
+                    shape:
+                        - ${state.agents.citizens.number}
+                        - 1
+                    learnable: False
+                    initialization_function: null
+                    value: ${simulation_metadata.INFINITY_TIME}
+                    dtype: "int"
+                
     objects: null
     
     network:
@@ -389,3 +448,37 @@ substeps:
                 output_variables:
                     - is_quarantined
                     - quarantine_start_date
+    
+    "3":
+        name: "Testing"
+        description: "Conduct test on citizens showing symptoms"
+        active_agents:
+            - "citizens"
+        observation:
+            citizens: null
+        policy:
+            citizens:
+                accept_test:
+                    generator: "AcceptTest"
+                    arguments: null
+                    input_variables:
+                        disease_stage: "agents/citizens/disease_stage"
+                        is_quarantined: "agents/citizens/is_quarantined"
+                        test_compliance_prob: "environment/test_compliance_prob"
+                    output_variables:
+                        - test_acceptance_action
+        transition:
+            update_test_status:
+                generator: "UpdateTestStatus"
+                arguments: null
+                input_variables:
+                    test_true_positive_prob: "environment/test_true_positive_prob"
+                    test_false_positive_prob: "environment/test_false_positive_prob"
+                    awaiting_test_result: "agents/citizens/awaiting_test_result"
+                    disease_stage: "agents/citizens/disease_stage"
+                    test_re_eligble_date: "agents/citizens/test_re_eligble_date"
+                    test_result_date: "agents/citizens/test_result_date"
+                output_variables:
+                    - awaiting_test_result
+                    - test_result_date
+                    - test_re_eligble_date
