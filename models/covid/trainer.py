@@ -27,27 +27,24 @@ parser.add_argument(
 
 args = parser.parse_args()
 config_file = args.config
-
 print("Running experiment with config file: ", config_file)
+
+profiler_obj = profiler.profile(record_shapes=True, use_cuda=torch.cuda.is_available())
+profiler_started = False
+if not profiler_started:
+    profiler_obj.__enter__()
+    profiler_started = True
 
 config = read_config(config_file)
 registry = get_registry()
 runner = get_runner(config, registry)
 
-profiler_obj = profiler.profile(record_shapes=True, use_cuda=torch.cuda.is_available())
-profiler_started = False
-
-if not profiler_started:
-    profiler_obj.__enter__()
-    profiler_started = True
+device = torch.device(runner.config['simulation_metadata']['device'])
+num_episodes = runner.config['simulation_metadata']['num_episodes']
+num_steps_per_episode = runner.config['simulation_metadata']['num_steps_per_episode']
 
 with profiler.record_function("init_runner"):
     runner.init()
-
-device = torch.device(runner.config['simulation_metadata']['device'])
-
-num_episodes = runner.config['simulation_metadata']['num_episodes']
-num_steps_per_episode = runner.config['simulation_metadata']['num_steps_per_episode']
 
 for episode in range(num_episodes):
     with profiler.record_function("step_episode"):
