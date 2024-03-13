@@ -4,6 +4,7 @@ from torch.distributions import Normal
 from AgentTorch.substep import SubstepTransition
 from AgentTorch.helpers import get_by_path
 import re
+import pdb
 
 class UpdateMonthCounter(SubstepTransition):
     def __init__(self,config, input_variables, output_variables, arguments):
@@ -21,7 +22,6 @@ class UpdateSavings(SubstepTransition):
         super().__init__(config, input_variables, output_variables, arguments)
     
     def forward(self, state, action):
-        
         savings,monthly_income = self.calculateSavings(state, action)
         return {self.output_variables[0] : savings, self.output_variables[1] : monthly_income}
     
@@ -77,6 +77,7 @@ class UpdateSavings(SubstepTransition):
         number_of_months = get_by_path(state, re.split("/", self.input_variables['Month_Counter']))
         if number_of_months % 12 == 0:
             savings = self.increaseSavingsAnnualy(state,action)
+            
         monthly_income,total_tax = self.calculatePostTaxIncome(state,action)
         post_distribution_income = self.distributeTax(state,action,total_tax,monthly_income)
         
@@ -90,7 +91,6 @@ class UpdateSavings(SubstepTransition):
         new_savings = s * (1+r)
         return new_savings
     
-
 
 class UpdateMacroeconomics(SubstepTransition):
     def __init__(self, config, input_variables, output_variables, arguments):
