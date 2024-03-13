@@ -10,12 +10,9 @@ import numpy as np
 import re
 import sys
 import pdb
+
 sys.path.append(MODEL_PATH)
 sys.path.insert(0, AGENT_TORCH_PATH)
-
-# sys.path.append('/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch')
-# sys.path.append('/Users/shashankkumar/Documents/GitHub/MacroEcon/models')
-
 from AgentTorch.LLM.llm_agent import LLMAgent
 from AgentTorch.substep import SubstepAction
 from AgentTorch.helpers import get_by_path
@@ -75,7 +72,6 @@ class CalculateWorkAndConsumptionPropensity(SubstepAction):
             output_values.append(output_value)
                 
         for en,output_value in enumerate(output_values):
-            # output_value = re.search(r'\{(.+?)\}', output_value, re.DOTALL)
             output_value = json.loads(output_value)
             group_work_propensity = output_value['work']
             group_consumption_propensity = output_value['consumption']

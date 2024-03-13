@@ -4,6 +4,7 @@ simulation_metadata:
     num_substeps_per_step: 1
     device: cpu
     execution_mode: "llm" # or llm
+    num_agents: 37518
     learning_params:
         lr: 0.002
         betas:
@@ -54,14 +55,6 @@ state:
             initialization_function: null
             value: 1.0
             dtype: float
-        Num_Agents: 
-            name: "Number of Agents"
-            learnable: false
-            shape:
-                - 1
-            initialization_function: null
-            value: 37518
-            dtype: int
         U: 
             name: "Unemployment Rate"
             learnable: false
@@ -117,19 +110,10 @@ state:
                 - 1
             initialization_function: null
             value: 0.0
-            dtype: float
-        Tax_Brackets:
-            name: "Tax Brackets"
-            learnable: false
-            shape:
-                - 1
-            initialization_function: null
-            value: 0.0
-            dtype: float
-            
+            dtype: float          
     agents:
         consumers:
-            number: 37518
+            number: ${simulation_metadata.num_agents}
             properties:
                 ID: 
                     name: ID
@@ -249,6 +233,7 @@ state:
                     initialization_function: null
                     value: 0.0
                     dtype: float
+                    
                 Conpsumption_Propensity:
                     name: Conpsumption_Propensity
                     learnable: false
@@ -258,6 +243,7 @@ state:
                     initialization_function: null
                     value: 0.0
                     dtype: float
+                    
                 Savings:
                     name: Savings
                     learnable: false
@@ -267,6 +253,7 @@ state:
                     initialization_function: null
                     value: 0.0
                     dtype: float
+                    
                 Work_Propensity:
                     name: Work_Propensity
                     learnable: false
@@ -276,6 +263,7 @@ state:
                     initialization_function: null
                     value: 0.0
                     dtype: float
+                    
                 Post_Tax_Income:
                     name: Post_Tax_Income
                     learnable: false
@@ -285,6 +273,7 @@ state:
                     initialization_function: null
                     value: 0.0
                     dtype: float
+                    
                 Monthly_Income:
                     name: Monthly_Income
                     learnable: false
@@ -294,6 +283,7 @@ state:
                     initialization_function: null
                     value: 0.0
                     dtype: float
+                    
                 Monthly_Consumption:
                     name: Monthly_Consumption
                     learnable: false
@@ -303,6 +293,7 @@ state:
                     initialization_function: null
                     value: 0.0
                     dtype: float
+                    
     objects:
         metadata:
             num_jobs: 2
@@ -351,6 +342,7 @@ state:
                     initialization_function: null
                     value: 1.0
                     dtype: "float"
+                    
     network:
         agent_agent:
             opinion_network:
@@ -361,9 +353,10 @@ state:
                         - 80
         agent_object: null
         object_object: null
+        
 substeps:
     "0":
-        name: New Month
+        name: "New Month"
         description: A new month is started
         active_agents:
             - consumers
@@ -371,8 +364,8 @@ substeps:
             consumers: null
         policy:
             consumers:
-                CalculateWorkAndConsumptionPropensity:
-                    generator: CalculateWorkAndConsumptionPropensity
+                work_consumption_decision:
+                    generator: WorkConsumptionPropensity
                     arguments: null
                     input_variables: 
                         Age : 'agents/consumers/Age'
@@ -386,6 +379,7 @@ substeps:
                         - Consumption_Propensity
 
         transition:
+        # Agent behavior - consumption, earning and savings; market behavior - macro quantities
             UpdateMacroeconomics:
                 generator: UpdateMacroeconomics
                 arguments: null
