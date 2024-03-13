@@ -1,3 +1,5 @@
+MACRO_ECON_PATH  = '/u/ayushc/projects/GradABM/MacroEcon/models'
+
 from langchain_openai import ChatOpenAI
 import torch
 import torch.nn as nn
@@ -14,48 +16,13 @@ from langchain.prompts import (
     MessagesPlaceholder,
 )
 from langchain_core.messages import SystemMessage
-import sys
-sys.path.append('/Users/shashankkumar/Documents/GitHub/MacroEcon/models')
-from macro_economics.prompt import complete_final_report_prompt
-# define open AI key
-
-
-
-def format_financial_report(config):
-    month = config.get("month")
-    year = config.get("year")
-    profession = config.get("profession")
-    income = config.get("income")
-    consumption = config.get("consumption")
-    tax_deduction = config.get("tax_deduction")
-    tax_credit = config.get("tax_credit")
-    tax_brackets = config.get("tax_brackets")
-    tax_rates = config.get("tax_rates")
-    essential_price = config.get("essential_price")
-    savings_balance = config.get("savings_balance")
-    interest_rate = config.get("interest_rate")
-    report = complete_final_report_prompt.format(
-        month=month,
-        year=year,
-        profession=profession,
-        income=income,
-        consumption=consumption,
-        tax_deduction=tax_deduction,
-        tax_credit=tax_credit,
-        tax_brackets=tax_brackets,
-        tax_rates=tax_rates,
-        essential_price=essential_price,
-        savings_balance=savings_balance,
-        interest_rate=interest_rate,
-    )
-    return report
 
 class LLMAgent():
     def __init__(self,agent_profile = None, memory = None,llm = None,openai_api_key = None) -> None:
         assert agent_profile is not None, "Agent profile is required"
         
         if llm is None:
-            llm = self.llm = ChatOpenAI(model='gpt-3.5-turbo', openai_api_key=OPENAI_API_KEY, temperature=0)
+            llm = self.llm = ChatOpenAI(model='gpt-3.5-turbo', openai_api_key=openai_api_key, temperature=0)
         
         self.prompt = ChatPromptTemplate.from_messages(
                     [
@@ -94,6 +61,41 @@ class LLMAgent():
 
 
 if __name__ == "__main__":
+    
+    import sys
+    sys.path.append(MACRO_ECON_PATH)
+    from macro_economics.prompt import complete_final_report_prompt
+    # define open AI key
+
+    def format_financial_report(config):
+        month = config.get("month")
+        year = config.get("year")
+        profession = config.get("profession")
+        income = config.get("income")
+        consumption = config.get("consumption")
+        tax_deduction = config.get("tax_deduction")
+        tax_credit = config.get("tax_credit")
+        tax_brackets = config.get("tax_brackets")
+        tax_rates = config.get("tax_rates")
+        essential_price = config.get("essential_price")
+        savings_balance = config.get("savings_balance")
+        interest_rate = config.get("interest_rate")
+        report = complete_final_report_prompt.format(
+            month=month,
+            year=year,
+            profession=profession,
+            income=income,
+            consumption=consumption,
+            tax_deduction=tax_deduction,
+            tax_credit=tax_credit,
+            tax_brackets=tax_brackets,
+            tax_rates=tax_rates,
+            essential_price=essential_price,
+            savings_balance=savings_balance,
+            interest_rate=interest_rate,
+        )
+        return report
+    
     agent_profile = """
                     You’re Adam Mills, 
                     a 40-year-old individual living in New York City, New York. As with all Americans, 
