@@ -5,8 +5,6 @@ import torch.optim as optim
 import torch.nn.functional as F
 import os
 
-import sys
-sys.path.insert(0, '../../')
 from simulator import OpDynRunner, opdyn_registry
 from AgentTorch.helpers import read_config
 
@@ -23,11 +21,12 @@ parser.add_argument(
 # *************************************************************************
 
 args = parser.parse_args()
-if not args:
+if args:
     config_file = args.config
 else:
-    config_file = "/Users/shashankkumar/Documents/GitHub/MacroEcon/models/macro_economics/config.yaml"
-    # config_file = os.path.join(os.getcwd(), 'config.yaml')
+#     config_file = "/Users/shashankkumar/Documents/GitHub/MacroEcon/models/macro_economics/config.yaml"
+    config_file = os.path.join(os.getcwd(), 'config.yaml')
+    print("Config file path: ", config_file)
     
 config = read_config(config_file)
 registry = opdyn_registry()
@@ -37,7 +36,8 @@ device = torch.device(runner.config['simulation_metadata']['device'])
 
 print("Initializing runner..")
 runner.init()
-print(" initialized..")
+print(" initialized!!!!!!!")
+print("---"*8)
 
 loss_log = []
 

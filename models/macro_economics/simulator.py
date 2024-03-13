@@ -1,7 +1,9 @@
+AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
+
 import pandas as pd
 import numpy as np 
 import sys
-sys.path.insert(0, '/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch')
+sys.path.insert(0, AGENT_TORCH_PATH)
 import torch
 import torch.optim as optim
 
@@ -18,14 +20,14 @@ def opdyn_registry():
 
     from substeps.macro_economics.action import CalculateWorkAndConsumptionPropensity
     reg.register(CalculateWorkAndConsumptionPropensity, "CalculateWorkAndConsumptionPropensity", key="policy")
-
+    
     from AgentTorch.helpers import zeros, random_normal, constant, grid_network
     reg.register(zeros, "zeros", key="initialization")
     reg.register(random_normal, "random_normal", key="initialization")
     reg.register(constant, "constant", key="initialization")
     reg.register(grid_network, "grid", key="network")
 
-    from substeps.utils import random_normal_col_by_col, load_population_attribute,initialize_id
+    from substeps.utils import random_normal_col_by_col, load_population_attribute, initialize_id
     reg.register(random_normal_col_by_col, "random_normal_col_by_col", key="initialization")
     reg.register(load_population_attribute, "load_population_attribute", key="initialization")
     reg.register(initialize_id, "initialize_id", key="initialization")
@@ -43,6 +45,7 @@ class OpDynRunner(Runner):
 
     def forward(self):
         for episode in range(self.config['simulation_metadata']['num_episodes']):
+            print("episode: ", episode)
             num_steps_per_episode = self.config["simulation_metadata"]["num_steps_per_episode"]
             self.reset()
             self.step(num_steps_per_episode)

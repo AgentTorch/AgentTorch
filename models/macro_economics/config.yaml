@@ -1,8 +1,9 @@
 simulation_metadata:
-    num_episodes: 5
-    num_steps_per_episode: 12
+    num_episodes: 2
+    num_steps_per_episode: 7
     num_substeps_per_step: 1
     device: cpu
+    execution_mode: "llm" # or llm
     learning_params:
         lr: 0.002
         betas:
@@ -24,8 +25,9 @@ simulation_metadata:
     hours_worked: 168.0
     tax_brackets : [0, 50, 100, 500]
     tax_rates : [0.1, 0.2, 0.3,0.35]
-    population_dir: '/Users/shashankkumar/Documents/GitHub/MacroEcon/'   
-    mapping_path: "/Users/shashankkumar/Documents/GitHub/MacroEcon/data/step2/process/mapping.json"
+    population_dir: '/u/ayushc/projects/GradABM/MacroEcon'   
+    mapping_path: "/u/ayushc/projects/GradABM/MacroEcon/data/step2/process/mapping.json"
+    OPENAI_API_KEY: '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'
 state:
     environment:
         P: 
@@ -52,6 +54,14 @@ state:
             initialization_function: null
             value: 1.0
             dtype: float
+        Num_Agents: 
+            name: "Number of Agents"
+            learnable: false
+            shape:
+                - 1
+            initialization_function: null
+            value: 37518
+            dtype: int
         U: 
             name: "Unemployment Rate"
             learnable: false
@@ -379,7 +389,7 @@ substeps:
             UpdateMacroeconomics:
                 generator: UpdateMacroeconomics
                 arguments: null
-                input_variables: 
+                input_variables:
                     Num_Agents: 'agents/consumers/number'
                     Month_Counter: 'environment/Month_Counter'
                     Savings: 'agents/consumers/Savings'
@@ -404,10 +414,8 @@ substeps:
                     - Cummulative_Price_of_Goods
                     - Inflation_Rate
                     
-
-            
             UpdateFinancialMarket:
-                generator: UpdateFinancialMarke
+                generator: UpdateFinancialMarket
                 arguments: null
                 input_variables: 
                     Work_Propensity: 'agents/consumers/Work_Propensity'
@@ -424,8 +432,7 @@ substeps:
                 generator: UpdateMonthCounter
                 arguments: null
                 input_variables: 
-                    Month_Counter: 'environment/Month_Counter'
-
+                    Month_Counter: 'environment/Month_Counter' 
                 output_variables:
                     - Month_Counter
             
