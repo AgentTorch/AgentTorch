@@ -5,7 +5,7 @@ https://github.com/AgentTorch/AgentTorch/assets/13482350/4c3f9fa9-8bce-4ddb-907c
 # 1. Installation
 
 ## Download
-The simplest way to install AgentTorch is from PyPi at:
+The simplest way to install AgentTorch (v0.2.4) is from PyPi at:
 ```
 pip install agent-torch
 ```
@@ -65,7 +65,7 @@ A detailed code specific documentation is provided in [create model docs](docs/c
 # 4. Running examples
 You can run a sample experiment with the following command:
 ```
-cd models/nca
+cd models/covid
 python trainer.py --c config.yaml
 ```
 ```
@@ -87,6 +87,7 @@ The AgentTorch project is under active development and are continually fixing is
 ## Citation
 If you use this project or code in your work, please cite it using the following BibTeX entry:
 
+```
 @inproceedings{chopra2024framework,
   title = {A Framework for Learning in Agent-Based Models},
   author = {Chopra, Ayush and Subramanian, Jayakumar and Krishnamurthy, Balaji and Raskar, Ramesh},
@@ -94,3 +95,4 @@ If you use this project or code in your work, please cite it using the following
   year = {2024},
   organization = {International Foundation for Autonomous Agents and Multiagent Systems},
 }
+```
