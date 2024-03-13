@@ -171,9 +171,7 @@ class Initializer(nn.Module):
         self.network()
         
         self.parameters = nn.ParameterDict(self.learnable_parameters)
-        
-        print("Simulator done..")
-    
+            
     def substeps(self):
         '''
         define observation, policy and transition functions for each active_agent on each substep
@@ -216,12 +214,7 @@ class Initializer(nn.Module):
         self.state["current_substep"] = '0' # use string not int for nn.ModuleDict
         
         self.simulator()
-        
-        print("Simulator initialization done..")
-        
         self.substeps()
-        
-        print("initialization complete..")
         
     def forward(self):
         self.initialize()
