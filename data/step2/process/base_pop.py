@@ -87,31 +87,21 @@ def create_base_pop(area_data,input_mapping, output_area,age):
 def base_pop_wrapper(
     input_data: dict,
     input_mapping: dict,
-    area_filter = None,
+    area_selector = None,
     use_parallel: bool = False,
     n_cpu: int = 8,
 ) -> DataFrame:
-    """Create base population
 
-    Args:
-        gender_data (DataFrame): Gender data for each age
-        ethnicity_data (DataFrame): Ethnicity data for each age
-        output_area_filter (list or None): With area ID to be used
-        use_parallel (bool, optional): If apply ray parallel processing. Defaults to False.
-
-    Returns:
-        DataFrame: Produced base population
-    """
     start_time = datetime.utcnow()
 
     if use_parallel:
         ray.init(num_cpus=n_cpu, include_dashboard=False)
 
     results = []
-    if area_filter is None:
+    if area_selector is None:
         output_areas = list(input_data.keys())
     else:
-        output_areas = area_filter
+        output_areas = area_selector
     total_output_area = len(output_areas)
     for i, output_area in enumerate(output_areas):
         
@@ -148,14 +138,14 @@ def base_pop_wrapper(
     return DataFrame(population), base_address
 
 if __name__ == "__main__":
-    area_filter = ['BK0101']
+    area_selector = ['BK0101']
     output_dir = "/Users/shashankkumar/Documents/GitHub/MacroEcon"
     if not exists(output_dir):
         makedirs(output_dir)
     file = np.load("/Users/shashankkumar/Documents/GitHub/MacroEcon/data/step1/all_nta_agents.npy", allow_pickle=True)
     file_dict = file.item()
     
-    base_population,base_address = base_pop_wrapper(input_data=file_dict['valid_ntas'],input_mapping=file_dict['mapping'],use_parallel=True,n_cpu=10,area_filter=area_filter)
+    base_population,base_address = base_pop_wrapper(input_data=file_dict['valid_ntas'],input_mapping=file_dict['mapping'],use_parallel=True,n_cpu=10,area_selector=area_selector)
     base_population.to_pickle(output_dir + "/base_population.pkl")
     
     

@@ -2,8 +2,6 @@
 Source: https://github.com/sneakatyou/Syspop/tree/NYC/syspop/process
 '''
 import random
-import sys
-sys.path.append('/Users/shashankkumar/Documents/GitHub/MacroEcon/data/')
 from address import add_random_address
 
 
@@ -444,6 +442,8 @@ def household_prep(
     return proc_household_data
 
 if __name__ == "__main__":
+    import sys
+    sys.path.append('/Users/shashankkumar/Documents/GitHub/MacroEcon/data/')
     adult_list = ['20t29','30t39', '40t49', '50t64', '65A']
     children_list = ['U19']
     base_pop_path = "/Users/shashankkumar/Documents/GitHub/MacroEcon/base_population.pkl"
