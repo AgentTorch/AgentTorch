@@ -12,8 +12,6 @@ simulation_metadata:
             - 0.5
         lr_gamma: 0.9999
         model_path: saved_model.pth
-    work_prompt: "Do you want to work?"
-    consumption_prompt: "Do you want to {daily limit} consume?"
     natural_unemployment_rate: 0.05
     natural_interest_rate: 0.05
     target_inflation_rate: 0.02
@@ -373,7 +371,6 @@ substeps:
                         Gender : 'agents/consumers/Gender'
                     output_variables:
                         - Whether_to_Work
-                        - Work_Propensity
                         - Consumption_Propensity
                         
         transition:
@@ -384,6 +381,7 @@ substeps:
                     assets: 'agents/consumers/assets'
                     hourly_wage: 'objects/JobA/wage'
                     interest_rate: 'environment/R'
+                    monthly_income: 'agents/consumers/Monthly_Income'
                 output_variables:
                     - assets
             
@@ -391,9 +389,12 @@ substeps:
                 generator: "WriteToState"
                 arguments: null
                 input_variables:
-                    Consumption_Propensity: "agents/consumers/ConsumptionPropensity"
+                    consumption_propensity: "agents/consumers/ConsumptionPropensity"
+                    weather_to_work: "agents/consumers/Whether_to_Work"
+                
                 output_variables:
-                    - Consumption_Propensity
+                    - consumption_propensity
+                    - weather_to_work
                     
     "1":
         name: "Agents Spend"
@@ -409,9 +410,18 @@ substeps:
                 generator: "UpdateAssetsGoods"
                 arguments: null
                 input_variables:
+                    savings: 'agents/consumers/Savings'
+                    goods_inventory: 'environment/G'
+                    price_of_goods: 'environment/P'
+                    consumption_propensity: 'agents/consumers/Conpsumption_Propensity'
+                    total_demand: 'environment/D'
+                    imbalance: 'environment/Im'
+                    work_propensity: 'agents/consumers/Work_Propensity'
                 output_variables:
-                    - assets
                     - goods_inventory
+                    - assets
+                    - total_demand
+                    - imbalance
             
     "2":
         name: "Market Quantities"
@@ -427,12 +437,62 @@ substeps:
                 generator: "UpdateMacroRates"
                 arguments: null
                 input_variables:
-                    
+                    - work_propensity: 'agents/consumers/Work_Propensity'
                 output_variables:
                     - Hourly_Wage
                     - Inflation_Rate
                     - Interest_Rate
                     - Unemployment_Rate
+    
+    "3":
+        name: "Financial Market"
+        description: "Financial market updates based on macro parameters"
+        active_agents:
+            - consumers
+        observation:
+            consumers: null
+        policy:
+            consumers: null
+        transition:
+            update_financial_market:
+                generator: "UpdateFinancialMarket"
+                arguments: null
+                input_variables:
+                    work_propensity: 'agents/consumers/Work_Propensity'
+                    monthly_income: 'agents/consumers/Monthly_Income'
+                    interest_rate: 'environment/R'
+                    inflation_rate: 'environment/P_i'
+                    unemployment_rate: 'environment/U'
+                    month_counter: 'environment/Month_Counter'
+                output_variables:
+                    - interest_rate
+                    - tax_brackets
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #         transition:
 #             UpdateMacroeconomics:
