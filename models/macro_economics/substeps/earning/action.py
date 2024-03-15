@@ -65,8 +65,7 @@ class WorkConsumptionPropensity(SubstepAction):
             gender = self.combinations_of_prompt_variables[en]['gender']
             prompt = prompt_template_var.format(age = age,gender = gender)
             prompt_list.append(prompt)
-            # output_value = self.agent(prompt)
-            # output_values.append(output_value)
+
         agent_output = await self.agent(prompt_list)
         for en,output_value in enumerate(agent_output):
             output_value = json.loads(output_value['text'])
