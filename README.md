@@ -1,4 +1,4 @@
-Differentiable agent-based learning for million-scale populations - inside the body, around us and beyond.
+AgentTorch models are differentiable, scalable and integrate autonomous agents. A brief review of capabilities is [here](https://web.media.mit.edu/~ayushc/motivation.pdf)
 
 https://github.com/AgentTorch/AgentTorch/assets/13482350/4c3f9fa9-8bce-4ddb-907c-3ee4d62e7148
 
