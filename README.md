@@ -1,4 +1,8 @@
-Agent-based simulations that - scale to million-size populations, are fully differentiable and integrate autonomous agents! Read a quick summary [here](https://web.media.mit.edu/~ayushc/motivation.pdf)
+AgentTorch unlocks differentiable and million-scale agent-based modeling. Read a quick summary [here](https://web.media.mit.edu/~ayushc/motivation.pdf). Three salient features -
+- **Scalability**: AgentTorch models can simulate country-size populations in seconds on commodity hardware.
+- **Differentiability**: AgentTorch models can differentiate through simulations with stochastic dynamics and conditional interventions, enabling gradient-based learning.
+- **Composition with DNNs**: AgentTorch models can compose with deep neural networks (DNNs) to describe autonomous agent behavior, calibrate simulation parameters to multi-modal data and specify expressive interaction rules
+
 
 https://github.com/AgentTorch/AgentTorch/assets/13482350/4c3f9fa9-8bce-4ddb-907c-3ee4d62e7148
 
