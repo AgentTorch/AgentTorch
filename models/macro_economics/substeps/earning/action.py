@@ -30,8 +30,7 @@ class WorkConsumptionPropensity(SubstepAction):
         self.variables = self.get_variables(prompt_template_var)
         self.filtered_mapping = self.filter_mapping(self.mapping,self.variables)
         self.combinations_of_prompt_variables, self.combinations_of_prompt_variables_with_index = self.get_combinations_of_prompt_variables(self.filtered_mapping)
-        
-    def forward(self, state, observation):        
+    async def forward(self, state, observation):        
         print("Substep Action: Earning decision")
         num_agents = self.config['simulation_metadata']['num_agents']
         gender = get_by_path(state, re.split("/", self.input_variables['gender']))
@@ -60,15 +59,17 @@ class WorkConsumptionPropensity(SubstepAction):
             float_mask = mask.float()
             masks.append(float_mask)
         
+        prompt_list = []
         for en,_ in enumerate(self.combinations_of_prompt_variables_with_index):
             age = self.combinations_of_prompt_variables[en]['age']
             gender = self.combinations_of_prompt_variables[en]['gender']
             prompt = prompt_template_var.format(age = age,gender = gender)
-            output_value = self.agent(prompt)
-            output_values.append(output_value)
-                
-        for en,output_value in enumerate(output_values):
-            output_value = json.loads(output_value)
+            prompt_list.append(prompt)
+            # output_value = self.agent(prompt)
+            # output_values.append(output_value)
+        agent_output = await self.agent(prompt_list)
+        for en,output_value in enumerate(agent_output):
+            output_value = json.loads(output_value['text'])
             group_work_propensity = output_value['work']
             group_consumption_propensity = output_value['consumption']
             consumption_propensity_for_group = masks[en]*group_consumption_propensity
