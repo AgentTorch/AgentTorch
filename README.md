@@ -1,6 +1,4 @@
-Agent-based simulations that - scale to million-size populations, are fully differentiable and integrate autonomous agents!
-
-Read a quick summary [here](https://web.media.mit.edu/~ayushc/motivation.pdf)
+Agent-based simulations that - scale to million-size populations, are fully differentiable and integrate autonomous agents! Read a quick summary [here](https://web.media.mit.edu/~ayushc/motivation.pdf)
 
 https://github.com/AgentTorch/AgentTorch/assets/13482350/4c3f9fa9-8bce-4ddb-907c-3ee4d62e7148
 
