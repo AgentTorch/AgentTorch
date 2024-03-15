@@ -32,12 +32,13 @@ class WorkConsumptionPropensity(SubstepAction):
         self.combinations_of_prompt_variables, self.combinations_of_prompt_variables_with_index = self.get_combinations_of_prompt_variables(self.filtered_mapping)
         
     def forward(self, state, observation):        
-        print("Executing action: ")
+        print("Substep Action: Earning decision")
         num_agents = self.config['simulation_metadata']['num_agents']
-        gender = get_by_path(state, re.split("/", self.input_variables['Gender']))
-        age = get_by_path(state,re.split("/", self.input_variables['Age']))
-        consumption_propensity = get_by_path(state,re.split("/", self.input_variables['Consumption_Propensity']))
-        work_propensity = get_by_path(state,re.split("/", self.input_variables['Work_Propensity']))
+        gender = get_by_path(state, re.split("/", self.input_variables['gender']))
+        age = get_by_path(state,re.split("/", self.input_variables['age']))
+        
+        consumption_propensity = get_by_path(state,re.split("/", self.input_variables['consumption_propensity']))
+        work_propensity = get_by_path(state,re.split("/", self.input_variables['work_propensity']))
         
         if self.mode == 'simple':
             print("Simple mode expts")
@@ -76,9 +77,9 @@ class WorkConsumptionPropensity(SubstepAction):
             work_propensity = torch.add(work_propensity,work_propensity_for_group)
 
         # work_propensity = torch.rand(16573530,1)
-        whether_to_work = torch.bernoulli(work_propensity)
-                
-        return {self.output_variables[0] : whether_to_work, 
+        will_work = torch.bernoulli(work_propensity)
+                        
+        return {self.output_variables[0] : will_work, 
                 self.output_variables[1] : consumption_propensity}
     
     def augment_mapping_with_index(self,mapping):

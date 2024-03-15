@@ -1,7 +1,7 @@
 simulation_metadata:
-    num_episodes: 2
-    num_steps_per_episode: 7
-    num_substeps_per_step: 1
+    num_episodes: 1
+    num_steps_per_episode: 3
+    num_substeps_per_step: 4
     device: "cpu"
     execution_mode: "llm" # or llm
     num_agents: 37518
@@ -130,7 +130,7 @@ state:
                                 initialization_function: null
                                 value: ${state.agents.consumers.number}
                     dtype: "float"
-                Gender:
+                gender:
                     name: Gender
                     learnable: False
                     shape:
@@ -153,7 +153,7 @@ state:
                                 value: 'gender'             
                     dtype: "float"
                 
-                Age:
+                age:
                     name: Age
                     learnable: False
                     shape:
@@ -176,7 +176,7 @@ state:
                                 value: 'age'         
                     dtype: "float"
 
-                Ethnicity:
+                ethnicity:
                     name: Ethnicity
                     learnable: False
                     shape:
@@ -199,7 +199,7 @@ state:
                                 value: 'ethnicity'     
                     dtype: "float"
                 
-                Area: 
+                area: 
                     name: Area
                     learnable: False
                     shape:
@@ -222,7 +222,7 @@ state:
                                 value: 'area'     
                     dtype: "float"
 
-                Whether_to_Work:
+                will_work:
                     name: Whether to Work
                     learnable: false
                     shape:
@@ -232,7 +232,7 @@ state:
                     value: 0.0
                     dtype: float
                     
-                Conpsumption_Propensity:
+                consumption_propensity:
                     name: Conpsumption_Propensity
                     learnable: false
                     shape:
@@ -242,7 +242,7 @@ state:
                     value: 0.0
                     dtype: float
                     
-                Savings:
+                assets:
                     name: Savings
                     learnable: false
                     shape:
@@ -252,7 +252,7 @@ state:
                     value: 0.0
                     dtype: float
                     
-                Work_Propensity:
+                work_propensity:
                     name: Work_Propensity
                     learnable: false
                     shape:
@@ -262,7 +262,7 @@ state:
                     value: 0.0
                     dtype: float
                     
-                Post_Tax_Income:
+                post_tax_income:
                     name: Post_Tax_Income
                     learnable: false
                     shape:
@@ -272,7 +272,7 @@ state:
                     value: 0.0
                     dtype: float
                     
-                Monthly_Income:
+                monthly_income:
                     name: Monthly_Income
                     learnable: false
                     shape:
@@ -282,7 +282,7 @@ state:
                     value: 0.0
                     dtype: float
                     
-                Monthly_Consumption:
+                monthly_consumption:
                     name: Monthly_Consumption
                     learnable: false
                     shape:
@@ -353,9 +353,9 @@ state:
         object_object: null
 
 substeps:
-    # Agents earn (employment + interest income), Agent spend (consumption + taxation), Market evolves (macro-rates, goods)
+    # Agents earn (employment + interest income), Agent spend (consumption + taxation), Market evolves (labor, financial)
     "0":
-        name: "Agents Earn"
+        name: "Agents Earning"
         description: "Agents earn from hourly employment and interest on old assets"
         active_agents:
             - consumers
@@ -367,11 +367,13 @@ substeps:
                     generator: "WorkConsumptionPropensity"
                     arguments: null
                     input_variables:
-                        Age : 'agents/consumers/Age'
-                        Gender : 'agents/consumers/Gender'
+                        age : 'agents/consumers/age'
+                        gender : 'agents/consumers/gender'
+                        consumption_propensity: 'agents/consumers/consumption_propensity'
+                        work_propensity: 'agents/consumers/work_propensity'
                     output_variables:
-                        - Whether_to_Work
-                        - Consumption_Propensity
+                        - will_work
+                        - consumption_propensity
                         
         transition:
             update_assets:
@@ -381,24 +383,24 @@ substeps:
                     assets: 'agents/consumers/assets'
                     hourly_wage: 'objects/JobA/wage'
                     interest_rate: 'environment/R'
-                    monthly_income: 'agents/consumers/Monthly_Income'
+                    monthly_income: 'agents/consumers/monthly_income'
                 output_variables:
                     - assets
+                    - monthly_income
             
-            write_to_state:
-                generator: "WriteToState"
+            write_action_to_state:
+                generator: "WriteActionToState"
                 arguments: null
                 input_variables:
-                    consumption_propensity: "agents/consumers/ConsumptionPropensity"
-                    weather_to_work: "agents/consumers/Whether_to_Work"
-                
+                    consumption_propensity: "agents/consumers/consumption_propensity"
+                    will_work: "agents/consumers/will_work"
                 output_variables:
                     - consumption_propensity
-                    - weather_to_work
+                    - will_work
                     
     "1":
-        name: "Agents Spend"
-        description: "Agents spend assets on consumption and taxation"
+        name: "Agents Consumption"
+        description: "Agents spend assets on consumption"
         active_agents:
             - consumers
         observation:
@@ -406,17 +408,17 @@ substeps:
         policy:
             consumers: null
         transition:
-            update_assets_and_good:
+            update_assets_and_goods:
                 generator: "UpdateAssetsGoods"
                 arguments: null
                 input_variables:
-                    savings: 'agents/consumers/Savings'
+                    assets: 'agents/consumers/assets'
                     goods_inventory: 'environment/G'
                     price_of_goods: 'environment/P'
-                    consumption_propensity: 'agents/consumers/Conpsumption_Propensity'
+                    consumption_propensity: 'agents/consumers/consumption_propensity'
                     total_demand: 'environment/D'
                     imbalance: 'environment/Im'
-                    work_propensity: 'agents/consumers/Work_Propensity'
+                    work_propensity: 'agents/consumers/work_propensity'
                 output_variables:
                     - goods_inventory
                     - assets
@@ -424,8 +426,8 @@ substeps:
                     - imbalance
             
     "2":
-        name: "Market Quantities"
-        description: "Government sets macro parameters and updates them based on agent behavior"
+        name: "Labor Market"
+        description: "Labor department sets employment and wage parameters based on agent behavior"
         active_agents:
             - consumers
         observation:
@@ -437,16 +439,17 @@ substeps:
                 generator: "UpdateMacroRates"
                 arguments: null
                 input_variables:
-                    - work_propensity: 'agents/consumers/Work_Propensity'
+                    will_work: 'agents/consumers/will_work'
+                    imbalance: 'environment/Im'
+                    hourly_wage: 'objects/JobA/wage'
+                    unemployment_rate: 'environment/U'
                 output_variables:
-                    - Hourly_Wage
-                    - Inflation_Rate
-                    - Interest_Rate
-                    - Unemployment_Rate
+                    - hourly_wage
+                    - unemployment_rate
     
     "3":
         name: "Financial Market"
-        description: "Financial market updates based on macro parameters"
+        description: "FED updates inflation and interest rate parameters based on labor and consumption behavior of agents"
         active_agents:
             - consumers
         observation:
@@ -458,41 +461,17 @@ substeps:
                 generator: "UpdateFinancialMarket"
                 arguments: null
                 input_variables:
-                    work_propensity: 'agents/consumers/Work_Propensity'
-                    monthly_income: 'agents/consumers/Monthly_Income'
                     interest_rate: 'environment/R'
                     inflation_rate: 'environment/P_i'
                     unemployment_rate: 'environment/U'
-                    month_counter: 'environment/Month_Counter'
+                    price_of_goods: 'environment/P'
+                    cumulative_price_of_goods: 'environment/Cumm_P'
+                    imbalance: 'environment/Im'
                 output_variables:
                     - interest_rate
-                    - tax_brackets
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                    - price_of_goods
+                    - cumulative_price_of_goods
+                    - inflation_rate
 
 #         transition:
 #             UpdateMacroeconomics:

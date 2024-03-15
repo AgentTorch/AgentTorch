@@ -12,15 +12,26 @@ from AgentTorch import Runner, Registry
 def opdyn_registry():
     reg = Registry()
 
-    from substeps.macro_economics.transition import UpdateMacroeconomics, UpdateFinancialMarket, UpdateMonthCounter, UpdateSavings
-    reg.register(UpdateMacroeconomics, "UpdateMacroeconomics", key="transition")
-    reg.register(UpdateFinancialMarket, "UpdateFinancialMarket", key="transition")
-    reg.register(UpdateMonthCounter, "UpdateMonthCounter", key="transition")
-    reg.register(UpdateSavings, "UpdateSavings", key="transition")
-
-    from substeps.macro_economics.action import CalculateWorkAndConsumptionPropensity
-    reg.register(CalculateWorkAndConsumptionPropensity, "CalculateWorkAndConsumptionPropensity", key="policy")
+    # Agent earning behavior
+    from substeps.earning.action import WorkConsumptionPropensity
+    reg.register(WorkConsumptionPropensity, "get_work_consumption_decision", key="policy")
     
+    from substeps.earning.transition import UpdateAssets, WriteActionToState
+    reg.register(UpdateAssets, "update_assets", key="transition")
+    reg.register(WriteActionToState, "write_action_to_state", key="transition")
+    
+    # Agents spending behavior
+    from substeps.consumption.transition import UpdateAssetsGoods
+    reg.register(UpdateAssetsGoods, "update_assets_and_goods", key="transition")
+    
+    # Market Evolves macro quantities - Labor Market
+    from substeps.labor_market.transition import UpdateMacroRates
+    reg.register(UpdateMacroRates, "update_macro_rates", key="transition")
+    
+    # Financial market evolves interest rate and tax brackets - FED
+    from substeps.financial_market.transition import UpdateFinancialMarket
+    reg.register(UpdateFinancialMarket, "update_financial_market", key="transition")
+        
     from AgentTorch.helpers import zeros, random_normal, constant, grid_network
     reg.register(zeros, "zeros", key="initialization")
     reg.register(random_normal, "random_normal", key="initialization")

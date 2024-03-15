@@ -10,14 +10,18 @@ class UpdateAssets(SubstepTransition):
     def __init__(self,config, input_variables, output_variables, arguments):
         super().__init__(config, input_variables, output_variables, arguments)
     
-    def forward(self, state, action):
-        assets,monthly_income = self.calculateAssets(state, action)
-        return {self.output_variables[0] : assets, self.output_variables[1] : monthly_income}
+    def increaseAssetsAnnualy(self, state, action):
+        # Calculate new assets
+        s = get_by_path(state, re.split("/", self.input_variables['assets']))
+        r = get_by_path(state, re.split("/", self.input_variables['interest_rate']))
+        
+        new_assets = s * (1+r)
+        return new_assets
     
-    def calculateAssets(self, state, action,assets = None):
-        if assets is None:
-            assets = get_by_path(state, re.split("/", self.input_variables['assets']))
-        number_of_months = get_by_path(state, re.split("/", self.input_variables['Month_Counter']))
+    def calculateAssets(self, state, action):
+        assets = get_by_path(state, re.split("/", self.input_variables['assets']))    
+        number_of_months = state['current_step']
+        
         if number_of_months % 12 == 0:
             assets = self.increaseAssetsAnnualy(state,action)
             
@@ -29,8 +33,10 @@ class UpdateAssets(SubstepTransition):
     
     def calculateMonthlyIncome(self, state, action):
         hourly_wage = get_by_path(state, re.split("/", self.input_variables['hourly_wage']))
-        l = action['consumers']['Whether_to_Work']
+        l = action['consumers']['will_work']
+        
         hours_worked = self.config['simulation_metadata']['hours_worked']
+        
         monthly_income = get_by_path(state, re.split("/", self.input_variables['monthly_income']))
         monthly_income_per_agent = hourly_wage * hours_worked
         monthly_income = (monthly_income*l) + monthly_income_per_agent
@@ -70,19 +76,18 @@ class UpdateAssets(SubstepTransition):
         tax_distribution = total_tax / num_agents
         zi = zi + tax_distribution
         return zi
-        
-    def increaseAssetsAnnualy(self, state, action):
-        # Calculate new assets
-        s = get_by_path(state, re.split("/", self.input_variables['assets']))
-        r = get_by_path(state, re.split("/", self.input_variables['interest_rate']))
-        new_assets = s * (1+r)
-        return new_assets
+    
+    def forward(self, state, action):
+        print("Substep: Agent Earning!")
+        assets,monthly_income = self.calculateAssets(state, action)
+        return {self.output_variables[0] : assets, self.output_variables[1] : monthly_income}
 
-class WriteToState(SubstepTransition):
+        
+class WriteActionToState(SubstepTransition):
     def __init__(self, config, input_variables, output_variables, arguments):
         super().__init__(config, input_variables, output_variables, arguments)
     
     def forward(self, state, action):
-        consumption_propensity = action['consumers']['Consumption_Propensity']
-        weather_to_work = action['consumers']['Whether_to_Work']
+        consumption_propensity = action['consumers']['consumption_propensity']
+        weather_to_work = action['consumers']['will_work']
         return {self.output_variables[0] : consumption_propensity, self.output_variables[1] : weather_to_work}
