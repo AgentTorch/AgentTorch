@@ -16,6 +16,7 @@ from langchain.prompts import (
     MessagesPlaceholder,
 )
 from langchain_core.messages import SystemMessage
+from langchain.callbacks import get_openai_callback
 
 class LLMAgent():
     def __init__(self,agent_profile = None, memory = None,llm = None,openai_api_key = None) -> None:
@@ -50,14 +51,18 @@ class LLMAgent():
             memory=self.agent_memory,
         )
     
-    def __call__(self,input):
-        return self.llm_chain.predict(agent_query = input)
+    async def __call__(self,input):
+        return await self.llm_chain.aapply(input)
+        # return self.llm_chain.predict(agent_query = input)
     
     def get_memory(self):
         return self.agent_memory.load_memory_variables({})
 
     def reflect(self,reflection_prompt):
         return self.llm_chain.predict(agent_query=reflection_prompt)
+    
+    def save_memory(self,context_in,context_out):
+        return self.agent_memory.save_context(context_in,context_out)
 
 
 if __name__ == "__main__":
