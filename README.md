@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>making complexity simple</strong><br>
-  differentiable learning over millions of agents
+  differentiable learning over millions of autonomous agents
 </p>
 
 <p align="center">
