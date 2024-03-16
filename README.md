@@ -1,5 +1,5 @@
 <h1 align="center">
-  <a href="https://lpm.media.mit.edu/" style="color: red;">
+  <a href="https://lpm.media.mit.edu/" style="color: red;" target="_blank">
     Large Population Models
   </a>
 </h1>
@@ -10,13 +10,13 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/AgentTorch/AgentTorch/blob/HEAD/LICENSE">
+  <a href="https://github.com/AgentTorch/AgentTorch/blob/HEAD/LICENSE" target="_blank">
     <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="React Native is released under the MIT license." />
   </a>
-  <a href="https://web.media.mit.edu/~ayushc/motivation.pdf">
+  <a href="https://web.media.mit.edu/~ayushc/motivation.pdf" target="_blank">
     <img src="https://img.shields.io/badge/Quick%20Introduction-green" alt="Quick Introduction" />
   </a>
-  <a href="https://twitter.com/intent/follow?screen_name=ayushchopra96">
+  <a href="https://twitter.com/intent/follow?screen_name=ayushchopra96" target="_blank">
     <img src="https://img.shields.io/twitter/follow/ayushchopra96?style=social&label=Get%20in%20Touch" alt="Get in Touch" />
   </a>
 </p> 
