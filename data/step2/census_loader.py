@@ -39,6 +39,5 @@ class CensusDataLoader:
                                                          children_list=children_list,
                                                          geo_address_data=self.geo_mapping,
                                                          use_parallel=self.use_parallel,n_cpu=self.n_cpu)
-    
         if save_path is not None:
-            base_population.to_pickle(save_path)
+            self.population_df.to_pickle(save_path)
