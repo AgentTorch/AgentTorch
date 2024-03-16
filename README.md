@@ -1,4 +1,28 @@
-AgentTorch unlocks differentiable and million-scale agent-based modeling. Read a quick summary [here](https://web.media.mit.edu/~ayushc/motivation.pdf). 
+<h1 align="center">
+  <a href="https://lpm.media.mit.edu/">
+    Large Population Models
+  </a>
+</h1>
+
+<p align="center">
+  <strong>making complexity simple</strong><br>
+  differentiable learning over millions of agents
+</p>
+
+<p align="center">
+  <a href="https://github.com/AgentTorch/AgentTorch/blob/HEAD/LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="React Native is released under the MIT license." />
+  </a>
+  <a href="https://web.media.mit.edu/~ayushc/motivation.pdf">
+    <img src="https://img.shields.io/badge/Quick%20Introduction-green" alt="Quick Introduction" />
+  </a>
+  <a href="https://twitter.com/intent/follow?screen_name=ayushchopra96">
+    <img src="https://img.shields.io/twitter/follow/ayushchopra96?style=social&label=Get%20in%20Touch" alt="Get in Touch" />
+  </a>
+</p> 
+
+AgentTorch enables differentiable agent-based modeling over million-scale populations. Quick summary of underlying research is [here](https://web.media.mit.edu/~ayushc/motivation.pdf).
+
 
 Four salient features -
 - **Scalability**: AgentTorch models can simulate country-size populations in seconds on commodity hardware.
