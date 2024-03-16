@@ -30,7 +30,6 @@ Four salient features -
 - **Generalization**: AgentTorch helps simulate diverse ecosystems - humans in geospatial worlds, cells in anatomical worlds, autonomous avatars in digital worlds.
 
 AgentTorch is building the future of decision engines - inside the body, around us and beyond!
-AgentTorch pla
 
 https://github.com/AgentTorch/AgentTorch/assets/13482350/4c3f9fa9-8bce-4ddb-907c-3ee4d62e7148
 
