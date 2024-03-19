@@ -48,8 +48,8 @@ def get_nta_race(df, nta_id, race_mapping):
 
         estimate, percentage = merge_nta_stats(nta_df, race_mapping[key])
 
-        nta_race[key]['estimate'] = max(0, estimate.item())
-        nta_race[key]['probability'] = max(0, percentage.item())/100
+        nta_race[key] = max(0, estimate.item())
+        # nta_race[key]['probability'] = max(0, percentage.item())/100
 
     return nta_race
 
@@ -77,9 +77,11 @@ def get_nta_age_gender(df, nta_id, age_mapping, male_ratio=0.508):
 
         key_male = key + '_male'
         key_female = key + '_female'
-
-        nta_age_gender[key_male] = {'estimate': male_stats[0], 'probability': male_stats[1]}
-        nta_age_gender[key_female] = {'estimate': female_stats[0], 'probability': female_stats[1]}
+        nta_age_gender[key] = {'male':male_stats[0],'female':female_stats[0]}
+        # nta_age_gender[key_male] = male_stats[0]
+        # nta_age_gender[key_female] = female_stats[0]
+        # nta_age_gender[key_male] = {'estimate': male_stats[0], 'probability': male_stats[1]}
+        # nta_age_gender[key_female] = {'estimate': female_stats[0], 'probability': female_stats[1]}
 
         # nta_age_gender[key] = age_gender_stats
 
@@ -103,8 +105,9 @@ def get_nta_education(df, nta_id, education_mapping):
         estimate, _ = merge_nta_stats(nta_df, education_mapping[key])
         estimate = estimate.item()
 
-        nta_education[key]['estimate'] = max(0, estimate)
-        nta_education[key]['probability'] = nta_education[key]['estimate'] / total_educated_studying
+        nta_education[key] = max(0, estimate)
+        # nta_education[key]['estimate'] = max(0, estimate)
+        # nta_education[key]['probability'] = nta_education[key]['estimate'] / total_educated_studying
         
     return nta_education
 
@@ -123,8 +126,9 @@ def get_nta_employ_insure(df, nta_id, employ_insure_mapping):
         estimate = estimate.item()
 
         nta_employ_insure[category] = {}
-        nta_employ_insure[category]['estimate'] = estimate
-        nta_employ_insure[category]['probability'] = estimate / total_eligible_agents
+        nta_employ_insure[category] = estimate
+        # nta_employ_insure[category]['estimate'] = estimate
+        # nta_employ_insure[category]['probability'] = estimate / total_eligible_agents
 
     return nta_employ_insure
 
