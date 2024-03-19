@@ -26,72 +26,89 @@ def get_index(value, age_ranges):
         return "Value not found in the list"
 
 @ray.remote
-def create_base_pop_remote(area_data,input_mapping, output_area,age):
-    return create_base_pop(area_data,input_mapping, output_area,age)
+def create_base_pop_remote(df_age_gender,df_ethnicity,age,area):
+    return create_base_pop(df_age_gender,df_ethnicity,age,area)
 
 
-def create_base_pop(area_data,input_mapping, output_area,age):
+def create_base_pop(df_age_gender,df_ethnicity,age,area):
     population = []
     # number_of_individuals = area_data[number_of_individuals]
+    age_gender_data = df_age_gender[df_age_gender['area']==area]
+    age_gender_data = age_gender_data[age_gender_data['age']==age]
+    ethnicity_data = df_ethnicity[df_ethnicity['area']==area]
     
-    age_index = input_mapping['age'].index(age) * 2
-    number_of_individuals = area_data['age_gender'][age_index] + area_data['age_gender'][age_index+1]
+    
+    number_of_individuals = int(age_gender_data.sum(axis=0)[['count']].sum())
     if number_of_individuals == 0:
         return []
     
     # gender_prob = area_data['age_gender_prob'][age]
     # Randomly assign gender and ethnicity to each individual
+    age_gender_data['probability'] = age_gender_data.apply(lambda row: row['count'] / number_of_individuals, axis=1)
+    gender_choices = age_gender_data['gender'].to_list()
+    gender_probablities = age_gender_data['probability'].to_list()
+    genders = choice(gender_choices, size=number_of_individuals, p=gender_probablities)
 
-    male_prob = area_data['age_gender'][age_index]
-    female_prob = area_data['age_gender'][age_index+1] #TODO: Change it to be generalised
-    combined_gender_prob = [male_prob,female_prob]
-    gender_prob = get_probability(combined_gender_prob)
-    
-    genders = choice(input_mapping['gender'], size=number_of_individuals, p=gender_prob)
-
-    ethnicity_prob = get_probability(area_data['race'])
+    total_population = ethnicity_data.groupby('area')['count'].sum()
+    ethnicity_data['probability'] = ethnicity_data.apply(lambda row: row['count'] / total_population[row['area']], axis=1)
+    ethnicity_choices = ethnicity_data['ethnicity'].to_list()
+    ethnicity_probabilities = ethnicity_data['probability'].to_list()
     ethnicities = choice(
-        input_mapping['race'],
+        ethnicity_choices,
         size=number_of_individuals,
-        p=ethnicity_prob,
+        p=ethnicity_probabilities,
     )
     
-    education_prob = get_probability(area_data['education'])
-    education = choice(
-        input_mapping['education'],
-        size=number_of_individuals,
-        p=education_prob,
-    )
+    # education_prob = get_probability(area_data['education'])
+    # education = choice(
+    #     input_mapping['education'],
+    #     size=number_of_individuals,
+    #     p=education_prob,
+    # )
     
-    employment_insurance_prob = get_probability(area_data['employment_insurance'])
-    employment_insurance = choice(
-        input_mapping['employment_insurance'],
-        size=number_of_individuals,
-        p=employment_insurance_prob,
-    )
-    attributes_list = [genders, ethnicities,education,employment_insurance]
-    for gender, ethnicity,education,employment_insurance in zip(genders, ethnicities,education,employment_insurance):
+    # employment_insurance_prob = get_probability(area_data['employment_insurance'])
+    # employment_insurance = choice(
+    #     input_mapping['employment_insurance'],
+    #     size=number_of_individuals,
+    #     p=employment_insurance_prob,
+    # )
+
+    for gender, ethnicity in zip(genders, ethnicities):
         individual = {
-            "area": output_area,
+            "area": area,
             "age": age,
             "gender": gender,
-            "ethnicity": ethnicity,
-            "education": education,
-            "employment_insurance": employment_insurance
+            "ethnicity": ethnicity
         }
         population.append(individual)
+    # for gender, ethnicity,education,employment_insurance in zip(genders, ethnicities,education,employment_insurance):
+    #     individual = {
+    #         "area": area,
+    #         "age": age,
+    #         "gender": gender,
+    #         "ethnicity": ethnicity,
+    #         "education": education,
+    #         "employment_insurance": employment_insurance
+    #     }
+    #     population.append(individual)
 
     return population
 
 
 def base_pop_wrapper(
     input_data: dict,
-    input_mapping: dict,
     area_selector = None,
     use_parallel: bool = False,
     n_cpu: int = 8,
 ) -> DataFrame:
 
+    df_age_gender = input_data['age_gender']
+    df_ethnicity = input_data['ethnicity']
+    # df_age_gender_melt = df_age_gender.melt(
+    #     id_vars=["area", "gender"], var_name="age", value_name="count"
+    # )
+
+    
     start_time = datetime.utcnow()
 
     if use_parallel:
@@ -103,18 +120,19 @@ def base_pop_wrapper(
     else:
         output_areas = area_selector
     total_output_area = len(output_areas)
+    age_list = df_age_gender['age'].unique()
     for i, output_area in enumerate(output_areas):
         
         logger.info(f"Processing: {i}/{total_output_area}")
         total_individuals = 0
-        for age in input_mapping['age']:
+        for age in age_list:
             if use_parallel:
                 result = create_base_pop_remote.remote(
-                    area_data=input_data[output_area], output_area=output_area,age=age,input_mapping=input_mapping
+                    df_age_gender=df_age_gender,df_ethnicity=df_ethnicity,age=age,area=output_area
                 )
             else:
                 result = create_base_pop(
-                    area_data=input_data[output_area], output_area=output_area,age=age,input_mapping=input_mapping
+                    df_age_gender=df_age_gender,df_ethnicity=df_ethnicity,age=age,area=output_area
                 )
             # total_individuals+=num_individuals
             results.append(result)
@@ -138,14 +156,16 @@ def base_pop_wrapper(
     return DataFrame(population), base_address
 
 if __name__ == "__main__":
-    area_selector = ['BK0101']
+    # area_selector = ['BK0101']
+    area_selector = [100100]
     output_dir = "/Users/shashankkumar/Documents/GitHub/MacroEcon"
     if not exists(output_dir):
         makedirs(output_dir)
-    file = np.load("/Users/shashankkumar/Documents/GitHub/MacroEcon/data/step1/all_nta_agents.npy", allow_pickle=True)
-    file_dict = file.item()
     
-    base_population,base_address = base_pop_wrapper(input_data=file_dict['valid_ntas'],input_mapping=file_dict['mapping'],use_parallel=True,n_cpu=10,area_selector=area_selector)
+    # df = pd.read_pickle("/Users/shashankkumar/Documents/GitHub/Syspop/syspop/att_dict.pkl")
+    df = pd.read_pickle("/Users/shashankkumar/Documents/GitHub/Syspop/syspop/att_NZ_dict.pkl")
+
+    base_population,base_address = base_pop_wrapper(input_data=df,area_selector=area_selector)
     base_population.to_pickle(output_dir + "/base_population.pkl")
     
     

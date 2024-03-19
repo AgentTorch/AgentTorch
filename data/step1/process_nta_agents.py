@@ -24,6 +24,7 @@ def process_nta_agents(NTA_ID, data_mode='estimate'):
     nta_race = get_nta_race(demo_df, NTA_ID, race_mapping)
     df_ethnicity = pd.DataFrame(nta_race, index=[0])
     df_ethnicity['area'] = NTA_ID
+    
     nta_age_gender = get_nta_age_gender(demo_df, NTA_ID, age_mapping)
     df_age_gender = pd.DataFrame.from_dict(nta_age_gender, orient='index')
     df_age_gender.reset_index(inplace=True)
@@ -32,15 +33,15 @@ def process_nta_agents(NTA_ID, data_mode='estimate'):
     df_age_gender = df_age_gender.melt(id_vars=['age', 'area'], var_name='gender')
     df_age_gender = df_age_gender.pivot(index=['area', 'gender'], columns='age', values='value')
     df_age_gender.reset_index(inplace=True)
-    # df_age_gender['area'] = NTA_ID
+
     nta_employment_insurance = get_nta_employ_insure(econ_df, NTA_ID, employment_insurance_mapping)
     df_employment_insurance = pd.DataFrame(nta_employment_insurance, index=[0])
     df_employment_insurance['area'] = NTA_ID
+    
     nta_education_level = get_nta_education(social_df, NTA_ID, education_mapping)
     df_education = pd.DataFrame(nta_education_level, index=[0])
     df_education['area'] = NTA_ID    
-    # num_agents_age_data = sum([nta_age_gender[key_ix] for key_ix in nta_age_gender])
-    # num_agents_race_data = sum([nta_race[key_ix] for key_ix in nta_race])
+
 
     return df_age_gender,df_ethnicity,df_education,df_employment_insurance
 
