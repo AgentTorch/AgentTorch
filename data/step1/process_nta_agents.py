@@ -38,34 +38,10 @@ def process_nta_agents(NTA_ID, data_mode='estimate'):
     df_employment_insurance['area'] = NTA_ID
     nta_education_level = get_nta_education(social_df, NTA_ID, education_mapping)
     df_education = pd.DataFrame(nta_education_level, index=[0])
-    df_education['area'] = NTA_ID
-    
-    
+    df_education['area'] = NTA_ID    
     # num_agents_age_data = sum([nta_age_gender[key_ix] for key_ix in nta_age_gender])
     # num_agents_race_data = sum([nta_race[key_ix] for key_ix in nta_race])
-    
-    # assert int(num_agents_age_data) > 0 # actual agents live in the NTA
-    # assert int(num_agents_age_data) == int(num_agents_race_data)
-    
-    # return dictionary
-    nta_dict = dict()
-    # nta_dict['nta_id'] = NTA_ID
-    
-    # nta_dict['num_agents'] = num_agents_age_data
-    
-    # race_stats = [nta_race[key_ix][data_mode] for key_ix in nta_race]
-    # education_stats = [nta_education_level[key_ix][data_mode] for key_ix in nta_education_level]
-    # employment_insurance_stats = [nta_employment_insurance[key_ix][data_mode] for key_ix in nta_employment_insurance]
-    # age_gender_stats = [nta_age_gender[key_ix][data_mode] for key_ix in nta_age_gender]
 
-    # new_row_index = len(df_age)
-    # # df_age.loc[new_row_index] = [NTA_ID,*age_gender_stats]
-    
-    # nta_dict['race'] = race_stats
-    # nta_dict['education'] = education_stats
-    # nta_dict['employment_insurance'] = employment_insurance_stats
-    # nta_dict['age_gender'] = age_gender_stats
-    
     return df_age_gender,df_ethnicity,df_education,df_employment_insurance
 
 def get_feature_mapping():
