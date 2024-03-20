@@ -45,14 +45,16 @@ def create_base_pop(df_age_gender,df_ethnicity,age,area):
     # gender_prob = area_data['age_gender_prob'][age]
     # Randomly assign gender and ethnicity to each individual
     age_gender_data['probability'] = age_gender_data.apply(lambda row: row['count'] / number_of_individuals, axis=1)
-    gender_choices = age_gender_data['gender'].to_list()
-    gender_probablities = age_gender_data['probability'].to_list()
+    gender_choices = age_gender_data['gender']
+    gender_probablities = age_gender_data['probability']
+    gender_probablities = gender_probablities/sum(gender_probablities)
     genders = choice(gender_choices, size=number_of_individuals, p=gender_probablities)
 
     total_population = ethnicity_data.groupby('area')['count'].sum()
     ethnicity_data['probability'] = ethnicity_data.apply(lambda row: row['count'] / total_population[row['area']], axis=1)
-    ethnicity_choices = ethnicity_data['ethnicity'].to_list()
-    ethnicity_probabilities = ethnicity_data['probability'].to_list()
+    ethnicity_choices = ethnicity_data['ethnicity']
+    ethnicity_probabilities = ethnicity_data['probability']
+    ethnicity_probabilities = ethnicity_probabilities/sum(ethnicity_probabilities)
     ethnicities = choice(
         ethnicity_choices,
         size=number_of_individuals,
@@ -157,7 +159,7 @@ def base_pop_wrapper(
 
 if __name__ == "__main__":
     # area_selector = ['BK0101']
-    area_selector = [100100]
+    # area_selector = [100100]
     output_dir = "/Users/shashankkumar/Documents/GitHub/MacroEcon"
     if not exists(output_dir):
         makedirs(output_dir)
@@ -165,7 +167,7 @@ if __name__ == "__main__":
     # df = pd.read_pickle("/Users/shashankkumar/Documents/GitHub/Syspop/syspop/att_dict.pkl")
     df = pd.read_pickle("/Users/shashankkumar/Documents/GitHub/Syspop/syspop/att_NZ_dict.pkl")
 
-    base_population,base_address = base_pop_wrapper(input_data=df,area_selector=area_selector)
+    base_population,base_address = base_pop_wrapper(input_data=df)
     base_population.to_pickle(output_dir + "/base_population.pkl")
     
     
