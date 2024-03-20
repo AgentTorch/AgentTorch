@@ -4,7 +4,6 @@ Source: https://github.com/sneakatyou/Syspop/tree/NYC/syspop/process
 
 from datetime import datetime
 from genericpath import exists
-from logging import getLogger
 from os import makedirs
 from pickle import dump as pickle_dump
 
@@ -14,8 +13,10 @@ from pandas import DataFrame
 import numpy as np
 import pandas as pd
 import random
-logger = getLogger()
+import logging
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 def get_probability(attribute : list):
     return [i/sum(attribute) for i in attribute]
 
@@ -118,7 +119,7 @@ def base_pop_wrapper(
 
     results = []
     if area_selector is None:
-        output_areas = list(input_data.keys())
+        output_areas = df_age_gender['area'].unique()
     else:
         output_areas = area_selector
     total_output_area = len(output_areas)
@@ -164,8 +165,9 @@ if __name__ == "__main__":
     if not exists(output_dir):
         makedirs(output_dir)
     
+    pop_path = "/Users/shashankkumar/Documents/GitHub/MacroEcon/data/step1/NZ/output_pop_data/NZ_POP.pkl"
     # df = pd.read_pickle("/Users/shashankkumar/Documents/GitHub/Syspop/syspop/att_dict.pkl")
-    df = pd.read_pickle("/Users/shashankkumar/Documents/GitHub/Syspop/syspop/att_NZ_dict.pkl")
+    df = pd.read_pickle(pop_path)
 
     base_population,base_address = base_pop_wrapper(input_data=df)
     base_population.to_pickle(output_dir + "/base_population.pkl")

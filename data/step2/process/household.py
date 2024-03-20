@@ -7,7 +7,7 @@ from address import add_random_address
 
 from copy import deepcopy
 from datetime import datetime
-from logging import getLogger
+import logging
 from random import choices as random_choices
 from random import sample as random_sample
 
@@ -21,7 +21,8 @@ from pandas import DataFrame, concat, isna
 from pandas import merge as pandas_merge
 import pandas as pd
 import numpy as np
-logger = getLogger()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def compared_synpop_household_with_census(
     houshold_dataset: DataFrame, pop_input: DataFrame, proc_area: int
