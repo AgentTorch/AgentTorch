@@ -18,8 +18,8 @@ class CensusDataLoader:
         self.population_df = None
         self.address_df = None
     
-    def generate_basepop(self, pop_data, pop_mapping, save_path=None):
-        self.population_df, self.address_df = base_pop_wrapper(input_data=pop_data, input_mapping=pop_mapping,
+    def generate_basepop(self, input_data, save_path=None):
+        self.population_df, self.address_df = base_pop_wrapper(input_data = input_data,
                                                          use_parallel=self.use_parallel,n_cpu=self.n_cpu,
                                                          area_selector=self.area_list)
         
