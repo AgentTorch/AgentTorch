@@ -1,3 +1,4 @@
+import inspect
 import wandb
 import types
 
@@ -66,3 +67,8 @@ def create_dicts_list(params):
 
 def assign_method(runner, method_name, method):
         setattr(runner, method_name, types.MethodType(method, runner))
+        
+
+def is_async_method(cls, method_name):
+    method = getattr(cls, method_name)
+    return inspect.iscoroutinefunction(method)

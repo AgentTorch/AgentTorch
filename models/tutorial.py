@@ -1,3 +1,4 @@
+import asyncio
 import sys
 sys.path.append('/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch')
 sys.path.append('/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch/AgentTorch')
@@ -55,5 +56,6 @@ class AgentSim():
     
 USER_INP_MODEL = 'macro_economics'
 USER_INP_DATA = 'NYC'
+USER_INP_NUM_AGENTS = 11111
 agent_sim = AgentSim(USER_INP_MODEL, USER_INP_DATA)
 agent_sim.execute()

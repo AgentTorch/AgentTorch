@@ -1,8 +1,9 @@
+import asyncio
 import torch
 import torch.nn as nn
 import re
 from AgentTorch.helpers import get_by_path, set_by_path, copy_module
-
+from utils import is_async_method
 class Controller(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -27,7 +28,10 @@ class Controller(nn.Module):
 
         try:
             for policy in self.config["substeps"][substep]["policy"][agent_type].keys():
-                action = {**policy_function[substep][agent_type][policy](state, observation), **action}
+                if is_async_method(policy_function[substep][agent_type][policy],'forward'):
+                    action = {**asyncio.run(policy_function[substep][agent_type][policy](state, observation)), **action}
+                else:
+                    action = {**policy_function[substep][agent_type][policy](state, observation), **action}
         except Exception as e:
             print("Action error: ", e)
             action = None
