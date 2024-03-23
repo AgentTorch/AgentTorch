@@ -1,15 +1,16 @@
-AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
+AGENT_TORCH_PATH = '/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch'
 
 import pandas as pd
 import numpy as np 
 import sys
-sys.path.insert(0, AGENT_TORCH_PATH)
+# sys.path.insert(0, AGENT_TORCH_PATH)
+sys.path.append(AGENT_TORCH_PATH)
 import torch
 import torch.optim as optim
 
 from AgentTorch import Runner, Registry
 
-def opdyn_registry():
+def simulation_registry():
     reg = Registry()
 
     # Agent earning behavior
@@ -46,7 +47,7 @@ def opdyn_registry():
 
     return reg
 
-class OpDynRunner(Runner):
+class SimulationRunner(Runner):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
