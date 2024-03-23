@@ -1,4 +1,7 @@
 import inspect
+import json
+import os
+import pandas as pd
 import wandb
 import types
 
@@ -72,3 +75,16 @@ def assign_method(runner, method_name, method):
 def is_async_method(cls, method_name):
     method = getattr(cls, method_name)
     return inspect.iscoroutinefunction(method)
+
+def preprocess_data(df_path,output_dir):
+    df = pd.read_pickle(df_path)
+    attributes = df.keys()
+    mapping_collection = {}
+    for attribute in attributes:
+        df[attribute],mapping = pd.factorize(df[attribute])
+        output_att_path = os.path.join(output_dir, attribute)
+        df[attribute].to_pickle(f'{output_att_path}.pickle')
+        mapping_collection[attribute] = mapping.tolist()
+    output_mapping_path = os.path.join(output_dir, 'mapping.json')
+    with open(output_mapping_path, 'w') as f:
+        json.dump(mapping_collection, f)
