@@ -12,26 +12,27 @@ from preprocess_data import preprocess_data
 from simulator import OpDynRunner, opdyn_registry
 
 class DataLoader(DataLoaderBase):
-    def __init__(self, model, region):
+    def __init__(self, model, region, population_size):
         super().__init__('simulator_data',model)
         self.config_path = self._get_config_path(model)
-        self.config_path = self._set_input_data_dir(self.config_path,region)
+        self.config_path = self._set_input_data_dir(self.config_path,'population_dir',region)
+        self.config_path = self.set_population_size(self.config_path,population_size)
         self.config = self._read_config(self.config_path)
     
     def _read_config(self,config_path):
         config = read_config(str(config_path))
         return config
     
-    def _set_input_data_dir(self, config_path,region):
-        return self._set_config_attribute(config_path,'population_dir', region)
+    def set_population_size(self, config_path, num_agents):
+        return self._set_config_attribute(config_path,'num_agents', num_agents)
     
     def get_config(self):
         return self.config
     
 
 class AgentSim():
-    def __init__(self,model,region) -> None:    
-        data_loader = DataLoader(model, region)
+    def __init__(self,model,region,population_size) -> None:    
+        data_loader = DataLoader(model, region, population_size)
         self.config = data_loader.get_config()
         self.runner = self._get_runner(model)
         self.runner.init()
@@ -56,6 +57,6 @@ class AgentSim():
     
 USER_INP_MODEL = 'macro_economics'
 USER_INP_DATA = 'NYC'
-USER_INP_NUM_AGENTS = 11111
-agent_sim = AgentSim(USER_INP_MODEL, USER_INP_DATA)
+USER_INP_NUM_AGENTS = 16460
+agent_sim = AgentSim(USER_INP_MODEL, USER_INP_DATA, USER_INP_NUM_AGENTS)
 agent_sim.execute()
