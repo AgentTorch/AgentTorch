@@ -1,448 +1,462 @@
 simulation_metadata:
-    num_episodes: 2
-    num_steps_per_episode: 7
-    num_substeps_per_step: 1
-    device: cpu
-    execution_mode: "llm" # or llm
-    num_agents: 37518
-    learning_params:
-        lr: 0.002
-        betas:
-            - 0.5
-            - 0.5
-        lr_gamma: 0.9999
-        model_path: saved_model.pth
-    work_prompt: "Do you want to work?"
-    consumption_prompt: "Do you want to {daily limit} consume?"
-    natural_unemployment_rate: 0.05
-    natural_interest_rate: 0.05
-    target_inflation_rate: 0.02
-    maximum_rate_of_change_of_wage: 0.05
-    maximum_rate_of_change_of_price: 0.05
-    inflation_adaptation_coefficient: 0.05
-    unemployment_adaptation_coefficient: 0.05
-    universal_productivity: 1.0
-    hourly_wage: 1.0
-    hours_worked: 168.0
-    tax_brackets : [0, 50, 100, 500]
-    tax_rates : [0.1, 0.2, 0.3,0.35]
-    population_dir: '/u/ayushc/projects/GradABM/MacroEcon'   
-    mapping_path: "/u/ayushc/projects/GradABM/MacroEcon/data/step2/process/mapping.json"
-    OPENAI_API_KEY: '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'
+  OPENAI_API_KEY: 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
+  device: cpu
+  execution_mode: llm
+  hourly_wage: 1.0
+  hours_worked: 168.0
+  inflation_adaptation_coefficient: 0.05
+  learning_params:
+    betas:
+    - 0.5
+    - 0.5
+    lr: 0.002
+    lr_gamma: 0.9999
+    model_path: saved_model.pth
+  mapping_path: ${simulation_metadata.population_dir}/mapping.json
+  maximum_rate_of_change_of_price: 0.05
+  maximum_rate_of_change_of_wage: 0.05
+  natural_interest_rate: 0.05
+  natural_unemployment_rate: 0.05
+  num_agents: 16460
+  num_episodes: 1
+  num_steps_per_episode: 3
+  num_substeps_per_step: 4
+  population_dir: /u/ayushc/projects/GradABM/MacroEcon/populations/NZ
+  target_inflation_rate: 0.02
+  tax_brackets:
+  - 0
+  - 50
+  - 100
+  - 500
+  tax_rates:
+  - 0.1
+  - 0.2
+  - 0.3
+  - 0.35
+  unemployment_adaptation_coefficient: 0.05
+  universal_productivity: 1.0
 state:
-    environment:
-        P: 
-            name: "Price of Essential Goods"
-            learnable: True
-            shape:
+  agents:
+    consumers:
+      number: ${simulation_metadata.num_agents}
+      properties:
+        ID:
+          dtype: float
+          initialization_function:
+            arguments:
+              pop_size:
+                initialization_function: null
+                learnable: false
+                name: population size
+                shape:
                 - 1
-            initialization_function: null
-            value: 12.0
-            dtype: float
-        R:
-            name: "Interest Rate"
-            learnable: false
-            shape:
-                - 1
-            initialization_function: null
-            value: 1.0
-            dtype: float
-        P_i: 
-            name: "Inflation Rate"
-            learnable: false
-            shape:
-                - 1
-            initialization_function: null
-            value: 1.0
-            dtype: float
-        U: 
-            name: "Unemployment Rate"
-            learnable: false
-            shape:
-                - 1
-            initialization_function: null
-            value: 1.0
-            dtype: float
-        G: 
-            name: "Goods Inventory"
-            learnable: false
-            shape:
-                - 1
-            initialization_function: null
-            value: 0.0
-            dtype: float
-        D: 
-            name: "Demand"
-            learnable: false
-            shape:
-                - 1
-            initialization_function: null
-            value: 0.0
-            dtype: float
-        Avg_P: 
-            name: "Average Price"
-            learnable: false
-            shape:
-                - 1
-            initialization_function: null
-            value: 0.0
-            dtype: float
-        Month_Counter: 
-            name: "Total months"
-            learnable: false
-            shape:
-                - 1
-            initialization_function: null
-            value: 1.0
-            dtype: float
-        Im: 
-            name: "Imbalance"
-            learnable: false
-            shape:
-                - 1
-            initialization_function: null
-            value: 0.0
-            dtype: float
-        Cumm_P: 
-            name: "Cummulative Price of Essential Goods"
-            learnable: false
-            shape:
-                - 1
-            initialization_function: null
-            value: 0.0
-            dtype: float          
-    agents:
-        consumers:
-            number: ${simulation_metadata.num_agents}
-            properties:
-                ID: 
-                    name: ID
-                    learnable: false
-                    shape:
-                        - ${state.agents.consumers.number} # to verify this. number of networks
-                        - 1
-                    initialization_function:
-                        generator: "initialize_id"
-                        arguments:
-                            pop_size:
-                                name: "population size"
-                                learnable: false
-                                shape:
-                                    - 1
-                                initialization_function: null
-                                value: ${state.agents.consumers.number}
-                    dtype: "float"
-                Gender:
-                    name: Gender
-                    learnable: False
-                    shape:
-                        - ${state.agents.consumers.number} # to verify this. number of networks
-                        - 1
-                    initialization_function:
-                        generator: "load_population_attribute"
-                        arguments:
-                            file_path:
-                                name: "Filepath for age group stage"
-                                learnable: False
-                                shape: null
-                                initialization_function: null
-                                value: ${simulation_metadata.population_dir}/gender.pickle
-                            attribute:
-                                name: "Age"
-                                learnable: False
-                                shape: null
-                                initialization_function: null
-                                value: 'gender'             
-                    dtype: "float"
-                
-                Age:
-                    name: Age
-                    learnable: False
-                    shape:
-                        - ${state.agents.consumers.number} # to verify this. number of networks
-                        - 1
-                    initialization_function:
-                        generator: "load_population_attribute"
-                        arguments:
-                            file_path:
-                                name: "Filepath for age group stage"
-                                learnable: False
-                                shape: null
-                                initialization_function: null
-                                value: ${simulation_metadata.population_dir}/age.pickle
-                            attribute:
-                                name: "Age"
-                                learnable: False
-                                shape: null
-                                initialization_function: null
-                                value: 'age'         
-                    dtype: "float"
-
-                Ethnicity:
-                    name: Ethnicity
-                    learnable: False
-                    shape:
-                        - ${state.agents.consumers.number} # to verify this. number of networks
-                        - 1
-                    initialization_function:
-                        generator: "load_population_attribute"
-                        arguments:
-                            file_path:
-                                name: "Filepath for age group stage"
-                                learnable: False
-                                shape: null
-                                initialization_function: null
-                                value: ${simulation_metadata.population_dir}/ethnicity.pickle
-                            attribute:
-                                name: "Ethnicity"
-                                learnable: False
-                                shape: null
-                                initialization_function: null     
-                                value: 'ethnicity'     
-                    dtype: "float"
-                
-                Area: 
-                    name: Area
-                    learnable: False
-                    shape:
-                        - ${state.agents.consumers.number}
-                        - 1
-                    initialization_function:
-                        generator: "load_population_attribute"
-                        arguments:
-                            file_path:
-                                name: "Filepath for age group stage"
-                                learnable: False
-                                shape: null
-                                initialization_function: null
-                                value: ${simulation_metadata.population_dir}/area.pickle 
-                            attribute:
-                                name: "Area"
-                                learnable: False
-                                shape: null
-                                initialization_function: null
-                                value: 'area'     
-                    dtype: "float"
-
-                Whether_to_Work:
-                    name: Whether to Work
-                    learnable: false
-                    shape:
-                        - ${state.agents.consumers.number}
-                        - 1
-                    initialization_function: null
-                    value: 0.0
-                    dtype: float
-                    
-                Conpsumption_Propensity:
-                    name: Conpsumption_Propensity
-                    learnable: false
-                    shape:
-                        - ${state.agents.consumers.number}
-                        - 1
-                    initialization_function: null
-                    value: 0.0
-                    dtype: float
-                    
-                Savings:
-                    name: Savings
-                    learnable: false
-                    shape:
-                        - ${state.agents.consumers.number}
-                        - 1
-                    initialization_function: null
-                    value: 0.0
-                    dtype: float
-                    
-                Work_Propensity:
-                    name: Work_Propensity
-                    learnable: false
-                    shape:
-                        - ${state.agents.consumers.number}
-                        - 1
-                    initialization_function: null
-                    value: 0.0
-                    dtype: float
-                    
-                Post_Tax_Income:
-                    name: Post_Tax_Income
-                    learnable: false
-                    shape:
-                        - ${state.agents.consumers.number}
-                        - 1
-                    initialization_function: null
-                    value: 0.0
-                    dtype: float
-                    
-                Monthly_Income:
-                    name: Monthly_Income
-                    learnable: false
-                    shape:
-                        - ${state.agents.consumers.number}
-                        - 1
-                    initialization_function: null
-                    value: 0.0
-                    dtype: float
-                    
-                Monthly_Consumption:
-                    name: Monthly_Consumption
-                    learnable: false
-                    shape:
-                        - ${state.agents.consumers.number}
-                        - 1
-                    initialization_function: null
-                    value: 0.0
-                    dtype: float
-                    
-    objects:
-        metadata:
-            num_jobs: 2
-        JobA:
-            number: 1
-            properties:
-                wage:
-                    name: "Wage"
-                    shape:
-                        - ${state.objects.JobA.number}
-                        - 1
-                    learnable: False
-                    initialization_function: null
-                    value: 1.0
-                    dtype: "float" 
-                            
-                productivity:
-                    name: "Productivity"
-                    shape:
-                        - ${state.objects.JobA.number}
-                        - 1
-                    learnable: False
-                    initialization_function: null
-                    value: 1.0
-                    dtype: "float"
-
-        JobB:
-            number: 1
-            properties:
-                wage:
-                    name: "Wage"
-                    shape:
-                        - ${state.objects.JobB.number}
-                        - 1
-                    learnable: False
-                    initialization_function: null
-                    value: 1.0
-                    dtype: "float"
-                            
-                productivity:
-                    name: "Productivity"
-                    shape:
-                        - ${state.objects.JobB.number}
-                        - 1
-                    learnable: False
-                    initialization_function: null
-                    value: 1.0
-                    dtype: "float"
-                    
-    network:
-        agent_agent:
-            opinion_network:
-                type: grid
-                arguments:
-                    shape:
-                        - 80
-                        - 80
-        agent_object: null
-        object_object: null
-        
+                value: ${state.agents.consumers.number}
+            generator: initialize_id
+          learnable: false
+          name: ID
+          shape:
+          - ${state.agents.consumers.number}
+          - 1
+        age:
+          dtype: float
+          initialization_function:
+            arguments:
+              attribute:
+                initialization_function: null
+                learnable: false
+                name: Age
+                shape: null
+                value: age
+              file_path:
+                initialization_function: null
+                learnable: false
+                name: Filepath for age group stage
+                shape: null
+                value: ${simulation_metadata.population_dir}/age.pickle
+            generator: load_population_attribute
+          learnable: false
+          name: Age
+          shape:
+          - ${state.agents.consumers.number}
+          - 1
+        area:
+          dtype: float
+          initialization_function:
+            arguments:
+              attribute:
+                initialization_function: null
+                learnable: false
+                name: Area
+                shape: null
+                value: area
+              file_path:
+                initialization_function: null
+                learnable: false
+                name: Filepath for age group stage
+                shape: null
+                value: ${simulation_metadata.population_dir}/area.pickle
+            generator: load_population_attribute
+          learnable: false
+          name: Area
+          shape:
+          - ${state.agents.consumers.number}
+          - 1
+        assets:
+          dtype: float
+          initialization_function: null
+          learnable: false
+          name: Savings
+          shape:
+          - ${state.agents.consumers.number}
+          - 1
+          value: 0.0
+        consumption_propensity:
+          dtype: float
+          initialization_function: null
+          learnable: false
+          name: Conpsumption_Propensity
+          shape:
+          - ${state.agents.consumers.number}
+          - 1
+          value: 0.0
+        ethnicity:
+          dtype: float
+          initialization_function:
+            arguments:
+              attribute:
+                initialization_function: null
+                learnable: false
+                name: Ethnicity
+                shape: null
+                value: ethnicity
+              file_path:
+                initialization_function: null
+                learnable: false
+                name: Filepath for age group stage
+                shape: null
+                value: ${simulation_metadata.population_dir}/ethnicity.pickle
+            generator: load_population_attribute
+          learnable: false
+          name: Ethnicity
+          shape:
+          - ${state.agents.consumers.number}
+          - 1
+        gender:
+          dtype: float
+          initialization_function:
+            arguments:
+              attribute:
+                initialization_function: null
+                learnable: false
+                name: Age
+                shape: null
+                value: gender
+              file_path:
+                initialization_function: null
+                learnable: false
+                name: Filepath for age group stage
+                shape: null
+                value: ${simulation_metadata.population_dir}/gender.pickle
+            generator: load_population_attribute
+          learnable: false
+          name: Gender
+          shape:
+          - ${state.agents.consumers.number}
+          - 1
+        monthly_consumption:
+          dtype: float
+          initialization_function: null
+          learnable: false
+          name: Monthly_Consumption
+          shape:
+          - ${state.agents.consumers.number}
+          - 1
+          value: 0.0
+        monthly_income:
+          dtype: float
+          initialization_function: null
+          learnable: false
+          name: Monthly_Income
+          shape:
+          - ${state.agents.consumers.number}
+          - 1
+          value: 0.0
+        post_tax_income:
+          dtype: float
+          initialization_function: null
+          learnable: false
+          name: Post_Tax_Income
+          shape:
+          - ${state.agents.consumers.number}
+          - 1
+          value: 0.0
+        will_work:
+          dtype: float
+          initialization_function: null
+          learnable: false
+          name: Whether to Work
+          shape:
+          - ${state.agents.consumers.number}
+          - 1
+          value: 0.0
+        work_propensity:
+          dtype: float
+          initialization_function: null
+          learnable: false
+          name: Work_Propensity
+          shape:
+          - ${state.agents.consumers.number}
+          - 1
+          value: 0.0
+  environment:
+    Avg_P:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: Average Price
+      shape:
+      - 1
+      value: 0.0
+    Cumm_P:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: Cummulative Price of Essential Goods
+      shape:
+      - 1
+      value: 0.0
+    D:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: Demand
+      shape:
+      - 1
+      value: 0.0
+    G:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: Goods Inventory
+      shape:
+      - 1
+      value: 0.0
+    Im:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: Imbalance
+      shape:
+      - 1
+      value: 0.0
+    Month_Counter:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: Total months
+      shape:
+      - 1
+      value: 1.0
+    P:
+      dtype: float
+      initialization_function: null
+      learnable: true
+      name: Price of Essential Goods
+      shape:
+      - 1
+      value: 12.0
+    P_i:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: Inflation Rate
+      shape:
+      - 1
+      value: 1.0
+    R:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: Interest Rate
+      shape:
+      - 1
+      value: 1.0
+    U:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: Unemployment Rate
+      shape:
+      - 1
+      value: 1.0
+  network:
+    agent_agent:
+      opinion_network:
+        arguments:
+          shape:
+          - 80
+          - 80
+        type: grid
+    agent_object: null
+    object_object: null
+  objects:
+    JobA:
+      number: 1
+      properties:
+        productivity:
+          dtype: float
+          initialization_function: null
+          learnable: false
+          name: Productivity
+          shape:
+          - ${state.objects.JobA.number}
+          - 1
+          value: 1.0
+        wage:
+          dtype: float
+          initialization_function: null
+          learnable: false
+          name: Wage
+          shape:
+          - ${state.objects.JobA.number}
+          - 1
+          value: 1.0
+    JobB:
+      number: 1
+      properties:
+        productivity:
+          dtype: float
+          initialization_function: null
+          learnable: false
+          name: Productivity
+          shape:
+          - ${state.objects.JobB.number}
+          - 1
+          value: 1.0
+        wage:
+          dtype: float
+          initialization_function: null
+          learnable: false
+          name: Wage
+          shape:
+          - ${state.objects.JobB.number}
+          - 1
+          value: 1.0
+    metadata:
+      num_jobs: 2
 substeps:
-    "0":
-        name: "New Month"
-        description: A new month is started
-        active_agents:
-            - consumers
-        observation:
-            consumers: null
-        policy:
-            consumers:
-                work_consumption_decision:
-                    generator: WorkConsumptionPropensity
-                    arguments: null
-                    input_variables: 
-                        Age : 'agents/consumers/Age'
-                        Gender : 'agents/consumers/Gender'
-                        Consumption_Propensity: 'agents/consumers/Conpsumption_Propensity'
-                        Work_Propensity: 'agents/consumers/Work_Propensity'
-                        Whether_to_Work: 'agents/consumers/Whether_to_Work'
-                    output_variables:
-                        - Whether_to_Work
-                        - Work_Propensity
-                        - Consumption_Propensity
-
-        transition:
-        # Agent behavior - consumption, earning and savings; market behavior - macro quantities
-            UpdateMacroeconomics:
-                generator: UpdateMacroeconomics
-                arguments: null
-                input_variables:
-                    Num_Agents: 'agents/consumers/number'
-                    Month_Counter: 'environment/Month_Counter'
-                    Savings: 'agents/consumers/Savings'
-                    Goods_Inventory: 'environment/G'
-                    Demand_of_Goods: 'environment/D'
-                    Imbalance: 'environment/Im'
-                    Hourly_Wage: 'objects/JobA/wage'
-                    Price_of_Goods: 'environment/P'
-                    Interest_Rate: 'environment/R'
-                    Average_Price_of_goods: 'environment/Avg_P'
-                    Consumption_Propensity: 'agents/consumers/Conpsumption_Propensity'
-                    Inflation_Rate: 'environment/P_i'
-                    Unemployment_Rate: 'environment/U'
-                    Cummulative_Price_of_Goods: 'environment/Cumm_P'
-
-                output_variables:
-                    - Goods_Inventory
-                    - Demand_of_Goods
-                    - Imbalance
-                    - Hourly_Wage
-                    - Price_of_Goods
-                    - Cummulative_Price_of_Goods
-                    - Inflation_Rate
-                    
-            UpdateFinancialMarket:
-                generator: UpdateFinancialMarket
-                arguments: null
-                input_variables: 
-                    Work_Propensity: 'agents/consumers/Work_Propensity'
-                    Monthly_Income: 'agents/consumers/Monthly_Income'
-                    Interest_Rate: 'environment/R'
-                    Inflation_Rate: 'environment/P_i'
-                    Unemployment_Rate: 'environment/U'
-                    Month_Counter: 'environment/Month_Counter'
-                output_variables:
-                    - Interest_Rate
-                    - Unemployment_Rate
-            
-            UpdateMonthCounter:
-                generator: UpdateMonthCounter
-                arguments: null
-                input_variables: 
-                    Month_Counter: 'environment/Month_Counter' 
-                output_variables:
-                    - Month_Counter
-            
-            UpdateSavings:
-                generator: UpdateSavings
-                arguments: null
-                input_variables: 
-                    Savings: 'agents/consumers/Savings'
-                    Num_Agents: 'environment/Num_Agents'
-                    Month_Counter: 'environment/Month_Counter'
-                    Monthly_Income: 'agents/consumers/Monthly_Income'
-                    Hourly_Wage: 'objects/JobA/wage'
-                    Interest_Rate: 'environment/R'
-
-                output_variables:
-                    - Savings
-                    - Monthly_Income
-
-        reward: null
+  '0':
+    active_agents:
+    - consumers
+    description: Agents earn from hourly employment and interest on old assets
+    name: Agents Earning
+    observation:
+      consumers: null
+    policy:
+      consumers:
+        get_work_consumption_decision:
+          arguments: null
+          generator: WorkConsumptionPropensity
+          input_variables:
+            age: agents/consumers/age
+            consumption_propensity: agents/consumers/consumption_propensity
+            gender: agents/consumers/gender
+            work_propensity: agents/consumers/work_propensity
+          output_variables:
+          - will_work
+          - consumption_propensity
+    transition:
+      update_assets:
+        arguments: null
+        generator: UpdateAssets
+        input_variables:
+          assets: agents/consumers/assets
+          hourly_wage: objects/JobA/wage
+          interest_rate: environment/R
+          monthly_income: agents/consumers/monthly_income
+        output_variables:
+        - assets
+        - monthly_income
+      write_action_to_state:
+        arguments: null
+        generator: WriteActionToState
+        input_variables:
+          consumption_propensity: agents/consumers/consumption_propensity
+          will_work: agents/consumers/will_work
+        output_variables:
+        - consumption_propensity
+        - will_work
+  '1':
+    active_agents:
+    - consumers
+    description: Agents spend assets on consumption
+    name: Agents Consumption
+    observation:
+      consumers: null
+    policy:
+      consumers: null
+    transition:
+      update_assets_and_goods:
+        arguments: null
+        generator: UpdateAssetsGoods
+        input_variables:
+          assets: agents/consumers/assets
+          consumption_propensity: agents/consumers/consumption_propensity
+          goods_inventory: environment/G
+          imbalance: environment/Im
+          price_of_goods: environment/P
+          total_demand: environment/D
+          work_propensity: agents/consumers/work_propensity
+        output_variables:
+        - goods_inventory
+        - assets
+        - total_demand
+        - imbalance
+  '2':
+    active_agents:
+    - consumers
+    description: Labor department sets employment and wage parameters based on agent
+      behavior
+    name: Labor Market
+    observation:
+      consumers: null
+    policy:
+      consumers: null
+    transition:
+      update_macro_rates:
+        arguments: null
+        generator: UpdateMacroRates
+        input_variables:
+          hourly_wage: objects/JobA/wage
+          imbalance: environment/Im
+          unemployment_rate: environment/U
+          will_work: agents/consumers/will_work
+        output_variables:
+        - hourly_wage
+        - unemployment_rate
+  '3':
+    active_agents:
+    - consumers
+    description: FED updates inflation and interest rate parameters based on labor
+      and consumption behavior of agents
+    name: Financial Market
+    observation:
+      consumers: null
+    policy:
+      consumers: null
+    transition:
+      update_financial_market:
+        arguments: null
+        generator: UpdateFinancialMarket
+        input_variables:
+          cumulative_price_of_goods: environment/Cumm_P
+          imbalance: environment/Im
+          inflation_rate: environment/P_i
+          interest_rate: environment/R
+          price_of_goods: environment/P
+          unemployment_rate: environment/U
+        output_variables:
+        - interest_rate
+        - price_of_goods
+        - cumulative_price_of_goods
+        - inflation_rate

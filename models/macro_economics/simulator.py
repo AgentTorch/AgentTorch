@@ -1,4 +1,4 @@
-AGENT_TORCH_PATH = '/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch'
+AGENT_TORCH_PATH = '/Users/ayushc/projects/GradABM/MacroEcon/AgentTorch'
 
 import pandas as pd
 import numpy as np 
@@ -12,7 +12,7 @@ from AgentTorch import Runner, Registry
 
 def simulation_registry():
     reg = Registry()
-
+    
     # Agent earning behavior
     from substeps.earning.action import WorkConsumptionPropensity
     reg.register(WorkConsumptionPropensity, "get_work_consumption_decision", key="policy")

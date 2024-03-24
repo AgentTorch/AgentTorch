@@ -5,7 +5,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 import os
 
-from simulator import OpDynRunner, opdyn_registry
+from simulator import SimulationRunner, simulation_registry
 from AgentTorch.helpers import read_config
 
 '''Command: python trainer.py --c config.yaml'''
@@ -29,9 +29,9 @@ else:
     print("Config file path: ", config_file)
     
 config = read_config(config_file)
-registry = opdyn_registry()
+registry = simulation_registry()
 
-runner = OpDynRunner(config, registry)
+runner = SimulationRunner(config, registry)
 device = torch.device(runner.config['simulation_metadata']['device'])
 
 print("Initializing runner..")
