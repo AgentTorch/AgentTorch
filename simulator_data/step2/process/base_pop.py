@@ -38,8 +38,10 @@ def create_base_pop(df_age_gender,df_ethnicity,age,area):
     age_gender_data = age_gender_data[age_gender_data['age']==age]
     ethnicity_data = df_ethnicity[df_ethnicity['area']==area]
     
-    
-    number_of_individuals = int(age_gender_data.sum(axis=0)[['count']].sum())
+    if 'population_count' in age_gender_data.columns:
+        number_of_individuals = int(age_gender_data['population_count'].values[0])
+    else:
+        number_of_individuals = int(age_gender_data.sum(axis=0)[['count']].sum())
     if number_of_individuals == 0:
         return []
     
@@ -161,11 +163,12 @@ def base_pop_wrapper(
 if __name__ == "__main__":
     # area_selector = ['BK0101']
     # area_selector = [100100]
-    output_dir = "/Users/shashankkumar/Documents/GitHub/MacroEcon"
+    area_selector = [10101]
+    output_dir = "/Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/census_populations/SF/synthetic_populations"
     if not exists(output_dir):
         makedirs(output_dir)
     
-    pop_path = "/Users/shashankkumar/Documents/GitHub/MacroEcon/data/step1/NZ/output_pop_data/NZ_POP.pkl"
+    pop_path = "/Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/census_populations/SF/user_input/SF_POP.pkl"
     # df = pd.read_pickle("/Users/shashankkumar/Documents/GitHub/Syspop/syspop/att_dict.pkl")
     df = pd.read_pickle(pop_path)
 
