@@ -99,12 +99,12 @@ def create_base_pop(df_age_gender,df_ethnicity,age,area):
 
 
 def base_pop_wrapper(
-    input_data: dict,
-    area_selector = None,
-    use_parallel: bool = False,
-    n_cpu: int = 8,
+    input_data,
+    area_selector=None,
+    use_parallel=False,
+    n_cpu=8,
 ) -> DataFrame:
-
+    
     df_age_gender = input_data['age_gender']
     df_ethnicity = input_data['ethnicity']
     # df_age_gender_melt = df_age_gender.melt(
