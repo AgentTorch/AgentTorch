@@ -21,9 +21,8 @@
   </a>
 </p> 
 
-AgentTorch unlocks differentiable agent-based modeling over million-scale populations. Quick summary of underlying research is [here](https://web.media.mit.edu/~ayushc/motivation.pdf).
+Large population models are grounded in state-of-the-art AI research and a quick summary is [here](https://web.media.mit.edu/~ayushc/motivation.pdf). AgentTorch LPMs have four key features:
 
-Four salient features -
 - **Scalability**: AgentTorch can simulate country-size populations in seconds on commodity hardware.
 - **Differentiability**: AgentTorch models can differentiate through simulations with stochastic dynamics and conditional interventions, enabling gradient-based learning.
 - **Composition**: AgentTorch models can compose with deep neural networks (eg: LLMs), mechanistic simulators (eg: mitsuba) or other LPMs. This helps describe agent behavior, calibrate simulation parameters and specify expressive interaction rules.
