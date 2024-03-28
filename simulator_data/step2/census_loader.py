@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import sys
 import os
+import json
 
 from process.base_pop import base_pop_wrapper
 from process.household import household_wrapper
@@ -57,6 +58,10 @@ class CensusDataLoader:
         self.mobility_network_paths = mobility_network_wrapper(age_df, num_steps, interaction_by_age_dict, age_by_category_dict, save_path=save_path)
         
     def export(self, save_dir):
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+        
+        # creating the demographic files
         df = self.population_df
         attributes = df.keys()
         mapping_collection = {}
