@@ -56,4 +56,16 @@ class CensusDataLoader:
         age_df = self.population_df['age']
         self.mobility_network_paths = mobility_network_wrapper(age_df, num_steps, interaction_by_age_dict, age_by_category_dict, save_path=save_path)
         
-        
+    def export(self, save_dir):
+        df = self.population_df
+        attributes = df.keys()
+        mapping_collection = {}
+        for attribute in attributes:
+            df[attribute],mapping = pd.factorize(df[attribute])
+            output_att_path = os.path.join(save_dir, attribute)
+            df[attribute].to_pickle(f'{output_att_path}.pickle')
+            mapping_collection[attribute] = mapping.tolist()
+        output_mapping_path = os.path.join(save_dir, 'population_mapping.json')
+
+        with open(output_mapping_path, 'w') as f:
+            json.dump(mapping_collection, f)

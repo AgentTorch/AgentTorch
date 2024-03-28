@@ -2,7 +2,7 @@
 Source: https://github.com/sneakatyou/Syspop/tree/NYC/syspop/process
 '''
 import random
-from address import add_random_address
+from .address import add_random_address
 
 
 from copy import deepcopy
