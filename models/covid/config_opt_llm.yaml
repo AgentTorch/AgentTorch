@@ -75,7 +75,7 @@ state:
         
         mortality_rate:
             name: "Mortality Rate"
-            learnable: False
+            learnable: True
             shape:
                 - 1
             initialization_function: null
@@ -386,7 +386,15 @@ substeps:
         transition:
             new_transmission:
                 generator: "NewTransmission"
-                arguments: null
+                arguments:
+                    R2:
+                        name: "R2"
+                        learnable: True
+                        shape:
+                            - 1
+                        initialization_function: null
+                        value: 4.75
+                        dtype: "float"
                 input_variables:
                     R: 'environment/R'
                     SFSusceptibility: 'environment/SFSusceptibility'
