@@ -29,17 +29,15 @@ class NewTransmission(SubstepTransitionMessagePassing):
         integrals = torch.zeros_like(B_n)
         infected_idx = x_j[:, 2].bool()    
         infected_times = t - x_j[infected_idx, 3] - 1
-        
-        pdb.set_trace()
-                
+                    
         integrals[infected_idx] =  lam_gamma_integrals[infected_times.long()]
         edge_network_numbers = edge_attr[0, :]
                 
         I_bar = torch.gather(x_i[:, 4], 0, edge_network_numbers.long()).view(-1)
         
-        not_isolated = 1 - x_j[:, 5]
+        not_isolated = 1 - x_j[:, 5] # logical_not(will_isolate)
         
-        res = R*S_A_s*A_s_i*B_n*integrals #/I_bar
+        res = not_isolated*R*S_A_s*A_s_i*B_n*integrals #/I_bar
 
         return res.view(-1, 1)
     
@@ -71,11 +69,9 @@ class NewTransmission(SubstepTransitionMessagePassing):
         t = state['current_step']
         print("Substep: Disease Transmission")
         
-        R = state['environment']['R']
+        # R = state['environment']['R']
         #         R = get_by_path(state, re.split("/", input_variables['R']))
-
-        
-        pdb.set_trace()
+        R = self.learnable_args['R2']
                 
         SFSusceptibility = get_by_path(state, re.split("/", input_variables['SFSusceptibility']))
         SFInfector = get_by_path(state, re.split("/", input_variables['SFInfector']))
@@ -91,7 +87,6 @@ class NewTransmission(SubstepTransitionMessagePassing):
         
         agents_infected_index = torch.logical_and(current_stages > self.SUSCEPTIBLE_VAR, current_stages < self.RECOVERED_VAR)
         
-        pdb.set_trace()
         will_isolate = action['citizens']['isolation_decision']
                         
         all_node_attr = torch.stack((
@@ -113,6 +108,8 @@ class NewTransmission(SubstepTransitionMessagePassing):
         
         potentially_exposed_today = F.gumbel_softmax(logits=cat_logits,tau=1,hard=True,dim=1)[:,0]        
         newly_exposed_today = (current_stages==self.SUSCEPTIBLE_VAR).squeeze()*potentially_exposed_today
+
+        pdb.set_trace()
         
         # d(newly_exposed_today) / d(R)
                 
