@@ -18,6 +18,11 @@ class UpdateMacroRates(SubstepTransition):
         unemployment_rate = agg_l / (l.size(0) * 12.0)
         return unemployment_rate
     
+    def calculateNumberOfAgentsNotWorking(self, working_status):
+        l = working_status
+        agents_not_working = torch.sum(torch.sum((1-l),dim=1),dim=0)
+        return agents_not_working
+    
     def calculateHourlyWage(self, hourly_wage, imbalance):
         # Calculate hourly wage
         w = hourly_wage
@@ -47,9 +52,14 @@ class UpdateMacroRates(SubstepTransition):
         working_status = get_by_path(state, re.split("/", self.input_variables['will_work']))
         imbalance = get_by_path(state, re.split("/", self.input_variables['imbalance']))
         hourly_wage = get_by_path(state, re.split("/", self.input_variables['hourly_wage']))
+        # unemployed_agents = get_by_path(state, re.split("/", self.input_variables['unemployed_agents']))
                 
         # unemployment rate
-        unemployment_rate = self.calculateUnemploymentRate(working_status)
+        agents_not_working = self.calculateNumberOfAgentsNotWorking(working_status)
+        unemployment_adaptation_coefficient = self.args['unemployment_adaptation_coefficient']
+        unemployed_agents = torch.ceil(agents_not_working * unemployment_adaptation_coefficient)
+        num_agents = working_status.shape[0]
+        unemployment_rate = unemployed_agents / num_agents
                 
         # hourly wages
         new_hourly_wages = self.calculateHourlyWage(hourly_wage, imbalance)

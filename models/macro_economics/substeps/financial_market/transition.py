@@ -50,7 +50,7 @@ class UpdateFinancialMarket(SubstepTransition):
         return price_of_goods
     
     def calculateCumulativeGoodsPrice(self, cumulative_price_of_goods, price_of_goods):
-        pdb.set_trace()
+        # pdb.set_trace()
         cumulative_price_of_goods = cumulative_price_of_goods + price_of_goods.squeeze()
         return cumulative_price_of_goods
 

@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import re
 from AgentTorch.helpers import get_by_path, set_by_path, copy_module
-from utils import is_async_method
+from AgentTorch.utils import is_async_method
 class Controller(nn.Module):
     def __init__(self, config):
         super().__init__()

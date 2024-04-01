@@ -1,4 +1,4 @@
-AGENT_TORCH_PATH = '/Users/ayushc/projects/GradABM/MacroEcon/AgentTorch'
+AGENT_TORCH_PATH = '/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch'
 
 import pandas as pd
 import numpy as np 
@@ -7,7 +7,8 @@ import sys
 sys.path.append(AGENT_TORCH_PATH)
 import torch
 import torch.optim as optim
-
+import sys
+sys.path.append("/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch/AgentTorch")
 from AgentTorch import Runner, Registry
 
 def simulation_registry():
@@ -61,6 +62,9 @@ class SimulationRunner(Runner):
             num_steps_per_episode = self.config["simulation_metadata"]["num_steps_per_episode"]
             self.reset()
             self.step(num_steps_per_episode)
+            unemployment_rate = self.state_trajectory[-1][-1]['environment']['U']
+            
+        
 
             #self.controller.learn_after_episode(jax.tree_map(lambda x: x[-1], self.trajectory), self.initializer, self.optimizer)
 
