@@ -12,16 +12,16 @@ simulation_metadata:
     lr: 0.002
     lr_gamma: 0.9999
     model_path: saved_model.pth
-  mapping_path: ${simulation_metadata.population_dir}/mapping.json
+  mapping_path: ${simulation_metadata.population_dir}/population_mapping.json
   maximum_rate_of_change_of_price: 0.05
   maximum_rate_of_change_of_wage: 0.05
   natural_interest_rate: 0.05
   natural_unemployment_rate: 0.05
-  num_agents: 16460
-  num_episodes: 1
-  num_steps_per_episode: 3
+  num_agents: 37518
+  num_episodes: 2
+  num_steps_per_episode: 2
   num_substeps_per_step: 4
-  population_dir: /u/ayushc/projects/GradABM/MacroEcon/populations/NZ
+  population_dir: /Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/census_populations/NYC/simulation_input
   target_inflation_rate: 0.02
   tax_brackets:
   - 0
@@ -284,11 +284,19 @@ state:
     U:
       dtype: float
       initialization_function: null
-      learnable: false
+      learnable: true
       name: Unemployment Rate
       shape:
       - 1
       value: 1.0
+    unemployed_agents: 
+            dtype: float
+            initialization_function: null
+            learnable: false
+            name: unemployed_agents
+            shape:
+            - 1
+            value: 1.0
   network:
     agent_agent:
       opinion_network:
@@ -424,7 +432,15 @@ substeps:
       consumers: null
     transition:
       update_macro_rates:
-        arguments: null
+        arguments:
+          unemployment_adaptation_coefficient: 
+            dtype: float
+            initialization_function: null
+            learnable: true
+            name: unemployment_adaptation_coefficient
+            shape:
+            - 1
+            value: 0.7
         generator: UpdateMacroRates
         input_variables:
           hourly_wage: objects/JobA/wage

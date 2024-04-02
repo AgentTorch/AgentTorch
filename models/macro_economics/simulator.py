@@ -10,6 +10,7 @@ import torch.optim as optim
 import sys
 sys.path.append("/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch/AgentTorch")
 from AgentTorch import Runner, Registry
+from torch.nn import functional as F
 
 def simulation_registry():
     reg = Registry()
@@ -51,18 +52,32 @@ def simulation_registry():
 class SimulationRunner(Runner):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # self.optimizer = optim.Adam(self.parameters(), 
-        #         lr=self.config['simulation_metadata']['learning_params']['lr'], 
-        #         betas=self.config['simulation_metadata']['learning_params']['betas'])
-
+        df = pd.read_csv("/Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/NYC/brooklyn_unemp.csv")
+        df.sort_values(by=['year','month'],ascending=True,inplace=True)
+        arr = df['unemployment_rate'].values
+        tensor = torch.from_numpy(arr)
+        self.unemployment_test_dataset = tensor.view(5,-1)
+        self.mse_loss = torch.nn.MSELoss()
+        
     def forward(self):
+        self.optimizer = optim.Adam(self.parameters(), 
+                lr=self.config['simulation_metadata']['learning_params']['lr'], 
+                betas=self.config['simulation_metadata']['learning_params']['betas'])
+        self.scheduler = optim.lr_scheduler.ExponentialLR(self.optimizer, 
+                self.config['simulation_metadata']['learning_params']['lr_gamma'])
+
         for episode in range(self.config['simulation_metadata']['num_episodes']):
             print("episode: ", episode)
             num_steps_per_episode = self.config["simulation_metadata"]["num_steps_per_episode"]
             self.reset()
             self.step(num_steps_per_episode)
-            unemployment_rate = self.state_trajectory[-1][-1]['environment']['U']
+            unemployment_rate_list = [state['environment']['U'] for state in self.state_trajectory[-1] if state['current_substep'] == str(self.config['simulation_metadata']['num_substeps_per_step'] - 1)]
+            unemployment_rate_tensor = torch.tensor(unemployment_rate_list,requires_grad=True).float()
+            test_set_for_episode = self.unemployment_test_dataset[episode][:num_steps_per_episode].float()
+            loss =  self.mse_loss(unemployment_rate_tensor, test_set_for_episode)
+            loss.backward()
+            self.optimizer.step()
+            self.optimizer.zero_grad()
             
         
 
