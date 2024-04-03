@@ -1,9 +1,10 @@
 simulation_metadata:
     num_episodes: 1
-    num_steps_per_episode: 4
-    num_substeps_per_step: 1
+    num_steps_per_episode: 3
+    num_substeps_per_step: 2
     OPENAI_API_KEY: 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
     device: "cpu"
+    EXECUTION_MODE: llm
     num_agents: 37518
     initial_infection_ratio: 0.04
     population_dir: "/u/ayushc/projects/GradABM/MacroEcon/simulator_data/census_populations/NYC/simulation_input"
@@ -413,28 +414,36 @@ substeps:
                     - infected_time
         reward: null
         
-#     "1":
-#         name: "Disease Progression"
-#         description: "Evolution of previously infected agents"
-#         active_agents:
-#             - "citizens"
-#         observation:
-#             citizens: null
-#         policy:
-#             citizens: null
-#         transition:
-#             seirm_progression:
-#                 generator: "SEIRMProgression"
-#                 arguments: null
-#                 input_variables:
-#                     disease_stage: 'agents/citizens/disease_stage'
-#                     next_stage_time: 'agents/citizens/next_stage_time'
-#                     exposed_to_infected_time: 'environment/exposed_to_infected_time'
-#                     infected_to_recovered_time: 'environment/infected_to_recovered_time'
-#                 output_variables:
-#                     - disease_stage
-#                     - next_stage_time
-#         reward: null
+    "1":
+        name: "Disease Progression"
+        description: "Evolution of previously infected agents"
+        active_agents:
+            - "citizens"
+        observation:
+            citizens: null
+        policy:
+            citizens: null
+        transition:
+            seirm_progression:
+                generator: "SEIRMProgression"
+                arguments:
+                   M:
+                        name: "Mortality Rate"
+                        learnable: True
+                        shape:
+                            - 1
+                        initialization_function: null
+                        value: 0.12
+                        dtype: "float" 
+                input_variables:
+                    disease_stage: 'agents/citizens/disease_stage'
+                    next_stage_time: 'agents/citizens/next_stage_time'
+                    exposed_to_infected_time: 'environment/exposed_to_infected_time'
+                    infected_to_recovered_time: 'environment/infected_to_recovered_time'
+                output_variables:
+                    - disease_stage
+                    - next_stage_time
+        reward: null
         
 #     "2":
 #         name: "Quarantine"

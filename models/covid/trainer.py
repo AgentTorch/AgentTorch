@@ -50,8 +50,6 @@ num_steps_per_episode = runner.config['simulation_metadata']['num_steps_per_epis
 
 runner.init()
 
-pdb.set_trace()
-
 opt = optim.Adam(runner.parameters(), 
                 lr=runner.config['simulation_metadata']['learning_params']['lr'], 
                 betas=runner.config['simulation_metadata']['learning_params']['betas'])

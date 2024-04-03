@@ -16,7 +16,7 @@ from AgentTorch.substep import SubstepAction
 from AgentTorch.LLM.llm_agent import LLMAgent
 from prompt import prompt_template_var, system_prompt
 
-from .llm_utils import get_answer, CaseProvider, Neighborhood
+from llm_utils import get_answer, CaseProvider, Neighborhood
 
 class MakeIsolationDecision(SubstepAction):
     def __init__(self, *args, **kwargs):
@@ -42,6 +42,12 @@ class MakeIsolationDecision(SubstepAction):
         
         self.num_agents = self.config['simulation_metadata']['num_agents']
     
+    def string_to_number(self, string):
+        if 'false' in string.lower():
+            return 0
+        else:
+            return 1
+    
     def change_text(self, change_amount):
         change_amount = int(change_amount)
         if change_amount >= 1:
@@ -60,6 +66,10 @@ class MakeIsolationDecision(SubstepAction):
 
         week_id = int(t/7) + 1
         
+        past_week_num = self.case_numbers[week_id-1]
+        curr_week_num = self.case_numbers[week_id]
+        week_i_change = (curr_week_num/past_week_num - 1)*100
+
         print("Substep Action: IsolationDecision")
         
         agent_age = get_by_path(state, re.split("/", input_variables['age']))
@@ -70,18 +80,17 @@ class MakeIsolationDecision(SubstepAction):
 
         masks = []
         prompt_list = []
-
+        
+        print("Executing LLM prompts")
+        
         # prompts are segregated based on agent age
         for value in self.age_mapping.keys():
             # agent subgroups for each prompt
             age_mask = (agent_age == value)
             masks.append(age_mask.float())
-
+        
+        for value in self.age_mapping.keys():
             # formatting prompt for each group
-            past_week_num = self.case_numbers[week_id-1]
-            curr_week_num = self.case_numbers[week_id]
-            week_i_change = (curr_week_num/past_week_num - 1)*100
-
             prompt = prompt_template_var.format(age=self.age_mapping[value], week_i_num=curr_week_num, change_text=self.change_text(week_i_change))
             prompt_list.append(prompt)
 
@@ -92,8 +101,10 @@ class MakeIsolationDecision(SubstepAction):
         will_isolate = torch.zeros((self.num_agents, 1))
 
         for en, output_value in enumerate(agent_output):
-            output_response = json.loads(output_value['content'])
-            isolation_response = output_response.split(',')[0]
+            output_response = output_value['text']
+            decision = output_response.split('.')[0]
+            reasoning = output_response.split('.')[1] # reasoning to be saved for RAG later
+            isolation_response = self.string_to_number(decision)
             will_isolate = will_isolate + masks[en]*isolation_response
         
         return {self.output_variables[0]: will_isolate}

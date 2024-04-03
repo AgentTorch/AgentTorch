@@ -35,9 +35,12 @@ class NewTransmission(SubstepTransitionMessagePassing):
                 
         I_bar = torch.gather(x_i[:, 4], 0, edge_network_numbers.long()).view(-1)
         
-        not_isolated = 1 - x_j[:, 5] # logical_not(will_isolate)
+        will_isolate = x_j[:, 6]
+        not_isolated = 1 - will_isolate
         
-        res = not_isolated*R*S_A_s*A_s_i*B_n*integrals #/I_bar
+#         res = not_isolated*R*S_A_s*A_s_i*B_n*integrals #/I_bar
+        
+        res = R*S_A_s*A_s_i*B_n*integrals #/I_bar
 
         return res.view(-1, 1)
     
@@ -94,9 +97,9 @@ class NewTransmission(SubstepTransitionMessagePassing):
                 current_stages.detach(),  #1
                 agents_infected_index, #2
                 agents_infected_time, #3
-                agents_mean_interactions_split, # *agents_mean_interactions_split,
-                torch.unsqueeze(torch.arange(self.config['simulation_metadata']['num_agents']), 1).to(self.device),
-                will_isolate)).transpose(0,1).squeeze() #.t()
+                agents_mean_interactions_split, # 4 *agents_mean_interactions_split,
+                torch.unsqueeze(torch.arange(self.config['simulation_metadata']['num_agents']), 1).to(self.device), # 5
+                will_isolate,)).transpose(0,1).squeeze() #.t() # 6
             
         agents_data = Data(all_node_attr, edge_index=all_edgelist, edge_attr=all_edgeattr, t=t)
                 
@@ -108,8 +111,6 @@ class NewTransmission(SubstepTransitionMessagePassing):
         
         potentially_exposed_today = F.gumbel_softmax(logits=cat_logits,tau=1,hard=True,dim=1)[:,0]        
         newly_exposed_today = (current_stages==self.SUSCEPTIBLE_VAR).squeeze()*potentially_exposed_today
-
-        pdb.set_trace()
         
         # d(newly_exposed_today) / d(R)
                 
@@ -118,7 +119,7 @@ class NewTransmission(SubstepTransitionMessagePassing):
         updated_stages = self.update_stages(current_stages, newly_exposed_today)    
         updated_next_stage_times = self.update_transition_times(t, current_transition_times, newly_exposed_today)
         updated_infected_times = self.update_infected_times(t, agents_infected_time, newly_exposed_today)
-                        
+                                
         return {self.output_variables[0]: updated_stages, 
                 self.output_variables[1]: updated_next_stage_times, 
                 self.output_variables[2]: updated_infected_times}

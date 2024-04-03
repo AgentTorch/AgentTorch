@@ -60,7 +60,7 @@ class Provider:
 class CaseProvider(Provider):
     def __init__(self):
         # read the data file into a table
-        with open("./data/caserate-by-modzcta.csv", mode="r", encoding="utf-8") as file:
+        with open("./llm_data/caserate-by-modzcta.csv", mode="r", encoding="utf-8") as file:
             table = list(csv.DictReader(file))
 
         # extract the weeks
