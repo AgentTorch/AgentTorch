@@ -1,5 +1,5 @@
-AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
-MODEL_PATH = '/u/ayushc/projects/GradABM/MacroEcon/models'
+AGENT_TORCH_PATH = '/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch'
+MODEL_PATH = '/Users/shashankkumar/Documents/GitHub/MacroEcon/models'
 
 # OPENAI_API_KEY = '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'
 
@@ -30,6 +30,7 @@ class WorkConsumptionPropensity(SubstepAction):
         self.variables = self.get_variables(prompt_template_var)
         self.filtered_mapping = self.filter_mapping(self.mapping,self.variables)
         self.combinations_of_prompt_variables, self.combinations_of_prompt_variables_with_index = self.get_combinations_of_prompt_variables(self.filtered_mapping)
+    
     async def forward(self, state, observation):        
         print("Substep Action: Earning decision")
         num_agents = self.config['simulation_metadata']['num_agents']

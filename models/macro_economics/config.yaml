@@ -287,8 +287,8 @@ state:
       learnable: true
       name: Unemployment Rate
       shape:
-      - 1
-      value: 1.0
+      - ${simulation_metadata.num_steps_per_episode}
+      value: 0.0
     unemployed_agents: 
             dtype: float
             initialization_function: null
@@ -297,6 +297,14 @@ state:
             shape:
             - 1
             value: 1.0
+    unemployment_adaptation_coefficient:
+      dtype: float
+      initialization_function: null
+      learnable: true
+      name: unemployment_adaptation_coefficient
+      shape:
+      - 1
+      value: 0.7
   network:
     agent_agent:
       opinion_network:

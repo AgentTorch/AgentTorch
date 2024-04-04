@@ -50,7 +50,7 @@ class Controller(nn.Module):
             for var_name in updated_vals:
                 assert self.config["substeps"][substep]["transition"][trans_func]['input_variables'][var_name]
                 
-                source_path =  self.config["substeps"][substep]["transition"][trans_func]["input_variables"][var_name]
+                source_path = self.config["substeps"][substep]["transition"][trans_func]["input_variables"][var_name]
                 set_by_path(next_state, re.split("/", source_path), updated_vals[var_name])
                 
         return next_state

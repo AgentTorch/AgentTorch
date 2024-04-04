@@ -201,7 +201,8 @@ state:
                     file_path:
                         name: "Filepath for age group stage"
                         learnable: False
-                        shape: null
+                        shape:
+                            - 1
                         initialization_function: null
                         value: ${simulation_metadata.age_group_file}           
             dtype: "int"
@@ -213,17 +214,17 @@ state:
                 id:
                   dtype: "float"
                   initialization_function:
+                    generator: "initialize_id"
                     arguments:
                       pop_size:
                         initialization_function: null
                         learnable: false
                         name: "population size"
                         shape:
-                        - 1
+                            - 1
                         value: ${simulation_metadata.num_agents}
-                    generator: initialize_id
                   learnable: false
-                  name: "ID"
+                  name: "id"
                   shape:
                   - ${state.agents.citizens.number}
                   - 1
@@ -247,7 +248,8 @@ state:
                                 initialization_function: null
                                 learnable: false
                                 name: Filepath for age group stage
-                                shape: null
+                                shape:
+                                    - 1
                                 value: ${simulation_metadata.age_group_file}
                     dtype: "int"
                     
@@ -263,7 +265,8 @@ state:
                             file_path:
                                 name: "Disease Stage File"
                                 learnable: False
-                                shape: null
+                                shape:
+                                    - 1
                                 initialization_function: null
                                 value: ${simulation_metadata.disease_stage_file}
                     dtype: "int"
@@ -406,6 +409,7 @@ substeps:
                         value: 4.75
                         dtype: "float"
                 input_variables:
+                    R: 'environment/R'
                     SFSusceptibility: 'environment/SFSusceptibility'
                     SFInfector: 'environment/SFInfector'
                     lam_gamma_integrals: 'environment/lam_gamma_integrals'
