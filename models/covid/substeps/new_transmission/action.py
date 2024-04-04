@@ -65,9 +65,7 @@ class MakeIsolationDecision(SubstepAction):
         input_variables = self.input_variables
 
         week_id = int(t/7) + 1
-        
-        pdb.set_trace()
-        
+                
         past_week_num = self.case_numbers[week_id-1]
         curr_week_num = self.case_numbers[week_id]
         week_i_change = (curr_week_num/past_week_num - 1)*100
@@ -82,9 +80,7 @@ class MakeIsolationDecision(SubstepAction):
 
         masks = []
         prompt_list = []
-        
-        print("Executing LLM prompts")
-        
+                
         # prompts are segregated based on agent age
         for value in self.age_mapping.keys():
             # agent subgroups for each prompt

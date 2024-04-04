@@ -83,9 +83,7 @@ class NewTransmission(SubstepTransitionMessagePassing):
         # R = state['environment']['R']
         R_debug = get_by_path(state, re.split("/", input_variables['R']))
         R = self.learnable_args['R2']
-        
-        pdb.set_trace()
-        
+                
         time_step_one_hot = self._generate_one_hot_tensor(t, self.num_timesteps)
                 
         SFSusceptibility = get_by_path(state, re.split("/", input_variables['SFSusceptibility']))
@@ -127,7 +125,6 @@ class NewTransmission(SubstepTransitionMessagePassing):
         newly_exposed_today = (current_stages==self.SUSCEPTIBLE_VAR).squeeze()*potentially_exposed_today
         
         daily_infected = daily_infected + newly_exposed_today.sum()*time_step_one_hot
-        print("daily infected gradient: ", daily_infected.requires_grad)
         
         # d(newly_exposed_today) / d(R)
                 
