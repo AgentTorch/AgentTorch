@@ -61,6 +61,14 @@ for episode in range(num_episodes):
     opt.zero_grad()
     runner.step(num_steps_per_episode)
     
+    traj = runner.trajectory[-1][-1]
+    daily_infections_arr = traj['environment']['daily_infections']
+    
+    loss_val = daily_infections_arr.sum() # test loss for now. will be replaced after
+    loss_val.backward()
+    
+    opt.step()
+    
     pdb.set_trace()
     
     runner.reset()

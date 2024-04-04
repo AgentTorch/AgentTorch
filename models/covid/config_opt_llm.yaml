@@ -41,6 +41,15 @@ state:
             initialization_function: null
             value: 5.12
             dtype: "float"
+            
+        daily_infected:
+            name: "daily_infected"
+            learnable: True
+            shape:
+                - ${simulation_metadata.num_steps_per_episode}
+            initialization_function: null
+            value: 0
+            dtype: "float"
         
         SFSusceptibility:
             name: "Susceptibility by Age Group"
@@ -397,7 +406,6 @@ substeps:
                         value: 4.75
                         dtype: "float"
                 input_variables:
-                    R: 'environment/R'
                     SFSusceptibility: 'environment/SFSusceptibility'
                     SFInfector: 'environment/SFInfector'
                     lam_gamma_integrals: 'environment/lam_gamma_integrals'
@@ -408,10 +416,12 @@ substeps:
                     infected_time: 'agents/citizens/infected_time'
                     exposed_to_infected_time: 'environment/exposed_to_infected_time'
                     adjacency_matrix: 'network/agent_agent/infection_network/adjacency_matrix'
+                    daily_infected: 'environment/daily_infected'
                 output_variables:
                     - disease_stage
                     - next_stage_time
                     - infected_time
+                    - daily_infected
         reward: null
         
     "1":
