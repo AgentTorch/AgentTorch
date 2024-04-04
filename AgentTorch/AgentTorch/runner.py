@@ -62,14 +62,14 @@ class Runner(nn.Module):
             num_steps = self.config["simulation_metadata"]["num_steps_per_episode"]
         
         for time_step in range(num_steps):
-            self.state['current_step'] = time_step
+            self.state['current_step'] = time_step # current_step is a string
             for traj_var in self.trajectory.keys():
                 self.trajectory[traj_var][-1].append(deque())
 
             for substep in self.config['substeps'].keys():
                 self.trajectory["states"][-1][-1].append(self.state)
                 observation_profile, action_profile = {}, {}
-
+                                
                 for agent_type in self.config['substeps'][substep]['active_agents']:
                     assert substep == self.state['current_substep']
                     assert time_step == self.state['current_step']

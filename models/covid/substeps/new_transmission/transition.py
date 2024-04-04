@@ -77,12 +77,14 @@ class NewTransmission(SubstepTransitionMessagePassing):
     
     def forward(self, state, action=None):
         input_variables = self.input_variables
-        t = state['current_step']
+        t = int(state['current_step'])
         print("Substep: Disease Transmission")
         
         # R = state['environment']['R']
-        #         R = get_by_path(state, re.split("/", input_variables['R']))
+        R_debug = get_by_path(state, re.split("/", input_variables['R']))
         R = self.learnable_args['R2']
+        
+        pdb.set_trace()
         
         time_step_one_hot = self._generate_one_hot_tensor(t, self.num_timesteps)
                 

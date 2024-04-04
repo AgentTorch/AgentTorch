@@ -61,10 +61,12 @@ class MakeIsolationDecision(SubstepAction):
         '''
             LLMAgent class has three functions: a) mask sub-groups, b) format_prompt, c) invoke LLM, d) aggregate response 
         '''
-        t = state['current_step']
+        t = int(state['current_step'])
         input_variables = self.input_variables
 
         week_id = int(t/7) + 1
+        
+        pdb.set_trace()
         
         past_week_num = self.case_numbers[week_id-1]
         curr_week_num = self.case_numbers[week_id]

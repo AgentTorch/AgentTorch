@@ -10,7 +10,9 @@ def get_by_path(root, items):
     r"""
         Access a nested object in root by item sequence
     """
-    return reduce(operator.getitem, items, root)
+    property_obj = reduce(operator.getitem, items, root)
+    return property_obj()
+#     return reduce(operator.getitem, items, root)
 
 def set_by_path(root, items, value):
     r"""

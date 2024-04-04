@@ -118,7 +118,7 @@ def initialize_id(shape, params):
     """
     Initialize a unique ID for each agent
     """
-    return torch.arange(0, shape[0]).reshape(-1, 1)
+    return torch.arange(0, shape[0]).reshape(-1, 1).float()
     
 def network_from_file(params):
     file_path = params['file_path']
