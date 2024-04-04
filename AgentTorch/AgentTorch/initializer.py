@@ -22,8 +22,6 @@ class Initializer(nn.Module):
         self.config = config
         self.registry = registry
         
-        print("Debug initializer being used!")
-        
         self.state = {}
 #         for key in self.config["state"].keys():
 #             self.state[key] = nn.ModuleDict()
@@ -132,9 +130,7 @@ class Initializer(nn.Module):
             return
             
         for prop in self.config["state"][key].keys():
-            print("property: ", prop)
             property_object = self.config["state"][key][prop]
-            
             property_value, property_is_learnable = self._initialize_property(property_object, property_key=f"{key}_{prop}")
             self.environment[prop] = MakeModule(property_value, property_is_learnable)
             
@@ -156,7 +152,6 @@ class Initializer(nn.Module):
             
             for prop in instance_properties.keys():
                 property_object = instance_properties[prop]
-                print("property key: ", prop)
                 property_value, property_is_learnable = self._initialize_property(property_object, property_key=f"{key}_{instance_type}_{prop}")
                 self.agents[instance_type][prop] = MakeModule(property_value, property_is_learnable)
     
