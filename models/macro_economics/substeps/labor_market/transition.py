@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 from torch.distributions import Normal
+import sys
+sys.path.append("/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch")
 from AgentTorch.substep import SubstepTransition
 from AgentTorch.helpers import get_by_path
 import re
