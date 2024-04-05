@@ -60,6 +60,10 @@ class SimulationRunner(Runner):
         self.mse_loss = torch.nn.MSELoss()
         
     def forward(self):
+        # for name, params in self.named_parameters():
+        #     print(name)
+        for params in self.parameters():
+            print(params)
         self.optimizer = optim.Adam(self.parameters(), 
                 lr=self.config['simulation_metadata']['learning_params']['lr'], 
                 betas=self.config['simulation_metadata']['learning_params']['betas'])
@@ -70,12 +74,13 @@ class SimulationRunner(Runner):
             print("episode: ", episode)
             num_steps_per_episode = self.config["simulation_metadata"]["num_steps_per_episode"]
             self.reset()
-            self.step(num_steps_per_episode)
-            unemployment_rate_list = [state['environment']['U'] for state in self.state_trajectory[-1] if state['current_substep'] == str(self.config['simulation_metadata']['num_substeps_per_step'] - 1)]
-            unemployment_rate_tensor = torch.tensor(unemployment_rate_list,requires_grad=True).float()
-            test_set_for_episode = self.unemployment_test_dataset[episode][:num_steps_per_episode].float()
-            loss =  self.mse_loss(unemployment_rate_tensor, test_set_for_episode)
+            self.step(1)
+            unemployment_rate = self.state_trajectory[-1][-1]['environment']['U']().squeeze()
+            test_set_for_episode = self.unemployment_test_dataset[episode][:num_steps_per_episode].float().squeeze()
+            loss =  self.mse_loss(unemployment_rate, test_set_for_episode)
             loss.backward()
+            for param in self.parameters():
+                print(param.grad)
             self.optimizer.step()
             self.optimizer.zero_grad()
             
