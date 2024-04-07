@@ -4,6 +4,7 @@ MODEL_PATH = '/Users/shashankkumar/Documents/GitHub/MacroEcon/models'
 # OPENAI_API_KEY = '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'
 
 import json
+import os
 import torch
 import torch.nn as nn
 import numpy as np
@@ -25,15 +26,21 @@ class WorkConsumptionPropensity(SubstepAction):
         OPENAI_API_KEY = self.config['simulation_metadata']['OPENAI_API_KEY']
         
         self.mode = self.config['simulation_metadata']['execution_mode']        
-        self.agent = LLMAgent(agent_profile = agent_profile,openai_api_key = OPENAI_API_KEY)
         self.mapping = self.load_mapping(self.config['simulation_metadata']['mapping_path'])
         self.variables = self.get_variables(prompt_template_var)
         self.filtered_mapping = self.filter_mapping(self.mapping,self.variables)
         self.combinations_of_prompt_variables, self.combinations_of_prompt_variables_with_index = self.get_combinations_of_prompt_variables(self.filtered_mapping)
+        self.num_llm_agents = len(self.combinations_of_prompt_variables)
+        self.agent = LLMAgent(agent_profile = agent_profile,openai_api_key = OPENAI_API_KEY,num_agents = self.num_llm_agents)
+        self.save_memory_dir = self.config['simulation_metadata']['memory_dir']
+        
     
     async def forward(self, state, observation):        
         print("Substep Action: Earning decision")
         num_agents = self.config['simulation_metadata']['num_agents']
+        number_of_months = state['current_step'] + 1
+        current_episode = 1
+        
         gender = get_by_path(state, re.split("/", self.input_variables['gender']))
         age = get_by_path(state,re.split("/", self.input_variables['age']))
         
@@ -79,7 +86,12 @@ class WorkConsumptionPropensity(SubstepAction):
 
         # work_propensity = torch.rand(16573530,1)
         will_work = torch.bernoulli(work_propensity)
-                        
+        
+        if number_of_months % 12 == 0:
+            current_memory_dir = os.path.join(self.save_memory_dir ,str(current_episode), str(number_of_months))
+            self.agent.export_memory_to_file(current_memory_dir)
+            
+        
         return {self.output_variables[0] : will_work, 
                 self.output_variables[1] : consumption_propensity}
     

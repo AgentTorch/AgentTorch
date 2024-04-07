@@ -21,7 +21,7 @@ simulation_metadata:
   num_episodes: 2
   num_steps_per_episode: 2
   num_substeps_per_step: 4
-  population_dir: /Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/census_populations/NYC/simulation_input
+  population_dir: /Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/census_populations/NYC/simulation_input #change this path to be just till NYC
   target_inflation_rate: 0.02
   tax_brackets:
   - 0
@@ -33,8 +33,9 @@ simulation_metadata:
   - 0.2
   - 0.3
   - 0.35
-  unemployment_adaptation_coefficient: 0.05
+  unemployment_adaptation_macro: 0.05
   universal_productivity: 1.0
+  memory_dir: ${simulation_metadata.population_dir}/simulation_memory_output
 state:
   agents:
     consumers:
@@ -108,7 +109,7 @@ state:
           name: Savings
           shape:
           - ${state.agents.consumers.number}
-          - 1
+          - ${simulation_metadata.num_steps_per_episode}
           value: 0.0
         consumption_propensity:
           dtype: float
@@ -264,6 +265,7 @@ state:
       name: Price of Essential Goods
       shape:
       - 1
+      - 1
       value: 12.0
     P_i:
       dtype: float
@@ -271,6 +273,7 @@ state:
       learnable: false
       name: Inflation Rate
       shape:
+      - 1
       - 1
       value: 1.0
     R:
@@ -280,6 +283,7 @@ state:
       name: Interest Rate
       shape:
       - 1
+      - ${simulation_metadata.num_steps_per_episode}
       value: 1.0
     U:
       dtype: float
@@ -287,6 +291,7 @@ state:
       learnable: true
       name: Unemployment Rate
       shape:
+      - 1
       - ${simulation_metadata.num_steps_per_episode}
       value: 0.0
     unemployed_agents: 
@@ -440,21 +445,14 @@ substeps:
       consumers: null
     transition:
       update_macro_rates:
-        arguments:
-          unemployment_adaptation_coefficient: 
-            dtype: float
-            initialization_function: null
-            learnable: true
-            name: unemployment_adaptation_coefficient
-            shape:
-            - 1
-            value: 0.7
+        arguments: null
         generator: UpdateMacroRates
         input_variables:
           hourly_wage: objects/JobA/wage
           imbalance: environment/Im
           unemployment_rate: environment/U
           will_work: agents/consumers/will_work
+          unemployment_adaptation_coefficient: environment/unemployment_adaptation_coefficient
         output_variables:
         - hourly_wage
         - unemployment_rate
