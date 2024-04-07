@@ -2,8 +2,10 @@ import asyncio
 import torch
 import torch.nn as nn
 import re
+import copy
 from AgentTorch.helpers import get_by_path, set_by_path, copy_module
 from AgentTorch.utils import is_async_method
+
 class Controller(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -40,7 +42,8 @@ class Controller(nn.Module):
     
     def progress(self, state, action, transition_function):
         next_state = copy_module(state)
-            
+        # next_state = copy.deepcopy(state)    
+        
         substep = state['current_substep']
         next_substep = (int(substep) + 1)%self.config["simulation_metadata"]["num_substeps_per_step"]
         next_state['current_substep'] = str(next_substep)

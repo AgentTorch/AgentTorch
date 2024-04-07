@@ -30,21 +30,21 @@ simulation_metadata:
             - 0.5
         lr_gamma:  0.9999
         model_path: "saved_model.pth"
-    
+
 state:
     environment:
         R:
             name: "R"
-            learnable: True
+            learnable: False
             shape:
                 - 1
             initialization_function: null
-            value: 5.12
+            value: 4.75
             dtype: "float"
             
         daily_infected:
             name: "daily_infected"
-            learnable: True
+            learnable: False
             shape:
                 - ${simulation_metadata.num_steps_per_episode}
             initialization_function: null
@@ -85,7 +85,7 @@ state:
         
         mortality_rate:
             name: "Mortality Rate"
-            learnable: True
+            learnable: False
             shape:
                 - 1
             initialization_function: null
@@ -443,7 +443,7 @@ substeps:
                 arguments:
                    M:
                         name: "Mortality Rate"
-                        learnable: True
+                        learnable: False
                         shape:
                             - 1
                         initialization_function: null

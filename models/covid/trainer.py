@@ -5,13 +5,11 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import argparse
-import numpy as np
 import torch
 import torch.optim as optim
-import torch.nn.functional as F
-import torch.autograd.profiler as profiler
 import pdb
 import sys
+import torch.nn as nn
 
 AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
 
@@ -50,30 +48,46 @@ num_steps_per_episode = runner.config['simulation_metadata']['num_steps_per_epis
 
 runner.init()
 
-opt = optim.Adam(runner.parameters(), 
-                lr=runner.config['simulation_metadata']['learning_params']['lr'], 
-                betas=runner.config['simulation_metadata']['learning_params']['betas'])
+named_params_learnable = [(name, param) for (name, param) in runner.named_parameters() if param.requires_grad]
+print("named learnable_params: ", named_params_learnable)
 
-scheduler = optim.lr_scheduler.ExponentialLR(opt, 
-                runner.config['simulation_metadata']['learning_params']['lr_gamma'])
+pdb.set_trace()
+
+R = nn.Parameter(torch.tensor([4.43]))
+opt = optim.Adam([R], lr=runner.config['simulation_metadata']['learning_params']['lr'],betas=runner.config['simulation_metadata']['learning_params']['betas'])
+# # print(runner.state['parameters']['environment_R'], runner.state['parameters']['environment_R'].requires_grad)
+# params = {'environment/R': R}
+
+runner.initializer.transition_function['0']['new_transmission'].learnable_args.R2.data.copy_(R)
+
+# runner._set_parameters(params)
+# print(runner.state['environment']['R'].requires_grad)
+# print(runner.state['parameters']['environment_R'], runner.state['parameters']['environment_R'].requires_grad)
+
+# learnable_params = [p for p in runner.parameters() if p.requires_grad]
+# opt = optim.Adam(learnable_params, lr=runner.config['simulation_metadata']['learning_params']['lr'],betas=runner.config['simulation_metadata']['learning_params']['betas'])
+# scheduler = optim.lr_scheduler.ExponentialLR(opt, 
+#                 runner.config['simulation_metadata']['learning_params']['lr_gamma'])
+
+pdb.set_trace()
 
 for episode in range(num_episodes):
     opt.zero_grad()
     runner.step(num_steps_per_episode)
     
-    traj = runner.trajectory[-1][-1]
-    daily_infections_arr = traj['environment']['daily_infections']
+    traj = runner.state_trajectory[-1][-1]
+    daily_infections_arr = traj['environment']['daily_infected'] #()
     
     loss_val = daily_infections_arr.sum() # test loss for now. will be replaced after
     loss_val.backward()
-    
-    opt.step()
-    
+
+    # Check the gradients for all parameters in the optimizer
+    for param_group in opt.param_groups:
+        for param in param_group['params']:
+            print(f"Parameter: {param.data}, Gradient: {param.grad}")
+
+    # print("Parameters: ", [(p, p.grad) for p in learnable_params])
     pdb.set_trace()
     
+    opt.step()
     runner.reset()
-    
-# if profiler_started:
-#     profiler_obj.__exit__(None, None, None)
-            
-# print(profiler_obj.key_averages().table(sort_by="self_cpu_memory_usage", row_limit=10))

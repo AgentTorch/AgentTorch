@@ -81,8 +81,21 @@ class NewTransmission(SubstepTransitionMessagePassing):
         print("Substep: Disease Transmission")
         
         # R = state['environment']['R']
-        R_debug = get_by_path(state, re.split("/", input_variables['R']))
+        # R = state['environment']['R']
         R = self.learnable_args['R2']
+        # print("Substep R requires_grad: ", R_arg.requires_grad)
+        # print("Env R requires_grad: ", R_env.requires_grad)
+
+        # R = state['parameters']['environment_R']
+        # R = self.learnable_args['R2']
+        print("R.requires_grad: ", R.requires_grad)
+
+        # pdb.set_trace()
+        # R_paramdict = state['parameters']['environment_R']
+
+        # R = R_arg
+
+        # pdb.set_trace()
                 
         time_step_one_hot = self._generate_one_hot_tensor(t, self.num_timesteps)
                 
@@ -95,7 +108,7 @@ class NewTransmission(SubstepTransitionMessagePassing):
         agents_ages = get_by_path(state, re.split("/", input_variables['age']))                     
         current_stages = get_by_path(state, re.split("/", input_variables['disease_stage']))
         current_transition_times = get_by_path(state, re.split("/", input_variables['next_stage_time']))
-        
+                
         all_edgelist, all_edgeattr = get_by_path(state, re.split("/", input_variables["adjacency_matrix"]))
         
         daily_infected = get_by_path(state, re.split("/", input_variables["daily_infected"]))
@@ -125,8 +138,9 @@ class NewTransmission(SubstepTransitionMessagePassing):
         newly_exposed_today = (current_stages==self.SUSCEPTIBLE_VAR).squeeze()*potentially_exposed_today
         
         daily_infected = daily_infected + newly_exposed_today.sum()*time_step_one_hot
-        
+        daily_infected = daily_infected.squeeze(0)
         # d(newly_exposed_today) / d(R)
+        print("daily_infected.grad: ", daily_infected.requires_grad)
                 
         newly_exposed_today = newly_exposed_today.unsqueeze(1)
         
