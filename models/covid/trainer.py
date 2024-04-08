@@ -7,7 +7,6 @@ warnings.filterwarnings("ignore")
 import argparse
 import torch
 import torch.optim as optim
-import pdb
 import sys
 import torch.nn as nn
 
@@ -32,6 +31,8 @@ args = parser.parse_args()
 config_file = args.config
 print("Running experiment with config file: ", config_file)
 
+CALIB_MODE = 'NN'
+
 # profiler_obj = profiler.profile(record_shapes=True, use_cuda=torch.cuda.is_available())
 # profiler_started = False
 # if not profiler_started:
@@ -51,25 +52,18 @@ runner.init()
 named_params_learnable = [(name, param) for (name, param) in runner.named_parameters() if param.requires_grad]
 print("named learnable_params: ", named_params_learnable)
 
-pdb.set_trace()
+learning_rate = runner.config['simulation_metadata']['learning_params']['lr']
+betas = runner.config['simulation_metadata']['learning_params']['betas']
 
-R = nn.Parameter(torch.tensor([4.43]))
-opt = optim.Adam([R], lr=runner.config['simulation_metadata']['learning_params']['lr'],betas=runner.config['simulation_metadata']['learning_params']['betas'])
-# # print(runner.state['parameters']['environment_R'], runner.state['parameters']['environment_R'].requires_grad)
-# params = {'environment/R': R}
-
-runner.initializer.transition_function['0']['new_transmission'].learnable_args.R2.data.copy_(R)
-
-# runner._set_parameters(params)
-# print(runner.state['environment']['R'].requires_grad)
-# print(runner.state['parameters']['environment_R'], runner.state['parameters']['environment_R'].requires_grad)
-
-# learnable_params = [p for p in runner.parameters() if p.requires_grad]
-# opt = optim.Adam(learnable_params, lr=runner.config['simulation_metadata']['learning_params']['lr'],betas=runner.config['simulation_metadata']['learning_params']['betas'])
-# scheduler = optim.lr_scheduler.ExponentialLR(opt, 
-#                 runner.config['simulation_metadata']['learning_params']['lr_gamma'])
-
-pdb.set_trace()
+if CALIB_MODE == 'i':
+    learnable_params = [param for param in runner.parameters() if param.requires_grad]
+    opt = optim.Adam(learnable_params, lr=learning_rate,betas=betas)
+else:
+    R = nn.Parameter(torch.tensor([4.10]))
+    opt = optim.Adam([R], lr=learning_rate,betas=betas)
+    # breakpoint()
+    runner.initializer.transition_function['0']['new_transmission'].learnable_args.R2 = R
+    # runner.initializer.transition_function['0']['new_transmission'].learnable_args.R2.copy_(R)
 
 for episode in range(num_episodes):
     opt.zero_grad()
@@ -86,8 +80,7 @@ for episode in range(num_episodes):
         for param in param_group['params']:
             print(f"Parameter: {param.data}, Gradient: {param.grad}")
 
-    # print("Parameters: ", [(p, p.grad) for p in learnable_params])
-    pdb.set_trace()
+    breakpoint()
     
     opt.step()
     runner.reset()
