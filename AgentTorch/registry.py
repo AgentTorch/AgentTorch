@@ -37,6 +37,7 @@ class Registry(nn.Module):
             cls.helpers[key][name] = fn
             return fn
         return decorator
+    register_substep = register_helper
 
 if __name__ == '__main__':
     reg = Registry()

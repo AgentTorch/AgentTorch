@@ -11,10 +11,10 @@ from AgentTorch.substep import SubstepAction
 
 @Registry.register_helper("generate_something", "initialization")
 def generate_something():
-  print("something!")
+  pass
 
-@Registry.register_helper("AcceptTest", "policy")
-class AcceptTest(SubstepAction):
+@Registry.register_substep("do_something", "policy")
+class DoSomething(SubstepAction):
     def __init__(self, config, input_variables, output_variables, arguments):
         super().__init__(config, input_variables, output_variables, arguments)
         pass
