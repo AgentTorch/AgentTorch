@@ -74,7 +74,7 @@ class SimulationRunner(Runner):
             print("episode: ", episode)
             num_steps_per_episode = self.config["simulation_metadata"]["num_steps_per_episode"]
             self.reset()
-            self.step(1)
+            self.step(num_steps_per_episode)
             unemployment_rate = self.state_trajectory[-1][-1]['environment']['U']().squeeze()
             test_set_for_episode = self.unemployment_test_dataset[episode][:num_steps_per_episode].float().squeeze()
             loss =  self.mse_loss(unemployment_rate, test_set_for_episode)
