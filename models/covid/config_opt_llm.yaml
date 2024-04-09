@@ -51,6 +51,15 @@ state:
             value: 0
             dtype: "float"
         
+        daily_deaths:
+            name: "daily_deaths"
+            learnable: False
+            shape:
+                - ${simulation_metadata.num_steps_per_episode}
+            initialization_function: null
+            value: 0
+            dtype: "float"
+        
         SFSusceptibility:
             name: "Susceptibility by Age Group"
             learnable: False
@@ -443,7 +452,7 @@ substeps:
                 arguments:
                    M:
                         name: "Mortality Rate"
-                        learnable: False
+                        learnable: True
                         shape:
                             - 1
                         initialization_function: null
@@ -454,9 +463,11 @@ substeps:
                     next_stage_time: 'agents/citizens/next_stage_time'
                     exposed_to_infected_time: 'environment/exposed_to_infected_time'
                     infected_to_recovered_time: 'environment/infected_to_recovered_time'
+                    daily_death: 'environment/daily_death'
                 output_variables:
                     - disease_stage
                     - next_stage_time
+                    - daily_death
         reward: null
         
 #     "2":
