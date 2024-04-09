@@ -68,7 +68,7 @@ class LLMAgent():
             return self.agent_memory[agent_id].load_memory_variables({})
 
     async def reflect(self,reflection_prompt,last_k = 3,agent_id = 0):
-        last_k = 2*last_k
+        last_k = 2*last_k #get last 6 messages for each AI and Human
         memory = self.get_memory(last_k=last_k,agent_id=agent_id)
         return await self.__call__(prompt_list=[reflection_prompt],last_k=last_k,agent_id=agent_id)
     

@@ -33,6 +33,7 @@ class WorkConsumptionPropensity(SubstepAction):
         self.num_llm_agents = len(self.combinations_of_prompt_variables)
         self.agent = LLMAgent(agent_profile = agent_profile,openai_api_key = OPENAI_API_KEY,num_agents = self.num_llm_agents)
         self.save_memory_dir = self.config['simulation_metadata']['memory_dir']
+        self.num_steps_per_episode = self.config['simulation_metadata']['num_steps_per_episode']
         
     
     async def forward(self, state, observation):        
@@ -87,7 +88,7 @@ class WorkConsumptionPropensity(SubstepAction):
         # work_propensity = torch.rand(16573530,1)
         will_work = torch.bernoulli(work_propensity)
         
-        if number_of_months % 12 == 0:
+        if number_of_months == self.num_steps_per_episode:
             current_memory_dir = os.path.join(self.save_memory_dir ,str(current_episode), str(number_of_months))
             self.agent.export_memory_to_file(current_memory_dir)
             
