@@ -69,8 +69,6 @@ class MakeIsolationDecision(SubstepAction):
         past_week_num = self.case_numbers[week_id-1]
         curr_week_num = self.case_numbers[week_id]
         week_i_change = (curr_week_num/past_week_num - 1)*100
-
-        print("Substep Action: IsolationDecision")
         
         agent_age = get_by_path(state, re.split("/", input_variables['age']))
 

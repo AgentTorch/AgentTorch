@@ -6,11 +6,10 @@ warnings.filterwarnings("ignore")
 import argparse
 import torch
 import torch.optim as optim
-import sys
 import torch.nn as nn
 
 AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
-
+import sys
 sys.path.insert(0, AGENT_TORCH_PATH)
 
 from simulator import get_registry, get_runner
@@ -82,9 +81,7 @@ def _get_parameters(CALIB_MODE):
 
 def _set_parameters(new_R):
     '''Only sets R value for now..'''
-    breakpoint()
     runner.initializer.transition_function['0']['new_transmission'].external_R = new_R
-    #runner.initializer.transition_function['0']['new_transmission'].learnable_args.R2 = new_R
 
 for episode in range(num_episodes):
     opt.zero_grad()
