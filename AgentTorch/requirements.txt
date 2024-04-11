@@ -156,3 +156,7 @@ Werkzeug==2.3.6
 wget==3.2
 widgetsnbextension==4.0.8
 zipp==3.15.0
+pandas==2.2.2
+omegaconf==2.3.0
+wandb==0.16.6
+langchain_openai==0.1.3
