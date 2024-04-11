@@ -65,7 +65,9 @@ class UpdateMacroRates(SubstepTransition):
         agent_willing_to_work = working_status.shape[0] - agents_not_working
         Labor_Force_Participation_Rate = agent_willing_to_work / working_status.shape[0]
         
-        unemployment_adaptation_coefficient = self.args['unemployment_adaptation_coefficient']
+        unemployment_adaptation_coefficient = self.learnable_args['unemployment_adaptation_coefficient']
+        breakpoint()
+        # self.args['unemployment_adaptation_coefficient']
         # unemployment_rate = B0 + B1(GDP Growth Rate) + B2(Job Creation Rate) + β₃(Labor Force Participation Rate) + β₄(Education Level) + β₅(Industry Shift) + β₆(Government Spending) + ε
         unemployed_agents = torch.ceil(agents_not_working * unemployment_adaptation_coefficient)
         num_agents = working_status.shape[0]

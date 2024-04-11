@@ -1,21 +1,22 @@
-AGENT_TORCH_PATH = '/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch'
-MODEL_PATH = '/Users/shashankkumar/Documents/GitHub/MacroEcon/models'
+# AGENT_TORCH_PATH = '/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch'
+# MODEL_PATH = '/Users/shashankkumar/Documents/GitHub/MacroEcon/models'
+AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
+MODEL_PATH = '/u/ayushc/projects/GradABM/MacroEcon/models'
 
 # OPENAI_API_KEY = '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'
 
 import json
 import torch
-import torch.nn as nn
-import numpy as np
 import re
 import sys
-import pdb
 
-sys.path.append(MODEL_PATH)
 sys.path.insert(0, AGENT_TORCH_PATH)
+
 from AgentTorch.LLM.llm_agent import LLMAgent
 from AgentTorch.substep import SubstepAction
 from AgentTorch.helpers import get_by_path
+
+sys.path.append(MODEL_PATH)
 from macro_economics.prompt import prompt_template_var,agent_profile
 import itertools
 
