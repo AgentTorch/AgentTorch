@@ -4,22 +4,22 @@ import torch.nn as nn
 import json
 
 class Registry(nn.Module):
-    
+    helpers = {
+      "transition": {},
+      "observation": {},
+      "policy": {},
+      "initialization": {},
+      "network": {},
+    }
+
     def __init__(self):
         super().__init__()
-        self.initialization_helpers = {}
-        self.observation_helpers = {}
-        self.policy_helpers = {}
-        self.transition_helpers = {}
-        self.network_helpers = {}
-        
-        self.helpers = {}
-        self.helpers["transition"] = self.transition_helpers
-        self.helpers["observation"] = self.observation_helpers
-        self.helpers["policy"] = self.policy_helpers
-        self.helpers["initialization"] = self.initialization_helpers
-        self.helpers["network"] = self.network_helpers
-        
+        self.initialization_helpers = self.helpers["transition"]
+        self.observation_helpers = self.helpers["observation"]
+        self.policy_helpers = self.helpers["policy"]
+        self.transition_helpers = self.helpers["initialization"]
+        self.network_helpers = self.helpers["network"]
+
     def register(self, obj_source, name, key):
         '''Inserts a new function into the registry'''
         self.helpers[key][name] = obj_source
@@ -30,6 +30,14 @@ class Registry(nn.Module):
     
     def forward(self):
         print("Invoke registry.register(class_obj, key)")
+
+    @classmethod
+    def register_helper(cls, name, key):
+        def decorator(fn):
+            cls.helpers[key][name] = fn
+            return fn
+        return decorator
+    register_substep = register_helper
 
 if __name__ == '__main__':
     reg = Registry()
