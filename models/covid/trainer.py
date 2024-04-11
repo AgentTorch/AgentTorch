@@ -8,7 +8,7 @@ import torch
 import torch.optim as optim
 import torch.nn as nn
 
-AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
+AGENT_TORCH_PATH = '/u/ngkuru/ship/MacroEcon/AgentTorch'
 import sys
 sys.path.insert(0, AGENT_TORCH_PATH)
 
