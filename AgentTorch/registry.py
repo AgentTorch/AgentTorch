@@ -14,10 +14,10 @@ class Registry(nn.Module):
 
     def __init__(self):
         super().__init__()
-        self.initialization_helpers = self.helpers["transition"]
+        self.initialization_helpers = self.helpers["initialization"]
         self.observation_helpers = self.helpers["observation"]
         self.policy_helpers = self.helpers["policy"]
-        self.transition_helpers = self.helpers["initialization"]
+        self.transition_helpers = self.helpers["transition"]
         self.network_helpers = self.helpers["network"]
 
     def register(self, obj_source, name, key):
