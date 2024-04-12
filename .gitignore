@@ -1,3 +1,4 @@
 pythonProject1/.idea
 *.pyc
 **/__pycache__/
+**/work.ipynb
