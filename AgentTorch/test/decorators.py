@@ -13,6 +13,9 @@ from AgentTorch.substep import SubstepAction
 def generate_something():
   pass
 
+def another_helper():
+  pass
+
 @Registry.register_substep("do_something", "policy")
 class DoSomething(SubstepAction):
     def __init__(self, config, input_variables, output_variables, arguments):
@@ -23,4 +26,5 @@ class DoSomething(SubstepAction):
         pass
 
 registry = Registry()
+registry.register(another_helper, "another_helper", "initialization")
 print(registry.helpers)
