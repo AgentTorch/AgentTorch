@@ -17,6 +17,7 @@ class NewTransmission(SubstepTransitionMessagePassing):
         self.RECOVERED_VAR = self.config['simulation_metadata']['RECOVERED_VAR']
         
         self.num_timesteps = self.config['simulation_metadata']['num_steps_per_episode']
+        self.num_weeks = self.config['simulation_metadata']['NUM_WEEKS']
 
         self.STAGE_UPDATE_VAR = 1
         self.INFINITY_TIME = self.config['simulation_metadata']['INFINITY_TIME']
@@ -78,11 +79,14 @@ class NewTransmission(SubstepTransitionMessagePassing):
     def forward(self, state, action=None):
         input_variables = self.input_variables
         t = int(state['current_step'])
+        time_step_one_hot = self._generate_one_hot_tensor(t, self.num_timesteps)
+
+        week_id = int(t/7)
+        week_one_hot = self._generate_one_hot_tensor(week_id, self.num_weeks)
         
         # R = self.learnable_args['R2']
-        R = self.external_R
-
-        time_step_one_hot = self._generate_one_hot_tensor(t, self.num_timesteps)
+        R_tensor = self.external_R # tensor of size NUM_WEEK
+        R = (R_tensor*week_one_hot).sum()
                 
         SFSusceptibility = get_by_path(state, re.split("/", input_variables['SFSusceptibility']))
         SFInfector = get_by_path(state, re.split("/", input_variables['SFInfector']))

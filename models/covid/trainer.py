@@ -9,7 +9,9 @@ import torch
 import torch.optim as optim
 import torch.nn as nn
 
-AGENT_TORCH_PATH = '/u/ngkuru/ship/MacroEcon/AgentTorch'
+# AGENT_TORCH_PATH = '/u/ngkuru/ship/MacroEcon/AgentTorch'
+AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
+
 import sys
 sys.path.insert(0, AGENT_TORCH_PATH)
 
@@ -98,6 +100,7 @@ elif CALIB_MODE == "calibNN":
         out_dim=1,
         scale_output="abm-covid",
     ).to(device)
+    opt = optim.Adam(learn_model.parameters(), lr=learning_rate, betas=betas)
 
 def _get_parameters(CALIB_MODE):
     if CALIB_MODE == 'learnable_param':
@@ -105,12 +108,6 @@ def _get_parameters(CALIB_MODE):
         print("R shape: ", new_R.shape)
         return new_R
 
-def _set_parameters(new_R):
-    '''Only sets R value for now..'''
-    runner.initializer.transition_function['0']['new_transmission'].external_R = new_R
-
-for episode in range(num_episodes):
-    # get the R predictions for the calibNN
     if CALIB_MODE == "calibNN":
         # set beginning and end weeks
         epiweek_start = Week(2020, 38)
@@ -134,16 +131,22 @@ for episode in range(num_episodes):
         for metadata, features, _ in dataloader:
             r0_values = learn_model(features, metadata)[:, 0, 0]
         
+        return r0_values
 
+def _set_parameters(new_R):
+    print("SET PARAMETERS ONLY WORKS FOR R0 for now!")
+    '''Only sets R value for now..'''
+    runner.initializer.transition_function['0']['new_transmission'].external_R = new_R
+
+for episode in range(num_episodes):
+    # get the R predictions for the calibNN
+    
+    r0_values = _get_parameters(CALIB_MODE)
+    print("r0 values: ", r0_values)
+    _set_parameters(r0_values)
+    
     opt.zero_grad()
-    if CALIB_MODE != 'internal_param' and CALIB_MODE != 'external_param' and CALIB_MODE != "calibNN":
-        print("Calib Mode: ", CALIB_MODE)
-        new_R = _get_parameters(CALIB_MODE)
-        print("new R: ", new_R)
-        _set_parameters(new_R)
-    if CALIB_MODE == "calibNN":
-        pass
-
+    
     runner.step(num_steps_per_episode)
 
     traj = runner.state_trajectory[-1][-1]
@@ -155,9 +158,8 @@ for episode in range(num_episodes):
     # Check the gradients for all parameters in the optimizer
     for param_group in opt.param_groups:
         for param in param_group['params']:
-            print(f"Parameter: {param.data}, Gradient: {param.grad}")
-
-    breakpoint()
+            # print(f"Parameter: {param.data}, Gradient: {param.grad}")
+            print(f"Parameter: {param.data}")
 
     opt.step()
 
