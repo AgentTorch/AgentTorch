@@ -1,4 +1,5 @@
-AGENT_TORCH_PATH = '/u/ngkuru/ship/MacroEcon/AgentTorch'
+# AGENT_TORCH_PATH = '/u/ngkuru/ship/MacroEcon/AgentTorch'
+AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
 
 import pandas as pd
 import numpy as np 
