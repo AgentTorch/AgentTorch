@@ -83,13 +83,13 @@ def get_nn_data(
     if epiweek_index < INPUT_WEEKS:
         raise Exception("epiweek too early")
 
-    # get features
+    # get features of the past INPUT_WEEKS weeks
     features_table = table[epiweek_index - INPUT_WEEKS : epiweek_index][
         [feature.column_name for feature in feature_list]
     ]
     features_vector = torch.tensor(features_table.values, dtype=DTYPE)
 
-    # get labels
+    # get labels for the current week
     labels_table = table.iloc[epiweek_index][label_feature.column_name]
     label = torch.tensor(labels_table, dtype=DTYPE)
 

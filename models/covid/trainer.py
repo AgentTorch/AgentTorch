@@ -9,8 +9,10 @@ import torch
 import torch.optim as optim
 import torch.nn as nn
 
-# AGENT_TORCH_PATH = '/u/ngkuru/ship/MacroEcon/AgentTorch'
-AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
+from torch.utils.data import DataLoader
+
+AGENT_TORCH_PATH = '/u/ngkuru/ship/MacroEcon/AgentTorch'
+# AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
 
 import sys
 sys.path.insert(0, AGENT_TORCH_PATH)
@@ -42,9 +44,10 @@ config = read_config(config_file)
 registry = get_registry()
 runner = get_runner(config, registry)
 
-device = torch.device(runner.config['simulation_metadata']['device'])
-num_episodes = runner.config['simulation_metadata']['num_episodes']
-num_steps_per_episode = runner.config['simulation_metadata']['num_steps_per_episode']
+device = torch.device(runner.config["simulation_metadata"]["device"])
+num_episodes = runner.config["simulation_metadata"]["num_episodes"]
+NUM_STEPS_PER_EPISODE = runner.config["simulation_metadata"]["num_steps_per_episode"]
+
 
 class LearnableParamsWrapper(nn.Module):
     def __init__(self, num_params, device, scale_output='abm-covid'):
@@ -78,60 +81,64 @@ elif CALIB_MODE == 'learnable_param':
     learn_model = LearnableParams(num_params=1, device=device)
     opt = optim.Adam(learn_model.parameters(), lr=learning_rate, betas=betas)
 elif CALIB_MODE == "calibNN":
+    # set the epiweeks to simulate
+    EPIWEEK_START: Week = Week.fromstring(
+        str(runner.config["simulation_metadata"]["START_WEEK"])
+    )
+    NUM_WEEKS: int = runner.config["simulation_metadata"]["NUM_WEEKS"]
+    EPIWEEKS: list[Week] = [EPIWEEK_START + n for n in range(NUM_WEEKS)]
+
+    # assert that the number of days and weeks are consistent
+    # assert NUM_STEPS_PER_EPISODE == NUM_WEEKS * 7, "number of weeks and steps per episode are not consistent"
+
     # set up variables
-    feature_list = [
+    FEATURE_LIST = [
         Feature.RETAIL_CHANGE,
         Feature.GROCERY_CHANGE,
         Feature.PARKS_CHANGE,
         Feature.TRANSIT_CHANGE,
         Feature.WORK_CHANGE,
         Feature.RESIDENTIAL_CHANGE,
-        Feature.CASES
+        Feature.CASES,
     ]
-    label_feature = Feature.CASES
-    neighborhood = Neighborhood.ASTORIA_SOUTH_LIC_SUNNYSIDE
+    LABEL_FEATURE = Feature.CASES
+    NEIGHBORHOOD = Neighborhood.ASTORIA_SOUTH_LIC_SUNNYSIDE
 
     # set up model
     learn_model = CalibNN(
         metas_train_dim=len(Neighborhood),
-        X_train_dim=len(feature_list),
+        X_train_dim=len(FEATURE_LIST),
         device=device,
         training_weeks=INPUT_WEEKS,
         out_dim=1,
         scale_output="abm-covid",
     ).to(device)
+
+    # set up loss function and optimizer
+    loss_function = torch.nn.MSELoss()
     opt = optim.Adam(learn_model.parameters(), lr=learning_rate, betas=betas)
 
+
 def _get_parameters(CALIB_MODE):
-    if CALIB_MODE == 'learnable_param':
+    if CALIB_MODE == "learnable_param":
         new_R = learn_model()
         print("R shape: ", new_R.shape)
         return new_R
 
     if CALIB_MODE == "calibNN":
-        # set beginning and end weeks
-        epiweek_start = Week(2020, 38)
-        epiweek_end = Week(2020, 50)
-
-        # populate epiweeks
-        epiweeks = []
-        week = epiweek_start
-        while week != epiweek_end:
-            epiweeks.append(week)
-            week += 1
-
         # get R values for the epiweeks
-        dataloader = get_dataloader(
+        dataloader: DataLoader = get_dataloader(
             TABLE,
-            neighborhood,
-            epiweeks,
-            feature_list,
-            label_feature,
+            NEIGHBORHOOD,
+            EPIWEEKS,
+            FEATURE_LIST,
+            LABEL_FEATURE,
         )
         for metadata, features, _ in dataloader:
             r0_values = learn_model(features, metadata)[:, 0, 0]
-        
+
         return r0_values
+
 
 def _set_parameters(new_R):
     print("SET PARAMETERS ONLY WORKS FOR R0 for now!")
@@ -139,28 +146,39 @@ def _set_parameters(new_R):
     runner.initializer.transition_function['0']['new_transmission'].external_R = new_R
 
 for episode in range(num_episodes):
-    # get the R predictions for the calibNN
-    
+    # get the r0 predictions for the episode
     r0_values = _get_parameters(CALIB_MODE)
-    print("r0 values: ", r0_values)
     _set_parameters(r0_values)
-    
+    print("r0 values: ", r0_values)
+
+    # run the simulation
     opt.zero_grad()
-    
-    runner.step(num_steps_per_episode)
+    runner.step(NUM_STEPS_PER_EPISODE)
 
+    # get daily number of infections
     traj = runner.state_trajectory[-1][-1]
-    daily_infections_arr = traj['environment']['daily_infected'] #()
+    daily_infections_arr = traj["environment"]["daily_infected"]
 
-    loss_val = daily_infections_arr.sum() # test loss for now. will be replaced after
+    # get weekly number of infections from daily number of infections
+    predicted_weekly_cases = daily_infections_arr.reshape(-1, 7).sum(axis=1)
+    for _, _, labels in get_dataloader(
+        TABLE, NEIGHBORHOOD, EPIWEEKS, FEATURE_LIST, LABEL_FEATURE
+    ):
+        target_weekly_cases = labels.squeeze(0)
+
+    # for debugging
+    target_weekly_cases = target_weekly_cases[: NUM_STEPS_PER_EPISODE // 7]
+
+    # calculate the loss from the target cases
+    loss_val = loss_function(predicted_weekly_cases, target_weekly_cases)
     loss_val.backward()
 
     # Check the gradients for all parameters in the optimizer
     for param_group in opt.param_groups:
-        for param in param_group['params']:
+        for param in param_group["params"]:
             # print(f"Parameter: {param.data}, Gradient: {param.grad}")
             print(f"Parameter: {param.data}")
 
+    # run the optimization step, and clear simulation
     opt.step()
-
     runner.reset()

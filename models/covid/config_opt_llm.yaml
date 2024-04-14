@@ -1,6 +1,6 @@
 simulation_metadata:
     num_episodes: 2
-    num_steps_per_episode: 3
+    num_steps_per_episode: 7
     num_substeps_per_step: 2
     OPENAI_API_KEY: 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
     device: "cpu"
@@ -9,7 +9,7 @@ simulation_metadata:
     EXECUTION_MODE: llm
     num_agents: 37518
     initial_infection_ratio: 0.04
-    population_dir: "/u/ayushc/projects/GradABM/MacroEcon/simulator_data/census_populations/NYC/simulation_input"
+    population_dir: "/u/ngkuru/ship/MacroEcon/simulator_data/census_populations/NYC/simulation_input"
     mapping_path: ${simulation_metadata.population_dir}/population_mapping.json
     age_group_file: ${simulation_metadata.population_dir}/age.pickle
     infection_network_file: ${simulation_metadata.population_dir}/mobility_networks/0.csv
