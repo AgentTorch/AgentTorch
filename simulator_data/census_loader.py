@@ -8,8 +8,6 @@ from process.base_pop import base_pop_wrapper
 from process.household import household_wrapper
 from process.mobility_network import mobility_network_wrapper
 
-import pdb
-
 class CensusDataLoader:
     def __init__(self, use_parallel=False, n_cpu=8, area_list=None, geo_mapping=None):
         self.use_parallel = use_parallel
