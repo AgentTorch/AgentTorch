@@ -21,7 +21,7 @@ from simulator import get_registry, get_runner
 from AgentTorch.helpers import read_config
 from calibnn import CalibNN, LearnableParams
 
-from utils.misc import INPUT_WEEKS, TABLE, Feature, get_dataloader
+from utils.data import INPUT_WEEKS, Feature, get_dataloader
 from utils.region import Neighborhood
 
 # *************************************************************************
@@ -128,7 +128,6 @@ def _get_parameters(CALIB_MODE):
     if CALIB_MODE == "calibNN":
         # get R values for the epiweeks
         dataloader: DataLoader = get_dataloader(
-            TABLE,
             NEIGHBORHOOD,
             EPIWEEKS,
             FEATURE_LIST,
@@ -162,7 +161,7 @@ for episode in range(num_episodes):
     # get weekly number of infections from daily number of infections
     predicted_weekly_cases = daily_infections_arr.reshape(-1, 7).sum(axis=1)
     for _, _, labels in get_dataloader(
-        TABLE, NEIGHBORHOOD, EPIWEEKS, FEATURE_LIST, LABEL_FEATURE
+        NEIGHBORHOOD, EPIWEEKS, FEATURE_LIST, LABEL_FEATURE
     ):
         target_weekly_cases = labels.squeeze(0)
 
