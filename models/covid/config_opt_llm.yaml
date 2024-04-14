@@ -8,7 +8,7 @@ simulation_metadata:
     NUM_WEEKS: 12
     EXECUTION_MODE: llm
     num_agents: 37518
-    initial_infection_ratio: 0.04
+    initial_infection_ratio: 0.04 # BE CAREFUL: NOT USED IN SIMULATION HERE
     population_dir: "/u/ngkuru/ship/MacroEcon/simulator_data/census_populations/NYC/simulation_input"
     mapping_path: ${simulation_metadata.population_dir}/population_mapping.json
     age_group_file: ${simulation_metadata.population_dir}/age.pickle
