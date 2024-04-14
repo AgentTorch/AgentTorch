@@ -24,7 +24,6 @@ MAX_VAL_PARAMS = {
 WEEKS_AHEAD = 4
 
 class CalibNN(nn.Module):
-
     def __init__(self,
                  metas_train_dim,
                  X_train_dim,

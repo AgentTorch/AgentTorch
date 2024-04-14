@@ -3,7 +3,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
-# from data_utils import get_state_train_data_flu, create_window_seqs, get_county_train_data, counties
+from data_utils import get_county_train_data, counties, create_window_seqs
 from sklearn.preprocessing import StandardScaler
 import torch.nn as nn
 import numpy as np
@@ -218,154 +218,79 @@ def moving_average(x, w):
     return pd.Series(x).rolling(w, min_periods=1).mean().values
 
 ''' Specify which state '''
-# def fetch_county_data_covid(state='MA',
-#                             county_id='25005',
-#                             pred_week='202021',
-#                             batch_size=32,
-#                             noise_level=0):
-#     ''' Import COVID data for counties 
+def fetch_county_data_covid(state='MA',county_id='25005',pred_week='202021',batch_size=32,noise_level=0):
+    ''' Import COVID data for counties 
         
-#         Processing:
-#             - Sequences input is scaled
-#             - one-hot encoding for region (county)
-#             - Moving average to target
-#     '''
-#     np.random.seed(17)
+        Processing:
+            - Sequences input is scaled
+            - one-hot encoding for region (county)
+            - Moving average to target
+    '''
+    np.random.seed(17)
 
-#     if county_id == 'all':
-#         all_counties = counties[state]
-#     else:
-#         all_counties = [county_id]
+    if county_id == 'all':
+        all_counties = counties[state]
+    else:
+        all_counties = [county_id]
 
-#     c_seqs = []  # county sequences of features
-#     c_ys = []  # county targets
-#     for county in all_counties:
-#         X_county, y = get_county_train_data(county,
-#                                             pred_week,
-#                                             noise_level=noise_level)
-#         y = moving_average(y[:, 1].ravel(), SMOOTH_WINDOW).reshape(-1, 1)
-#         c_seqs.append(X_county.to_numpy())
-#         c_ys.append(y)
-#     c_seqs = np.array(c_seqs)  # Shape: [regions, time, features]
-#     c_ys = np.array(c_ys)  # Shape: [regions, time, 1]
+    c_seqs = []  # county sequences of features
+    c_ys = []  # county targets
+    for county in all_counties:
+        X_county, y = get_county_train_data(county,
+                                            pred_week,
+                                            noise_level=noise_level)
+        y = moving_average(y[:, 1].ravel(), SMOOTH_WINDOW).reshape(-1, 1)
+        c_seqs.append(X_county.to_numpy())
+        c_ys.append(y)
+    c_seqs = np.array(c_seqs)  # Shape: [regions, time, features]
+    c_ys = np.array(c_ys)  # Shape: [regions, time, 1]
 
-#     # Normalize
-#     # One scaler per county
-#     scalers = [StandardScaler() for _ in range(len(all_counties))]
-#     c_seqs_norm = []
-#     for i, scaler in enumerate(scalers):
-#         c_seqs_norm.append(scaler.fit_transform(c_seqs[i]))
-#     c_seqs_norm = np.array(c_seqs_norm)
-#     ''' Create static metadata data for each county '''
+    # Normalize
+    # One scaler per county
+    scalers = [StandardScaler() for _ in range(len(all_counties))]
+    c_seqs_norm = []
+    for i, scaler in enumerate(scalers):
+        c_seqs_norm.append(scaler.fit_transform(c_seqs[i]))
+    c_seqs_norm = np.array(c_seqs_norm)
+    ''' Create static metadata data for each county '''
 
-#     county_idx = {r: i for i, r in enumerate(all_counties)}
+    county_idx = {r: i for i, r in enumerate(all_counties)}
 
-#     def one_hot(idx, dim=len(county_idx)):
-#         ans = np.zeros(dim, dtype="float32")
-#         ans[idx] = 1.0
-#         return ans
+    def one_hot(idx, dim=len(county_idx)):
+        ans = np.zeros(dim, dtype="float32")
+        ans[idx] = 1.0
+        return ans
 
-#     metadata = np.array([one_hot(county_idx[r]) for r in all_counties])
-#     ''' Prepare train and validation dataset '''
+    metadata = np.array([one_hot(county_idx[r]) for r in all_counties])
+    ''' Prepare train and validation dataset '''
 
-#     min_sequence_length = 20
-#     metas, seqs, y, y_mask = [], [], [], []
-#     for meta, seq, ys in zip(metadata, c_seqs_norm, c_ys):
-#         seq, ys, ys_mask = create_window_seqs(seq, ys, min_sequence_length)
-#         metas.append(meta)
-#         seqs.append(seq[[-1]])
-#         y.append(ys[[-1]])
-#         y_mask.append(ys_mask[[-1]])
+    min_sequence_length = 20
+    metas, seqs, y, y_mask = [], [], [], []
+    for meta, seq, ys in zip(metadata, c_seqs_norm, c_ys):
+        seq, ys, ys_mask = create_window_seqs(seq, ys, min_sequence_length)
+        metas.append(meta)
+        seqs.append(seq[[-1]])
+        y.append(ys[[-1]])
+        y_mask.append(ys_mask[[-1]])
 
-#     all_metas = np.array(metas, dtype="float32")
-#     all_county_seqs = torch.cat(seqs, axis=0)
-#     all_county_ys = torch.cat(y, axis=0)
-#     all_county_y_mask = torch.cat(y_mask, axis=0)
+    all_metas = np.array(metas, dtype="float32")
+    all_county_seqs = torch.cat(seqs, axis=0)
+    all_county_ys = torch.cat(y, axis=0)
+    all_county_y_mask = torch.cat(y_mask, axis=0)
 
-#     counties_train, metas_train, X_train, y_train, y_mask_train = \
-#         all_counties, all_metas, all_county_seqs, all_county_ys, all_county_y_mask
+    counties_train, metas_train, X_train, y_train, y_mask_train = \
+        all_counties, all_metas, all_county_seqs, all_county_ys, all_county_y_mask
 
-#     train_dataset = SeqData(counties_train, metas_train, X_train, y_train,
-#                             y_mask_train)
-#     train_loader = torch.utils.data.DataLoader(train_dataset,
-#                                                batch_size=batch_size,
-#                                                shuffle=True)
+    train_dataset = SeqData(counties_train, metas_train, X_train, y_train,
+                            y_mask_train)
+    train_loader = torch.utils.data.DataLoader(train_dataset,
+                                               batch_size=batch_size,
+                                               shuffle=True)
 
-#     assert all_county_seqs.shape[1] == all_county_ys.shape[1]
-#     seqlen = all_county_seqs.shape[1]
-#     return train_loader, metas_train.shape[1], X_train.shape[2], seqlen
+    assert all_county_seqs.shape[1] == all_county_ys.shape[1]
+    seqlen = all_county_seqs.shape[1]
+    return train_loader, metas_train.shape[1], X_train.shape[2], seqlen
 
-
-# def fetch_county_data_flu(state='MA',
-#                           county_id='25005',
-#                           pred_week='202021',
-#                           batch_size=32,
-#                           noise_level=0):
-#     ''' in flu, our features are state-level and target ILI is only available at state'''
-#     np.random.seed(17)
-#     ''' Import data for all counties '''
-
-#     if county_id == 'all':
-#         all_counties = counties[state]
-#     else:
-#         all_counties = [county_id]
-
-#     X_state, y = get_state_train_data_flu(state,
-#                                           pred_week,
-#                                           noise_level=noise_level)
-#     y = moving_average(y.ravel(), SMOOTH_WINDOW).reshape(-1, 1)
-#     c_seqs = []  # county sequences of features
-#     c_ys = []  # county targets
-#     for _ in all_counties:
-#         c_seqs.append(X_state.to_numpy())
-#         c_ys.append(y)
-#     c_seqs = np.array(c_seqs)  # Shape: [regions, time, features]
-#     c_ys = np.array(c_ys)  # Shape: [regions, time, 1]
-
-#     # Normalize
-#     # One scaler per county
-#     scalers = [StandardScaler() for _ in range(len(all_counties))]
-#     c_seqs_norm = []
-#     for i, scaler in enumerate(scalers):
-#         c_seqs_norm.append(scaler.fit_transform(c_seqs[i]))
-#     c_seqs_norm = np.array(c_seqs_norm)
-#     ''' Create static metadata data for each county '''
-
-#     county_idx = {r: i for i, r in enumerate(all_counties)}
-
-#     def one_hot(idx, dim=len(county_idx)):
-#         ans = np.zeros(dim, dtype="float32")
-#         ans[idx] = 1.0
-#         return ans
-
-#     metadata = np.array([one_hot(county_idx[r]) for r in all_counties])
-#     ''' Prepare train and validation dataset '''
-#     min_sequence_length = 5
-#     metas, seqs, y, y_mask = [], [], [], []
-#     for meta, seq, ys in zip(metadata, c_seqs_norm, c_ys):
-#         seq, ys, ys_mask = create_window_seqs(seq, ys, min_sequence_length)
-#         metas.append(meta)
-#         seqs.append(seq[[-1]])
-#         y.append(ys[[-1]])
-#         y_mask.append(ys_mask[[-1]])
-
-#     all_metas = np.array(metas, dtype="float32")
-#     all_county_seqs = torch.cat(seqs, axis=0)
-#     all_county_ys = torch.cat(y, axis=0)
-#     all_county_y_mask = torch.cat(y_mask, axis=0)
-
-#     counties_train, metas_train, X_train, y_train, y_mask_train = \
-#         all_counties, all_metas, all_county_seqs, all_county_ys, all_county_y_mask
-#     train_dataset = SeqData(counties_train, metas_train, X_train, y_train,
-#                             y_mask_train)
-#     train_loader = torch.utils.data.DataLoader(train_dataset,
-#                                                batch_size=batch_size,
-#                                                shuffle=True)
-
-#     assert all_county_seqs.shape[1] == all_county_ys.shape[1]
-#     seqlen = all_county_seqs.shape[1]
-
-#     return train_loader, metas_train.shape[1], X_train.shape[2], seqlen
 
 
 # # dataset class
