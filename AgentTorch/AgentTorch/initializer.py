@@ -1,6 +1,7 @@
 import pandas as pd
 import torch
 import torch.nn as nn
+import copy
 
 from AgentTorch.helpers.general import *
 
@@ -22,13 +23,8 @@ class Initializer(nn.Module):
         self.config = config
         self.registry = registry
         
-        print("Debug initializer being used!")
-        
-        self.state = {}
-#         for key in self.config["state"].keys():
-#             self.state[key] = nn.ModuleDict()
-        
-        self.environment, self.agents, self.objects, self.networks = nn.ModuleDict(), nn.ModuleDict(), nn.ModuleDict(), {}
+        self.state = {}        
+        self.environment, self.agents, self.objects, self.networks = {}, {}, {}, {} #nn.ModuleDict(), nn.ModuleDict(), nn.ModuleDict(), {}
         
         self.fixed_parameters, self.learnable_parameters = {}, {}
         
@@ -92,7 +88,86 @@ class Initializer(nn.Module):
             self.fixed_parameters[property_key] = property_value
                 
         return property_value, property_is_learnable
+        
+    def init_environment(self, key="environment"):
+        if self.config["state"][key] is None:
+            print("Skipping.. ", key)
+            return
+            
+        for prop in self.config["state"][key].keys():
+            property_object = self.config["state"][key][prop]
+            property_value, property_is_learnable = self._initialize_property(property_object, property_key=f"{key}_{prop}")
+            self.environment[prop] = property_value #MakeModule(property_value, property_is_learnable)
+            
+#             self.state[key][prop] = self._initialize_property(property_object, property_key=f"{key}_{prop}")
     
+    def init_agents(self, key="agents"):
+        if self.config["state"][key] is None:
+            print("Skipping: ", key)
+            return
+        
+        for instance_type in self.config["state"][key].keys():
+            if instance_type == "metadata":
+                continue
+            
+            self.agents[instance_type] = {} #nn.ModuleDict()
+            instance_properties = self.config["state"][key][instance_type]["properties"]
+            if instance_properties is None:
+                continue
+            
+            for prop in instance_properties.keys():
+                property_object = instance_properties[prop]
+                property_value, property_is_learnable = self._initialize_property(property_object, property_key=f"{key}_{instance_type}_{prop}")
+                self.agents[instance_type][prop] = property_value #MakeModule(property_value, property_is_learnable)
+    
+    def init_objects(self, key="objects"):
+        if self.config["state"][key] is None:
+            print("Skipping: ", key)
+            return
+        
+        for instance_type in self.config["state"][key].keys():
+            if instance_type == "metadata":
+                continue
+            
+            self.objects[instance_type] = {} #nn.ModuleDict()
+            instance_properties = self.config["state"][key][instance_type]["properties"]
+            if instance_properties is None:
+                continue
+            
+            for prop in instance_properties.keys():
+                property_object = instance_properties[prop]
+                property_value, property_is_learnable = self._initialize_property(property_object, property_key=f"{key}_{instance_type}_{prop}")
+                self.objects[instance_type][prop] = property_value #MakeModule(property_value, property_is_learnable)
+        
+    def init_network(self, key="network"):
+        if self.config["state"][key] is None:
+            print("Skipping.. ", key)
+            return
+        
+        for interaction_type in self.config["state"][key].keys():
+            self.networks[interaction_type] = {}
+            
+            if self.config["state"][key][interaction_type] is None:
+                continue
+            
+            for contact_network in self.config["state"][key][interaction_type].keys():
+                self.networks[interaction_type][contact_network] = {}
+                
+                network_type = self.config["state"][key][interaction_type][contact_network]["type"]
+                params = self.config["state"][key][interaction_type][contact_network]["arguments"]
+                
+                self.networks[interaction_type][contact_network]["graph"], self.networks[interaction_type][contact_network]["adjacency_matrix"] = self.registry.network_helpers[network_type](params)
+                
+    def simulator(self):
+        self.init_environment()        
+        self.init_agents(key="agents")
+        self.init_objects(key="objects")
+        self.init_network()
+        
+        # track learnable parameters
+        self.parameters_dict = nn.ParameterDict(self.learnable_parameters)
+        # self.learnable_params_dict = nn.ParameterDict(self.learnable_parameters)
+
     def _parse_function(self, function_object, name_root):
         generator = function_object["generator"]
         input_variables = function_object["input_variables"]
@@ -102,7 +177,6 @@ class Initializer(nn.Module):
         learnable_args, fixed_args = {}, {}
         if arguments is not None:
             for argument in arguments:
-                
                 arg_name = f"{name_root}_{argument}"
                 
                 arg_object = arguments[argument]
@@ -125,116 +199,7 @@ class Initializer(nn.Module):
         arguments = {'learnable': learnable_args, 'fixed': fixed_args}
         
         return input_variables, output_variables, arguments
-        
-    def init_environment(self, key="environment"):
-        if self.config["state"][key] is None:
-            print("Skipping.. ", key)
-            return
-            
-        for prop in self.config["state"][key].keys():
-            print("property: ", prop)
-            property_object = self.config["state"][key][prop]
-            
-            property_value, property_is_learnable = self._initialize_property(property_object, property_key=f"{key}_{prop}")
-            self.environment[prop] = MakeModule(property_value, property_is_learnable)
-            
-#             self.state[key][prop] = self._initialize_property(property_object, property_key=f"{key}_{prop}")
-    
-    def init_agents(self, key="agents"):
-        if self.config["state"][key] is None:
-            print("Skipping: ", key)
-            return
-        
-        for instance_type in self.config["state"][key].keys():
-            if instance_type == "metadata":
-                continue
-            
-            self.agents[instance_type] = nn.ModuleDict()
-            instance_properties = self.config["state"][key][instance_type]["properties"]
-            if instance_properties is None:
-                continue
-            
-            for prop in instance_properties.keys():
-                property_object = instance_properties[prop]
-                print("property key: ", prop)
-                property_value, property_is_learnable = self._initialize_property(property_object, property_key=f"{key}_{instance_type}_{prop}")
-                self.agents[instance_type][prop] = MakeModule(property_value, property_is_learnable)
-    
-    def init_objects(self, key="objects"):
-        if self.config["state"][key] is None:
-            print("Skipping: ", key)
-            return
-        
-        for instance_type in self.config["state"][key].keys():
-            if instance_type == "metadata":
-                continue
-            
-            self.objects[instance_type] = nn.ModuleDict()
-            instance_properties = self.config["state"][key][instance_type]["properties"]
-            if instance_properties is None:
-                continue
-            
-            for prop in instance_properties.keys():
-                property_object = instance_properties[prop]
-                property_value, property_is_learnable = self._initialize_property(property_object, property_key=f"{key}_{instance_type}_{prop}")
-                self.objects[instance_type][prop] = MakeModule(property_value, property_is_learnable)
-        
-#     def agents_objects(self, key="agents"):
-#         if self.config["state"][key] is None:
-#             print("Skipping: ", key)
-#             return
-        
-#         for instance_type in self.config["state"][key].keys():
-#             if instance_type == "metadata":
-#                 continue
-            
-#             instance_dict = nn.ModuleDict()
-# #             self.state[key][instance_type] = NestedModule #{}
-#             instance_properties = self.config["state"][key][instance_type]["properties"]
-#             if instance_properties is None:
-#                 continue
-                
-#             for prop in instance_properties.keys():
-#                 property_object = instance_properties[prop]
-#                 instance_dict[prop] = self._initialize_property(property_object, property_key=f"{key}_{instance_type}_{prop}")
-# #                 self.state[key][instance_type][prop] = self._initialize_property(property_object, property_key=f"{key}_{instance_type}_{prop}")
-            
-#             self.state[key][instance_type] = NestedModule(instance_dict)
-        
-    def init_network(self, key="network"):
-        if self.config["state"][key] is None:
-            print("Skipping.. ", key)
-            return
-        
-        for interaction_type in self.config["state"][key].keys():
-            self.networks[interaction_type] = {}
-            
-            if self.config["state"][key][interaction_type] is None:
-                continue
-            
-            for contact_network in self.config["state"][key][interaction_type].keys():
-                self.networks[interaction_type][contact_network] = {}
-                
-                network_type = self.config["state"][key][interaction_type][contact_network]["type"]
-                params = self.config["state"][key][interaction_type][contact_network]["arguments"]
-                
-                self.networks[interaction_type][contact_network]["graph"], self.networks[interaction_type][contact_network]["adjacency_matrix"] = self.registry.network_helpers[network_type](params)
-                
-    def simulator(self):
-        self.init_environment()
-        print("environment done!")
-        
-        self.init_agents(key="agents")
-        print("agents done")
-        
-        self.init_objects(key="objects")
-        print("objects done")
-        
-        self.init_network()
-        print("networks done")
-        
-#         self.parameters = nn.ParameterDict(self.learnable_parameters)
-            
+
     def substeps(self):
         '''
         define observation, policy and transition functions for each active_agent on each substep
@@ -282,6 +247,18 @@ class Initializer(nn.Module):
         self.state['network'] = self.networks
         self.state['agents'] = self.agents
         self.state['objects'] = self.objects
+
+        self.state['parameters'] = self.parameters_dict
         
     def forward(self):
         self.initialize()
+
+    def __getstate__(self):
+        state_dict = self.state.copy()
+        state_dict['parameters'] = self.learnable_params_dict.state_dict()
+        return state_dict
+
+    def __setstate__(self, state):
+        self.learnable_params = nn.ParameterDict(state['parameters'])
+        self.state = state
+        self.state['parameters'] = self.learnable_params
