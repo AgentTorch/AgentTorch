@@ -200,7 +200,8 @@ def create_household_composition_v3(
     
     # Calculate average number of children per family
     avg_children_per_family = proc_houshold_dataset["children_num"] / proc_houshold_dataset["Family_households"]
-    num_households = proc_houshold_dataset['household_num'][0]
+    num_households = proc_houshold_dataset['household_num'] #[0]
+    breakpoint()
 
     unassigned_adults = proc_base_pop[proc_base_pop["age"].isin(adult_list)].copy()
     unassigned_children = proc_base_pop[proc_base_pop["age"].isin(children_list)].copy()
