@@ -11,9 +11,10 @@ import numpy as np
 import re
 import sys
 import pdb
+from AgentTorch.helpers.distributions import StraightThroughBernoulli
 
-sys.path.append(MODEL_PATH)
-sys.path.insert(0, AGENT_TORCH_PATH)
+# sys.path.append(MODEL_PATH)
+# sys.path.insert(0, AGENT_TORCH_PATH)
 from AgentTorch.LLM.llm_agent import LLMAgent
 from AgentTorch.substep import SubstepAction
 from AgentTorch.helpers import get_by_path
@@ -34,6 +35,8 @@ class WorkConsumptionPropensity(SubstepAction):
         self.agent = LLMAgent(agent_profile = agent_profile,openai_api_key = OPENAI_API_KEY,num_agents = self.num_llm_agents)
         self.save_memory_dir = self.config['simulation_metadata']['memory_dir']
         self.num_steps_per_episode = self.config['simulation_metadata']['num_steps_per_episode']
+
+        self.st_bernoulli = StraightThroughBernoulli.apply
         
     
     async def forward(self, state, observation):        
@@ -86,7 +89,7 @@ class WorkConsumptionPropensity(SubstepAction):
             work_propensity = torch.add(work_propensity,work_propensity_for_group)
 
         # work_propensity = torch.rand(16573530,1)
-        will_work = torch.bernoulli(work_propensity)
+        will_work = self.st_bernoulli(work_propensity) #torch.bernoulli(work_propensity)
         
         if number_of_months == self.num_steps_per_episode:
             current_memory_dir = os.path.join(self.save_memory_dir ,str(current_episode), str(number_of_months))

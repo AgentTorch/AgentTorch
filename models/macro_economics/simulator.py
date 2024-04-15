@@ -75,19 +75,18 @@ class SimulationRunner(Runner):
             num_steps_per_episode = self.config["simulation_metadata"]["num_steps_per_episode"]
             self.reset()
             self.step(num_steps_per_episode)
-            breakpoint()
             unemployment_rate = self.state_trajectory[-1][-1]['environment']['U'].squeeze()
-            test_set_for_episode = self.unemployment_test_dataset[episode][:num_steps_per_episode].float().squeeze()
-            loss =  self.mse_loss(unemployment_rate, test_set_for_episode)
+            loss = unemployment_rate.sum()
+            # test_set_for_episode = self.unemployment_test_dataset[episode][:num_steps_per_episode].float().squeeze()
+            # loss =  self.mse_loss(unemployment_rate, test_set_for_episode)
             loss.backward()
+            print([(p, p.grad) for p in self.parameters()])
             breakpoint()
             for param in self.parameters():
                 print(param.grad)
             self.optimizer.step()
             self.optimizer.zero_grad()
             
-        
-
             #self.controller.learn_after_episode(jax.tree_map(lambda x: x[-1], self.trajectory), self.initializer, self.optimizer)
 
     def execute(self):

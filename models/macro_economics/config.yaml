@@ -20,7 +20,7 @@ simulation_metadata:
   num_agents: 37518
   num_episodes: 2
   num_steps_per_episode: 2
-  num_substeps_per_step: 1
+  num_substeps_per_step: 4
   population_dir: /u/ayushc/projects/GradABM/MacroEcon/simulator_data/census_populations/NYC/simulation_input #change this path to be just till NYC
   target_inflation_rate: 0.02
   tax_brackets:
@@ -366,74 +366,74 @@ state:
     metadata:
       num_jobs: 2
 substeps:
-  # '0':
-  #   active_agents:
-  #   - consumers
-  #   description: Agents earn from hourly employment and interest on old assets
-  #   name: Agents Earning
-  #   observation:
-  #     consumers: null
-  #   policy:
-  #     consumers:
-  #       get_work_consumption_decision:
-  #         arguments: null
-  #         generator: WorkConsumptionPropensity
-  #         input_variables:
-  #           age: agents/consumers/age
-  #           consumption_propensity: agents/consumers/consumption_propensity
-  #           gender: agents/consumers/gender
-  #           work_propensity: agents/consumers/work_propensity
-  #         output_variables:
-  #         - will_work
-  #         - consumption_propensity
-  #   transition:
-  #     update_assets:
-  #       arguments: null
-  #       generator: UpdateAssets
-  #       input_variables:
-  #         assets: agents/consumers/assets
-  #         hourly_wage: objects/JobA/wage
-  #         interest_rate: environment/R
-  #         monthly_income: agents/consumers/monthly_income
-  #       output_variables:
-  #       - assets
-  #       - monthly_income
-  #     write_action_to_state:
-  #       arguments: null
-  #       generator: WriteActionToState
-  #       input_variables:
-  #         consumption_propensity: agents/consumers/consumption_propensity
-  #         will_work: agents/consumers/will_work
-  #       output_variables:
-  #       - consumption_propensity
-  #       - will_work
-  # '1':
-  #   active_agents:
-  #   - consumers
-  #   description: Agents spend assets on consumption
-  #   name: Agents Consumption
-  #   observation:
-  #     consumers: null
-  #   policy:
-  #     consumers: null
-  #   transition:
-  #     update_assets_and_goods:
-  #       arguments: null
-  #       generator: UpdateAssetsGoods
-  #       input_variables:
-  #         assets: agents/consumers/assets
-  #         consumption_propensity: agents/consumers/consumption_propensity
-  #         goods_inventory: environment/G
-  #         imbalance: environment/Im
-  #         price_of_goods: environment/P
-  #         total_demand: environment/D
-  #         work_propensity: agents/consumers/work_propensity
-  #       output_variables:
-  #       - goods_inventory
-  #       - assets
-  #       - total_demand
-  #       - imbalance
   '0':
+    active_agents:
+    - consumers
+    description: Agents earn from hourly employment and interest on old assets
+    name: Agents Earning
+    observation:
+      consumers: null
+    policy:
+      consumers:
+        get_work_consumption_decision:
+          arguments: null
+          generator: WorkConsumptionPropensity
+          input_variables:
+            age: agents/consumers/age
+            consumption_propensity: agents/consumers/consumption_propensity
+            gender: agents/consumers/gender
+            work_propensity: agents/consumers/work_propensity
+          output_variables:
+          - will_work
+          - consumption_propensity
+    transition:
+      update_assets:
+        arguments: null
+        generator: UpdateAssets
+        input_variables:
+          assets: agents/consumers/assets
+          hourly_wage: objects/JobA/wage
+          interest_rate: environment/R
+          monthly_income: agents/consumers/monthly_income
+        output_variables:
+        - assets
+        - monthly_income
+      write_action_to_state:
+        arguments: null
+        generator: WriteActionToState
+        input_variables:
+          consumption_propensity: agents/consumers/consumption_propensity
+          will_work: agents/consumers/will_work
+        output_variables:
+        - consumption_propensity
+        - will_work
+  '1':
+    active_agents:
+    - consumers
+    description: Agents spend assets on consumption
+    name: Agents Consumption
+    observation:
+      consumers: null
+    policy:
+      consumers: null
+    transition:
+      update_assets_and_goods:
+        arguments: null
+        generator: UpdateAssetsGoods
+        input_variables:
+          assets: agents/consumers/assets
+          consumption_propensity: agents/consumers/consumption_propensity
+          goods_inventory: environment/G
+          imbalance: environment/Im
+          price_of_goods: environment/P
+          total_demand: environment/D
+          work_propensity: agents/consumers/work_propensity
+        output_variables:
+        - goods_inventory
+        - assets
+        - total_demand
+        - imbalance
+  '2':
     active_agents:
     - consumers
     description: Labor department sets employment and wage parameters based on agent
@@ -464,29 +464,29 @@ substeps:
         output_variables:
         - hourly_wage
         - unemployment_rate
-  # '3':
-  #   active_agents:
-  #   - consumers
-  #   description: FED updates inflation and interest rate parameters based on labor
-  #     and consumption behavior of agents
-  #   name: Financial Market
-  #   observation:
-  #     consumers: null
-  #   policy:
-  #     consumers: null
-  #   transition:
-  #     update_financial_market:
-  #       arguments: null
-  #       generator: UpdateFinancialMarket
-  #       input_variables:
-  #         cumulative_price_of_goods: environment/Cumm_P
-  #         imbalance: environment/Im
-  #         inflation_rate: environment/P_i
-  #         interest_rate: environment/R
-  #         price_of_goods: environment/P
-  #         unemployment_rate: environment/U
-  #       output_variables:
-  #       - interest_rate
-  #       - price_of_goods
-  #       - cumulative_price_of_goods
-  #       - inflation_rate
+  '3':
+    active_agents:
+    - consumers
+    description: FED updates inflation and interest rate parameters based on labor
+      and consumption behavior of agents
+    name: Financial Market
+    observation:
+      consumers: null
+    policy:
+      consumers: null
+    transition:
+      update_financial_market:
+        arguments: null
+        generator: UpdateFinancialMarket
+        input_variables:
+          cumulative_price_of_goods: environment/Cumm_P
+          imbalance: environment/Im
+          inflation_rate: environment/P_i
+          interest_rate: environment/R
+          price_of_goods: environment/P
+          unemployment_rate: environment/U
+        output_variables:
+        - interest_rate
+        - price_of_goods
+        - cumulative_price_of_goods
+        - inflation_rate
