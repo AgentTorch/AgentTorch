@@ -1,14 +1,14 @@
-AGENT_TORCH_PATH = '/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch'
+AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
+#'/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch'
 
 import pandas as pd
 import numpy as np 
 import sys
-# sys.path.insert(0, AGENT_TORCH_PATH)
 sys.path.append(AGENT_TORCH_PATH)
 import torch
 import torch.optim as optim
 import sys
-sys.path.append("/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch/AgentTorch")
+# sys.path.append("/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch/AgentTorch")
 from AgentTorch import Runner, Registry
 from torch.nn import functional as F
 
@@ -52,7 +52,7 @@ def simulation_registry():
 class SimulationRunner(Runner):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        df = pd.read_csv("/Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/NYC/brooklyn_unemp.csv")
+        df = pd.read_csv("/u/ayushc/projects/GradABM/MacroEcon/simulator_data/NYC/brooklyn_unemp.csv")
         df.sort_values(by=['year','month'],ascending=True,inplace=True)
         arr = df['unemployment_rate'].values
         tensor = torch.from_numpy(arr)
@@ -62,8 +62,8 @@ class SimulationRunner(Runner):
     def forward(self):
         # for name, params in self.named_parameters():
         #     print(name)
-        for params in self.parameters():
-            print(params)
+        # for params in self.parameters():
+        #     print(params)
         self.optimizer = optim.Adam(self.parameters(), 
                 lr=self.config['simulation_metadata']['learning_params']['lr'], 
                 betas=self.config['simulation_metadata']['learning_params']['betas'])
@@ -75,10 +75,12 @@ class SimulationRunner(Runner):
             num_steps_per_episode = self.config["simulation_metadata"]["num_steps_per_episode"]
             self.reset()
             self.step(num_steps_per_episode)
-            unemployment_rate = self.state_trajectory[-1][-1]['environment']['U']().squeeze()
+            breakpoint()
+            unemployment_rate = self.state_trajectory[-1][-1]['environment']['U'].squeeze()
             test_set_for_episode = self.unemployment_test_dataset[episode][:num_steps_per_episode].float().squeeze()
             loss =  self.mse_loss(unemployment_rate, test_set_for_episode)
             loss.backward()
+            breakpoint()
             for param in self.parameters():
                 print(param.grad)
             self.optimizer.step()

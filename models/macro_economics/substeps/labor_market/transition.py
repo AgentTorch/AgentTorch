@@ -7,7 +7,6 @@ from AgentTorch.substep import SubstepTransition
 from AgentTorch.helpers import get_by_path
 from torch.nn import functional as F
 import re
-import pdb
 
 class UpdateMacroRates(SubstepTransition):
     '''Macro quantities relevant to labor markets - hourly wage, unemployment rate, price of goods'''
@@ -15,6 +14,8 @@ class UpdateMacroRates(SubstepTransition):
         super().__init__(config, input_variables, output_variables, arguments)
             
         self.num_timesteps = self.config['simulation_metadata']['num_steps_per_episode']
+        self.max_rate_change = self.config['simulation_metadata']['maximum_rate_of_change_of_wage']
+        self.num_agents = self.config['simulation_metadata']['num_agents']
     # def calculateUnemploymentRate(self, working_status):
     #     l = working_status
     #     agg_l = torch.sum(torch.sum((1-l),dim=1),dim=0)
@@ -23,11 +24,19 @@ class UpdateMacroRates(SubstepTransition):
     #     return unemployment_rate
     
     def calculateNumberOfAgentsNotWorking(self, working_status):
-        l = working_status
-        agents_not_working = torch.sum(torch.sum((1-l),dim=1),dim=0)
+        agents_not_working = torch.sum(torch.sum((1-working_status),dim=1),dim=0)
         return agents_not_working
     
-    def calculateHourlyWage(self, hourly_wage, imbalance):
+    def updateHourlyWage(self, hourly_wage, imbalance):
+        omega = imbalance.float()
+        r1, r2 = self.max_rate_change*omega, 0
+
+        sampled_omega = (r1 - r2) * torch.rand(1, 1) + r2
+
+        new_hourly_wage = hourly_wage + hourly_wage*sampled_omega
+        return new_hourly_wage
+
+    def legacy_calculateHourlyWage(self, hourly_wage, imbalance):
         # Calculate hourly wage
         w = hourly_wage
         omega = imbalance.float()
@@ -69,23 +78,25 @@ class UpdateMacroRates(SubstepTransition):
         working_status = get_by_path(state, re.split("/", self.input_variables['will_work']))
         imbalance = get_by_path(state, re.split("/", self.input_variables['imbalance']))
         hourly_wage = get_by_path(state, re.split("/", self.input_variables['hourly_wage']))
-        unemployment_adaptation_coefficient = get_by_path(state, re.split("/", self.input_variables['unemployment_adaptation_coefficient']))
         unemployment_rate = get_by_path(state, re.split("/", self.input_variables['unemployment_rate']))
-        
+
+        unemployment_adaptation_coefficient = self.learnable_args['unemployment_adaptation_coefficient']
+
+        # ua_coff_tensor = [num_months,]
+        # current_ua_coff = (time_step_one_hot*ua_coff_tensor).sum()
+
         # unemployment rate
         agents_not_working = self.calculateNumberOfAgentsNotWorking(working_status)
-        agent_willing_to_work = working_status.shape[0] - agents_not_working
-        Labor_Force_Participation_Rate = agent_willing_to_work / working_status.shape[0]
+        # agent_willing_to_work = working_status.shape[0] - agents_not_working
+        # Labor_Force_Participation_Rate = agent_willing_to_work / working_status.shape[0]
         time_step_one_hot = self._generate_one_hot_tensor(t, self.num_timesteps)
-        # unemployment_rate = B0 + B1(GDP Growth Rate) + B2(Job Creation Rate) + β₃(Labor Force Participation Rate) + β₄(Education Level) + β₅(Industry Shift) + β₆(Government Spending) + ε
-        unemployed_agents = torch.ceil(agents_not_working * unemployment_adaptation_coefficient)
-        num_agents = working_status.shape[0]
-        current_unemployment_rate = unemployed_agents / num_agents
+        
+        unemployed_agents = agents_not_working * unemployment_adaptation_coefficient
+        current_unemployment_rate = unemployed_agents / self.num_agents
         unemployment_rate = unemployment_rate + (current_unemployment_rate*time_step_one_hot)
         
-                
         # hourly wages
-        new_hourly_wages = self.calculateHourlyWage(hourly_wage, imbalance)
+        new_hourly_wages = self.updateHourlyWage(hourly_wage, imbalance) # self.calculateHourlyWage() to revert
                 
         return {self.output_variables[0]: new_hourly_wages, 
                 self.output_variables[1]: unemployment_rate}

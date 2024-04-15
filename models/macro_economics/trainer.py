@@ -1,14 +1,16 @@
+MODEL_PATH = '/u/ayushc/projects/GradABM/MacroEcon/models'
+AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
+
 import argparse
 import numpy as np
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
-import os
 import sys
-sys.path.append("/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch/")
+sys.path.insert(0, AGENT_TORCH_PATH)
+sys.path.append(MODEL_PATH)
 from AgentTorch.helpers import read_config
 from simulator import SimulationRunner, simulation_registry
-
 
 '''Command: python trainer.py --c config.yaml'''
 
@@ -30,7 +32,7 @@ parser.add_argument(
 #     config_file = os.path.join("/Users/shashankkumar/Documents/GitHub/MacroEcon/models/macro_economics", 'config.yaml')
 #     print("Config file path: ", config_file)
 
-config_file = "/Users/shashankkumar/Documents/GitHub/MacroEcon/models/macro_economics/config.yaml"
+config_file = "/u/ayushc/projects/GradABM/MacroEcon/models/macro_economics/config.yaml"
 config = read_config(config_file)
 registry = simulation_registry()
 
