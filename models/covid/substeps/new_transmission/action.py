@@ -7,6 +7,7 @@ import json
 import sys
 import re
 import pdb
+import time
 
 sys.path.append(MODEL_PATH)
 sys.path.insert(0, AGENT_TORCH_PATH)
@@ -91,6 +92,7 @@ class MakeIsolationDecision(SubstepAction):
             prompt_list.append(prompt)
 
         # execute prompts from LLMAgent and compile response
+        time.sleep(1)
         agent_output = await self.agent(prompt_list)
 
         # assign prompt response to agents

@@ -1,11 +1,11 @@
 simulation_metadata:
     num_episodes: 10
-    num_steps_per_episode: 7
+    num_steps_per_episode: 28
     num_substeps_per_step: 2
     OPENAI_API_KEY: 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
     device: "cpu"
-    START_WEEK: 202038 
-    NUM_WEEKS: 12
+    START_WEEK: 202109
+    NUM_WEEKS: 30
     EXECUTION_MODE: llm
     num_agents: 37518
     initial_infection_ratio: 0.04 # BE CAREFUL: NOT USED IN SIMULATION HERE

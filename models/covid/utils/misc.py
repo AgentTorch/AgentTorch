@@ -1,11 +1,18 @@
 from epiweeks import Week
 
-from utils.data import get_nn_data, Feature
-from utils.region import Neighborhood
+##### epiweek conversions #####
 
 
-def get_initial_infection_rate(neighborhood: Neighborhood, epiweek: Week):
-    # get number of cases for the previous week
-    num_cases = get_nn_data(neighborhood, epiweek - 1, [], Feature.CASES).label
-    # divide by population
-    return num_cases / neighborhood.population
+def epiweek_to_week_num(epiweek: Week):
+    return int(epiweek.cdcformat())
+
+
+def week_num_to_epiweek(week_num: int):
+    return Week.fromstring(str(week_num))
+
+
+def subtract_epiweek(epiweek1: Week, epiweek2: Week):
+    ans = 0
+    while epiweek2 + ans != epiweek1:
+        ans += 1
+    return ans
