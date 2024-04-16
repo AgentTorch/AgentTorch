@@ -40,7 +40,7 @@ def construct_user_prompt(
 
     # add the case news
     user_prompt += (
-        f"This week, there are {cases} new cases in the neighborhood, which is"
+        f"This week, there are {cases} new cases in the neighborhood, which is "
     )
 
     # add the change from past month's average
