@@ -15,40 +15,49 @@ sys.path.insert(0, AGENT_TORCH_PATH)
 from AgentTorch.helpers import get_by_path
 from AgentTorch.substep import SubstepAction
 from AgentTorch.LLM.llm_agent import LLMAgent
-from prompt import prompt_template_var, system_prompt
 
-from llm_utils import get_answer, CaseProvider, Neighborhood
+from utils.data import get_data
+from utils.feature import Feature
+from utils.llm import AgeGroup, SYSTEM_PROMPT, construct_user_prompt
+from utils.misc import week_num_to_epiweek, name_to_neighborhood
 
 class MakeIsolationDecision(SubstepAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
+        # set values from config
         OPENAI_API_KEY = self.config['simulation_metadata']['OPENAI_API_KEY']
         self.device = self.config['simulation_metadata']['device']
         self.mode = self.config['simulation_metadata']['EXECUTION_MODE']
-
-        self.agent = LLMAgent(agent_profile = system_prompt, openai_api_key=OPENAI_API_KEY)
-
-        self.provider = CaseProvider()
-
-        # index to age string mapping - for prompt formatting
-        self.age_mapping = {0: "under 19 years old", 1: "between 20-29 years old", 
-                            2: "between 30-39 years old",
-                            3: "between 40-49 years old",
-                            4: "between 50-64 years old",
-                            5: "above 65 years old"}
-        
-        self.dates = self.provider.get_dates()
-        self.case_numbers = self.provider.get_case_numbers()
-        
         self.num_agents = self.config['simulation_metadata']['num_agents']
-    
+        self.epiweek_start = week_num_to_epiweek(
+            self.config["simulation_metadata"]["START_WEEK"]
+        )
+        self.num_weeks = self.config["simulation_metadata"]["NUM_WEEKS"]
+        self.neighborhood = name_to_neighborhood(
+            self.config["simulation_metadata"]["NEIGHBORHOOD"]
+        )
+        self.include_week_count = self.config["simulation_metadata"]["INCLUDE_WEEK_COUNT"]
+
+        # set up llm agent
+        self.agent = LLMAgent(agent_profile=SYSTEM_PROMPT, openai_api_key=OPENAI_API_KEY)
+
+        # retrieve data
+        data = get_data(
+            self.neighborhood,
+            self.epiweek_start,
+            self.num_weeks,
+            [Feature.CASES, Feature.CASES_4WK_AVG],
+        )
+        self.cases_week = data[:, 0]
+        self.cases_4_week_avg = data[:, 1]
+
     def string_to_number(self, string):
-        if 'false' in string.lower():
-            return 0
-        else:
+        if string.lower() == "yes":
             return 1
-    
+        else:
+            return 0
+
     def change_text(self, change_amount):
         change_amount = int(change_amount)
         if change_amount >= 1:
@@ -57,39 +66,43 @@ class MakeIsolationDecision(SubstepAction):
             return f"a {abs(change_amount)}% decrease from last week"
         else:
             return "the same as last week"
-                
+
     async def forward(self, state, observation):
         '''
             LLMAgent class has three functions: a) mask sub-groups, b) format_prompt, c) invoke LLM, d) aggregate response 
         '''
         t = int(state['current_step'])
+        week_index = t//7
         input_variables = self.input_variables
 
-        week_id = int(t/7) + 1
-                
-        past_week_num = self.case_numbers[week_id-1]
-        curr_week_num = self.case_numbers[week_id]
-        week_i_change = (curr_week_num/past_week_num - 1)*100
-        
         agent_age = get_by_path(state, re.split("/", input_variables['age']))
 
         if self.mode == 'debug':
             will_isolate = torch.rand(self.num_agents, 1)
             return {self.output_variables[0]: will_isolate}
 
-        masks = []
-        prompt_list = []
-                
         # prompts are segregated based on agent age
-        for value in self.age_mapping.keys():
+        masks = []
+        for age_group in AgeGroup:
             # agent subgroups for each prompt
-            age_mask = (agent_age == value)
+            age_mask = (agent_age == age_group.value)
             masks.append(age_mask.float())
-        
-        for value in self.age_mapping.keys():
-            # formatting prompt for each group
-            prompt = prompt_template_var.format(age=self.age_mapping[value], week_i_num=curr_week_num, change_text=self.change_text(week_i_change))
-            prompt_list.append(prompt)
+
+        # generate the prompt list
+        prompt_list = [
+            {
+                "age": age_group.text,
+                "location": self.neighborhood.text,
+                "user_prompt": construct_user_prompt(
+                    self.include_week_count,
+                    self.epiweek_start,
+                    week_index,
+                    self.cases_week[week_index],
+                    self.cases_4_week_avg[week_index],
+                ),
+            }
+            for age_group in AgeGroup
+        ]
 
         # execute prompts from LLMAgent and compile response
         time.sleep(1)
@@ -104,5 +117,5 @@ class MakeIsolationDecision(SubstepAction):
             reasoning = output_response.split('.')[1] # reasoning to be saved for RAG later
             isolation_response = self.string_to_number(decision)
             will_isolate = will_isolate + masks[en]*isolation_response
-        
+
         return {self.output_variables[0]: will_isolate}

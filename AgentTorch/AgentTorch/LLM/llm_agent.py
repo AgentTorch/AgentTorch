@@ -13,61 +13,55 @@ from langchain_openai import OpenAI
 from langchain.prompts import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate,
+    SystemMessagePromptTemplate,
     MessagesPlaceholder,
 )
-from langchain_core.messages import SystemMessage
 from langchain.callbacks import get_openai_callback
 
 class LLMAgent():
     def __init__(self,agent_profile = None, memory = None,llm = None,openai_api_key = None) -> None:
         assert agent_profile is not None, "Agent profile is required"
-        
+
         if llm is None:
-            llm = self.llm = ChatOpenAI(model='gpt-3.5-turbo', openai_api_key=openai_api_key, temperature=0)
-        
+            llm = self.llm = ChatOpenAI(
+                model="gpt-3.5-turbo", openai_api_key=openai_api_key, temperature=0
+            )
+
         self.prompt = ChatPromptTemplate.from_messages(
-                    [
-                        SystemMessage(
-                            content=agent_profile
-                        ),  
-                        MessagesPlaceholder(
-                            variable_name="chat_history"
-                        ),  
-                        HumanMessagePromptTemplate.from_template(
-                            "{agent_query}"
-                        ), 
-                    ]
-                )
-        
+            [
+                SystemMessagePromptTemplate.from_template(agent_profile),
+                # MessagesPlaceholder(variable_name="chat_history"),
+                HumanMessagePromptTemplate.from_template("{user_prompt}"),
+            ]
+        )
+
         if memory is not None:
             self.agent_memory = memory
         else:
             self.agent_memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-        
+
         self.llm_chain = LLMChain(
             llm=llm,
             prompt=self.prompt,
             verbose=False,
             memory=self.agent_memory,
         )
-    
+
     async def __call__(self,prompt_list):
         memory = self.get_memory()
-        prompt_inputs = [{'agent_query': prompt, 'chat_history': memory['chat_history']} for prompt in prompt_list]
-        agent_output = await self.llm_chain.aapply(prompt_inputs)
-        self.save_memory(prompt_inputs,agent_output)
+        agent_output = await self.llm_chain.aapply(prompt_list)
+        self.save_memory(prompt_list,agent_output)
         return agent_output
-    
+
     def get_memory(self):
         return self.agent_memory.load_memory_variables({})
 
     def reflect(self,reflection_prompt):
         return self.llm_chain.predict(agent_query=reflection_prompt)
-    
+
     def save_memory(self,context_in,context_out):
-        for query,response in zip(context_in,context_out):
-            self.agent_memory.save_context({"input":query['agent_query']}, {"output":response['text']})
-        
+        for query, response in zip(context_in, context_out):
+            self.agent_memory.save_context({"input": query["user_prompt"]}, {"output": response['text']})
 
 
 if __name__ == "__main__":
