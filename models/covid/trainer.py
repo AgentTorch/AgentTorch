@@ -1,3 +1,4 @@
+from __future__ import annotations
 '''Command: python trainer.py --c config_opt_llm.yaml'''
 import warnings
 # Suppress all warnings
@@ -13,8 +14,8 @@ from torch.utils.data import DataLoader
 
 from utils.misc import week_num_to_epiweek
 
-AGENT_TORCH_PATH = '/u/ngkuru/ship/MacroEcon/AgentTorch'
-# AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
+# AGENT_TORCH_PATH = '/u/ngkuru/ship/MacroEcon/AgentTorch'
+AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
 
 import sys
 sys.path.insert(0, AGENT_TORCH_PATH)
@@ -34,7 +35,7 @@ parser = argparse.ArgumentParser(
     description="AgentTorch: million-scale, differentiable agent-based models"
 )
 parser.add_argument(
-    "-c", "--config", default="config.yaml", help="Name of the yaml config file with the parameters."
+    "-c", "--config", default="config_opt_llm.yaml", help="Name of the yaml config file with the parameters."
 )
 # *************************************************************************
 
@@ -51,20 +52,6 @@ runner = get_runner(config, registry)
 device = torch.device(runner.config["simulation_metadata"]["device"])
 num_episodes = runner.config["simulation_metadata"]["num_episodes"]
 NUM_STEPS_PER_EPISODE = runner.config["simulation_metadata"]["num_steps_per_episode"]
-
-
-class LearnableParamsWrapper(nn.Module):
-    def __init__(self, num_params, device, scale_output='abm-covid'):
-        super().__init__()
-        self.learnable_params_model = LearnableParams(num_params, device, scale_output)
-        self.learnable_params_output = None
-
-    def forward(self):
-        self.learnable_params_output = self.learnable_params_model()
-        return self.learnable_params_output
-
-    def parameters(self):
-        return self.learnable_params_model.parameters
 
 runner.init()
 
@@ -116,9 +103,8 @@ elif CALIB_MODE == "calibNN":
     ).to(device)
 
     # set up loss function and optimizer
-    loss_function = torch.nn.MSELoss()
+    loss_function = torch.nn.MSELoss().to(device)
     opt = optim.Adam(learn_model.parameters(), lr=learning_rate, betas=betas)
-
 
 def _get_parameters(CALIB_MODE):
     if CALIB_MODE == "learnable_param":
@@ -138,7 +124,6 @@ def _get_parameters(CALIB_MODE):
             r0_values = learn_model(features, metadata)[:, 0, 0]
 
         return r0_values
-
 
 def _set_parameters(new_R):
     print("SET PARAMETERS ONLY WORKS FOR R0 for now!")
@@ -165,6 +150,7 @@ for episode in range(num_episodes):
     target_weekly_cases = get_labels(NEIGHBORHOOD, EPIWEEK_START, NUM_WEEKS, LABEL_FEATURE)
     # for debugging
     target_weekly_cases = target_weekly_cases[: NUM_STEPS_PER_EPISODE // 7]
+    target_weekly_cases = target_weekly_cases.to(device)
 
     # calculate the loss from the target cases
     loss_val = loss_function(predicted_weekly_cases, target_weekly_cases)
