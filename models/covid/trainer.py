@@ -11,6 +11,8 @@ import torch.nn as nn
 
 from torch.utils.data import DataLoader
 
+from utils.misc import week_num_to_epiweek
+
 AGENT_TORCH_PATH = '/u/ngkuru/ship/MacroEcon/AgentTorch'
 # AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
 
@@ -23,6 +25,7 @@ from calibnn import CalibNN, LearnableParams
 
 from utils.data import NN_INPUT_WEEKS, get_dataloader, get_labels
 from utils.feature import Feature
+from utils.misc import name_to_neighborhood
 from utils.neighborhood import Neighborhood
 
 # *************************************************************************
@@ -83,9 +86,7 @@ elif CALIB_MODE == 'learnable_param':
     opt = optim.Adam(learn_model.parameters(), lr=learning_rate, betas=betas)
 elif CALIB_MODE == "calibNN":
     # set the epiweeks to simulate
-    EPIWEEK_START: Week = Week.fromstring(
-        str(runner.config["simulation_metadata"]["START_WEEK"])
-    )
+    EPIWEEK_START: Week = week_num_to_epiweek(runner.config["simulation_metadata"]["START_WEEK"])
     NUM_WEEKS: int = runner.config["simulation_metadata"]["NUM_WEEKS"]
 
     # assert that the number of days and weeks are consistent
@@ -102,7 +103,7 @@ elif CALIB_MODE == "calibNN":
         Feature.CASES,
     ]
     LABEL_FEATURE = Feature.CASES
-    NEIGHBORHOOD = Neighborhood.FICTION_LAND
+    NEIGHBORHOOD = name_to_neighborhood(config["simulation_metadata"]["NEIGHBORHOOD"])
 
     # set up model
     learn_model = CalibNN(

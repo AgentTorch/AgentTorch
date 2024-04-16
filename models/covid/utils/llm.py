@@ -1,3 +1,4 @@
+from enum import Enum
 from epiweeks import Week
 
 from utils.data import DATA_START_WEEK
@@ -6,7 +7,6 @@ from utils.misc import subtract_epiweek
 SYSTEM_PROMPT = """Consider a random person with the following attributes:
 * age: {age}
 * location: {location}
-* employment: {employment}
 
 There is a novel disease. It spreads through contact. It is more dangerous to older people.
 People have the option to isolate at home or continue their usual recreational activities outside.
@@ -17,6 +17,25 @@ Given this scenario, you must estimate the person's actions based on
 "There isn't enough information" and "It is unclear" are not acceptable answers.
 Give a "Yes" or "No" answer, followed by a period. Give one sentence explaining your choice.
 """
+
+class AgeGroup(Enum):
+    UNDER_19 = 0
+    BETWEEN_20_29 = 1
+    BETWEEN_30_39 = 2
+    BETWEEN_40_49 = 3
+    BETWEEN_50_64 = 4
+    ABOVE_65 = 5
+
+    @property
+    def text(self):
+        return {
+            AgeGroup.UNDER_19: "under 19 years old",
+            AgeGroup.BETWEEN_20_29: "between 20-29 years old",
+            AgeGroup.BETWEEN_30_39: "between 30-39 years old",
+            AgeGroup.BETWEEN_40_49: "between 40-49 years old",
+            AgeGroup.BETWEEN_50_64: "between 50-64 years old",
+            AgeGroup.ABOVE_65: "above 65 years old",
+        }[self]
 
 
 def construct_user_prompt(
