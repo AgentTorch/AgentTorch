@@ -21,9 +21,9 @@
   </a>
 </p> 
 
-Large population models are grounded in state-of-the-art AI research and a quick summary is [here](https://web.media.mit.edu/~ayushc/motivation.pdf). AgentTorch LPMs have four key features:
+Large population models are grounded in state-of-the-art AI research ([summary here](https://web.media.mit.edu/~ayushc/motivation.pdf)). AgentTorch LPMs have four key features:
 
-- **Scalability**: AgentTorch can simulate country-size populations in seconds on commodity hardware.
+- **Scalability**: AgentTorch models can simulate country-size populations in seconds on commodity hardware.
 - **Differentiability**: AgentTorch models can differentiate through simulations with stochastic dynamics and conditional interventions, enabling gradient-based learning.
 - **Composition**: AgentTorch models can compose with deep neural networks (eg: LLMs), mechanistic simulators (eg: mitsuba) or other LPMs. This helps describe agent behavior, calibrate simulation parameters and specify expressive interaction rules.
 - **Generalization**: AgentTorch helps simulate diverse ecosystems - humans in geospatial worlds, cells in anatomical worlds, autonomous avatars in digital worlds.
