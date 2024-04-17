@@ -76,7 +76,7 @@ class MakeIsolationDecision(SubstepAction):
         agent_age = get_by_path(state, re.split("/", input_variables['age']))
 
         if self.mode == 'debug':
-            will_isolate = torch.rand(self.num_agents, 1)
+            will_isolate = torch.rand(self.num_agents, 1).to(self.device)
             return {self.output_variables[0]: will_isolate}
 
         # prompts are segregated based on agent age

@@ -41,8 +41,9 @@ class NewTransmission(SubstepTransitionMessagePassing):
         will_isolate = x_j[:, 6]
         not_isolated = 1 - will_isolate
         
-        res = not_isolated*R*S_A_s*A_s_i*B_n*integrals #/I_bar
+        # res = not_isolated*R*S_A_s*A_s_i*B_n*integrals #/I_bar
         
+        res = R*S_A_s*A_s_i*B_n*integrals/I_bar #/I_bar
         # res = R*S_A_s*A_s_i*B_n*integrals #/I_bar
 
         return res.view(-1, 1)
