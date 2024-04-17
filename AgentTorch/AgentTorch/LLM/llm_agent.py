@@ -52,7 +52,7 @@ class LLMAgent():
         memory = self.get_memory()
         prompt_inputs = [{'agent_query': prompt, 'chat_history': memory['chat_history']} for prompt in prompt_list]
         agent_output = await self.llm_chain.aapply(prompt_inputs)
-        self.save_memory(prompt_inputs,agent_output)
+        #self.save_memory(prompt_inputs,agent_output) - Use memory in prompt when needed
         return agent_output
 
     def get_memory(self):
