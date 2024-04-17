@@ -1,16 +1,16 @@
 {
     "interaction_map": {
         "CHILD": {
-            "mu": 2,
+            "mu": 1,
             "sigma": 2
         },
         "ADULT": {
-            "mu": 4,
-            "sigma": 4
+            "mu": 3,
+            "sigma": 2
         },
         "ELDERLY": {
             "mu": 3,
-            "sigma": 3
+            "sigma": 2
         }
     },
     "age_map": {

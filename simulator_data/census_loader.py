@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import sys
+import shutil
 import os
 import json
 
@@ -72,3 +72,16 @@ class CensusDataLoader:
 
         with open(output_mapping_path, 'w') as f:
             json.dump(mapping_collection, f)
+
+        # move mobility networks        
+        src_folder = os.path.dirname(self.mobility_network_paths[0])
+        dst_folder = os.path.join(save_dir, 'mobility_networks')
+
+        # Remove the destination folder if it already exists
+        if os.path.exists(dst_folder):
+            shutil.rmtree(dst_folder)
+
+        # Copy the folder
+        shutil.copytree(src_folder, dst_folder)
+
+        
