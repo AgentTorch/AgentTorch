@@ -146,7 +146,7 @@ for episode in range(num_episodes):
     daily_infections_arr = traj["environment"]["daily_infected"]
 
     # get weekly number of infections from daily number of infections
-    predicted_weekly_cases = daily_infections_arr.reshape(-1, 7).sum(axis=1)
+    predicted_weekly_cases = daily_infections_arr.reshape(-1, 7).sum(axis=1).to(dtype=torch.float32)
     target_weekly_cases = get_labels(NEIGHBORHOOD, EPIWEEK_START, NUM_WEEKS, LABEL_FEATURE)
     # for debugging
     target_weekly_cases = target_weekly_cases[: NUM_STEPS_PER_EPISODE // 7]
