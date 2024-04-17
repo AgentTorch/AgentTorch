@@ -1,16 +1,13 @@
-AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
-MODEL_PATH = '/u/ayushc/projects/GradABM/MacroEcon/models'
+# AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
+# MODEL_PATH = '/u/ayushc/projects/GradABM/MacroEcon/models'
 
 import torch
 import numpy as np
-import json
-import sys
 import re
-import pdb
 import time
 
-sys.path.append(MODEL_PATH)
-sys.path.insert(0, AGENT_TORCH_PATH)
+# sys.path.append(MODEL_PATH)
+# sys.path.insert(0, AGENT_TORCH_PATH)
 
 from AgentTorch.helpers import get_by_path
 from AgentTorch.substep import SubstepAction
@@ -27,7 +24,7 @@ class MakeIsolationDecision(SubstepAction):
 
         # set values from config
         OPENAI_API_KEY = self.config['simulation_metadata']['OPENAI_API_KEY']
-        self.device = self.config['simulation_metadata']['device']
+        self.device = torch.device(self.config['simulation_metadata']['device'])
         self.mode = self.config['simulation_metadata']['EXECUTION_MODE']
         self.num_agents = self.config['simulation_metadata']['num_agents']
         self.epiweek_start = week_num_to_epiweek(
@@ -75,6 +72,7 @@ class MakeIsolationDecision(SubstepAction):
         week_index = t//7
         input_variables = self.input_variables
 
+
         agent_age = get_by_path(state, re.split("/", input_variables['age']))
 
         if self.mode == 'debug':
@@ -104,12 +102,12 @@ class MakeIsolationDecision(SubstepAction):
             for age_group in AgeGroup
         ]
 
+        # time.sleep(1)
         # execute prompts from LLMAgent and compile response
-        time.sleep(1)
         agent_output = await self.agent(prompt_list)
 
         # assign prompt response to agents
-        will_isolate = torch.zeros((self.num_agents, 1))
+        will_isolate = torch.zeros((self.num_agents, 1)).to(self.device)
 
         for en, output_value in enumerate(agent_output):
             output_response = output_value['text']
@@ -117,5 +115,5 @@ class MakeIsolationDecision(SubstepAction):
             reasoning = output_response.split('.')[1] # reasoning to be saved for RAG later
             isolation_response = self.string_to_number(decision)
             will_isolate = will_isolate + masks[en]*isolation_response
-
+        
         return {self.output_variables[0]: will_isolate}

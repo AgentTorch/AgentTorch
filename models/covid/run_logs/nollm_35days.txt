@@ -1,0 +1,239 @@
+Running experiment with config file:  config_opt_llm.yaml
+/u/ayushc/agent_torch_env/lib/python3.8/site-packages/langchain/callbacks/__init__.py:37: LangChainDeprecationWarning: Importing this callback from langchain is deprecated. Importing it from langchain will no longer be supported as of langchain==0.2.0. Please import from langchain-community instead:
+
+`from langchain_community.callbacks import get_openai_callback`.
+
+To install langchain-community run `pip install -U langchain-community`.
+  warnings.warn(
+Skipping:  objects
+named learnable_params:  [('initializer.transition_function.0.new_transmission.learnable_args.R2', Parameter containing:
+tensor([4.7500, 4.7500, 4.7500, 4.7500, 4.7500, 4.7500, 4.7500, 4.7500, 4.7500,
+        4.7500, 4.7500, 4.7500, 4.7500, 4.7500, 4.7500, 4.7500, 4.7500, 4.7500,
+        4.7500, 4.7500, 4.7500, 4.7500, 4.7500, 4.7500, 4.7500, 4.7500, 4.7500,
+        4.7500, 4.7500, 4.7500], device='cuda:0', requires_grad=True)), ('initializer.transition_function.1.seirms_progression.learnable_args.M', Parameter containing:
+tensor([0.1200], device='cuda:0', requires_grad=True))]
+
+running episode 0...
+SET PARAMETERS ONLY WORKS FOR R0 for now!
+r0 values: tensor([4.3679, 4.3619, 4.2985, 4.2378, 4.1066, 4.2493, 4.1511, 4.0859, 4.0237,
+        3.9000, 4.0717, 3.9989, 3.8736, 3.9455, 3.9537, 3.8890, 3.8303, 3.8055,
+        3.9525, 3.8800, 3.8912, 3.9296, 3.9341, 3.9425, 3.8756, 3.9532, 4.1273,
+        4.0022, 3.8843, 3.9603], device='cuda:0', grad_fn=<SelectBackward0>)
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+predicted number of cases: tensor([  843., 12648., 16400.,  2565.,   566.], device='cuda:0',
+       grad_fn=<SumBackward1>), actual number of cases: tensor([109., 126., 128., 125., 111.], device='cuda:0'), loss: 85655568.0
+Skipping:  objects
+
+running episode 1...
+SET PARAMETERS ONLY WORKS FOR R0 for now!
+r0 values: tensor([3.3235, 3.2576, 3.1387, 3.1684, 3.1024, 3.1704, 3.1503, 3.2127, 3.4111,
+        3.4595, 3.7404, 3.7524, 3.6780, 3.7883, 3.8190, 3.7120, 3.6805, 3.6648,
+        3.7762, 3.6685, 3.6349, 3.6580, 3.6658, 3.6666, 3.5528, 3.5390, 3.4714,
+        3.4907, 3.5057, 3.5432], device='cuda:0', grad_fn=<SelectBackward0>)
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+predicted number of cases: tensor([  723.,  9705., 17689.,  3667.,   745.], device='cuda:0',
+       grad_fn=<SumBackward1>), actual number of cases: tensor([109., 126., 128., 125., 111.], device='cuda:0'), loss: 82694136.0
+Skipping:  objects
+
+running episode 2...
+SET PARAMETERS ONLY WORKS FOR R0 for now!
+r0 values: tensor([2.6301, 2.5934, 2.5418, 2.5571, 2.5416, 2.5481, 2.5947, 2.6502, 2.8573,
+        2.9222, 3.3849, 3.5279, 3.4788, 3.6116, 3.6318, 3.5563, 3.5302, 3.5097,
+        3.5855, 3.4989, 3.4530, 3.4537, 3.4414, 3.3956, 3.1364, 3.0437, 2.9061,
+        2.9830, 3.0199, 3.0683], device='cuda:0', grad_fn=<SelectBackward0>)
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+predicted number of cases: tensor([  569.,  6711., 18118.,  5580.,  1134.], device='cuda:0',
+       grad_fn=<SumBackward1>), actual number of cases: tensor([109., 126., 128., 125., 111.], device='cuda:0'), loss: 79603496.0
+Skipping:  objects
+
+running episode 3...
+SET PARAMETERS ONLY WORKS FOR R0 for now!
+r0 values: tensor([2.3361, 2.3223, 2.2930, 2.2978, 2.2796, 2.2812, 2.3216, 2.3430, 2.4506,
+        2.5299, 2.8764, 3.0952, 3.0978, 3.2948, 3.2890, 3.2639, 3.2358, 3.1887,
+        3.2317, 3.1085, 3.0829, 3.0406, 3.0117, 2.9658, 2.7017, 2.5925, 2.4869,
+        2.5474, 2.5729, 2.6136], device='cuda:0', grad_fn=<SelectBackward0>)
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+predicted number of cases: tensor([  543.,  5735., 17576.,  6484.,  1166.], device='cuda:0',
+       grad_fn=<SumBackward1>), actual number of cases: tensor([109., 126., 128., 125., 111.], device='cuda:0'), loss: 75526368.0
+Skipping:  objects
+
+running episode 4...
+SET PARAMETERS ONLY WORKS FOR R0 for now!
+r0 values: tensor([2.1810, 2.1750, 2.1626, 2.1647, 2.1561, 2.1549, 2.1773, 2.1826, 2.2390,
+        2.2929, 2.4661, 2.7036, 2.7452, 2.9608, 2.9485, 2.9475, 2.9338, 2.8848,
+        2.8823, 2.7910, 2.7419, 2.6850, 2.6423, 2.6010, 2.3924, 2.3167, 2.2578,
+        2.2829, 2.2895, 2.3271], device='cuda:0', grad_fn=<SelectBackward0>)
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+Substep: SEIRM progression!
+predicted number of cases: tensor([  529.,  5431., 17212.,  6957.,  1363.], device='cuda:0',
+       grad_fn=<SumBackward1>), actual number of cases: tensor([109., 126., 128., 125., 111.], device='cuda:0'), loss: 73685240.0
+Skipping:  objects

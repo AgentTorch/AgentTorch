@@ -11,7 +11,7 @@ class NewTransmission(SubstepTransitionMessagePassing):
     def __init__(self, config, input_variables, output_variables, arguments):
         super().__init__(config, input_variables, output_variables, arguments)
 
-        self.device = self.config['simulation_metadata']['device']
+        self.device = torch.device(self.config['simulation_metadata']['device'])
         self.SUSCEPTIBLE_VAR = self.config['simulation_metadata']['SUSCEPTIBLE_VAR']
         self.EXPOSED_VAR = self.config['simulation_metadata']['EXPOSED_VAR']
         self.RECOVERED_VAR = self.config['simulation_metadata']['RECOVERED_VAR']
@@ -65,7 +65,7 @@ class NewTransmission(SubstepTransitionMessagePassing):
         timestep_tensor = torch.tensor([timestep])
         one_hot_tensor = F.one_hot(timestep_tensor, num_classes=num_timesteps)
 
-        return one_hot_tensor
+        return one_hot_tensor.to(self.device)
     
     def update_infected_times(self, t, agents_infected_times, newly_exposed_today):
         '''Note: not differentiable'''

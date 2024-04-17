@@ -87,6 +87,7 @@ class CalibNN(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x, meta):
+        x, meta = x.to(self.device), meta.to(self.device)
         x_embeds, encoder_hidden = self.emb_model.forward(
             x.transpose(1, 0), meta)
         

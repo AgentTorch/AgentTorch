@@ -1,9 +1,9 @@
 simulation_metadata:
-    num_episodes: 10
-    num_steps_per_episode: 28
+    num_episodes: 5
+    num_steps_per_episode: 35
     num_substeps_per_step: 2
     OPENAI_API_KEY: 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
-    device: "cpu"
+    device: "cuda" # "cpu"
     START_WEEK: 202207 # 202109
     NUM_WEEKS: 30
     NEIGHBORHOOD: "Astoria"
@@ -11,11 +11,11 @@ simulation_metadata:
     EXECUTION_MODE: llm
     num_agents: 37518
     initial_infection_ratio: 0.04 # BE CAREFUL: NOT USED IN SIMULATION HERE
-    population_dir: "/u/ngkuru/ship/MacroEcon/simulator_data/census_populations/NYC/simulation_input"
+    population_dir: "/u/ayushc/projects/GradABM/MacroEcon/simulator_data/census_populations/NYC/simulation_input"
     mapping_path: ${simulation_metadata.population_dir}/population_mapping.json
     age_group_file: ${simulation_metadata.population_dir}/age.pickle
     infection_network_file: ${simulation_metadata.population_dir}/mobility_networks/0.csv
-    disease_stage_file: "nyc_disease_stages.csv"
+    disease_stage_file: "disease_stages_fictional.csv"
     SUSCEPTIBLE_VAR: 0
     EXPOSED_VAR: 1
     INFECTED_VAR: 2
