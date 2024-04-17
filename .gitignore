@@ -3,3 +3,4 @@ pythonProject1/.idea
 **/__pycache__/
 **/work.ipynb
 .vscode/
+**/nohup.out

@@ -1,35 +1,35 @@
 simulation_metadata:
     num_episodes: 10
-    num_steps_per_episode: 168
+    num_steps_per_episode: 28
     num_substeps_per_step: 2
     OPENAI_API_KEY: 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
-    device: "cuda" # "cpu"
-    START_WEEK: 202212 # 202109
-    NUM_WEEKS: 24
+    device: "cuda" #"cpu"
+    START_WEEK: 202207
+    NUM_WEEKS: 10
     NEIGHBORHOOD: "Astoria"
     INCLUDE_WEEK_COUNT: True
-    EXECUTION_MODE: llm
+    EXECUTION_MODE: debug
     num_agents: 37518
     initial_infection_ratio: 0.04 # BE CAREFUL: NOT USED IN SIMULATION HERE
     population_dir: "/u/ngkuru/ship/MacroEcon/simulator_data/census_populations/NYC/simulation_input"
     mapping_path: ${simulation_metadata.population_dir}/population_mapping.json
     age_group_file: ${simulation_metadata.population_dir}/age.pickle
     infection_network_file: ${simulation_metadata.population_dir}/mobility_networks/0.csv
-    disease_stage_file: "disease_stages_fictional.csv"
+    disease_stage_file: "202212_37518_diseasestages.csv"
     SUSCEPTIBLE_VAR: 0
     EXPOSED_VAR: 1
     INFECTED_VAR: 2
     RECOVERED_VAR: 3
     MORTALITY_VAR: 4
-    EXPOSED_TO_INFECTED_TIME: 3
+    EXPOSED_TO_INFECTED_TIME: 5
     INFECTED_TO_RECOVERED_TIME: 5
     INFINITY_TIME: 130
-    RECOVERED_TO_SUSCEPTIBLE_TIME: 60
+    RECOVERED_TO_SUSCEPTIBLE_TIME: 100
     quarantine_days: 12
     test_result_delay_days: 3
     test_ineligible_days: 2
     learning_params:
-        lr: 2e-3
+        lr: 2e-2
         betas:
             - 0.5
             - 0.5
@@ -413,6 +413,39 @@ substeps:
                         initialization_function: null
                         value: 4.75
                         dtype: "float"
+                
+                    SFSusceptibility:
+                        name: "Susceptibility by Age Group"
+                        learnable: false
+                        shape:
+                            - 9
+                        initialization_function: null
+                        value: 
+                            - 0.35
+                            - 0.69
+                            - 1.03
+                            - 1.03
+                            - 1.03
+                            - 1.03
+                            - 1.27
+                            - 1.52
+                            - 1.52
+                        dtype: "float"
+            
+                    SFInfector:
+                        name: "Infectiousness of Infector"
+                        learnable: false
+                        shape:
+                            - 5
+                        initialization_function: null
+                        value:
+                            - 0.0
+                            - 0.33
+                            - 0.72
+                            - 0.0
+                            - 0.0
+                        dtype: "float"
+
                 input_variables:
                     SFSusceptibility: 'environment/SFSusceptibility'
                     SFInfector: 'environment/SFInfector'
@@ -442,8 +475,8 @@ substeps:
         policy:
             citizens: null
         transition:
-            seirms_progression:
-                generator: "SEIRMSProgression"
+            seirm_progression:
+                generator: "SEIRMProgression"
                 arguments:
                    M:
                         name: "Mortality Rate"

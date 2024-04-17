@@ -61,7 +61,9 @@ class Runner(nn.Module):
         if not num_steps:
             num_steps = self.config["simulation_metadata"]["num_steps_per_episode"]
         
+        print("step:", end=" ")
         for time_step in range(num_steps):
+            print(f"{time_step}", end=" ")
             self.state['current_step'] = time_step # current_step is a string
             for traj_var in self.trajectory.keys():
                 self.trajectory[traj_var][-1].append(deque())
@@ -84,6 +86,7 @@ class Runner(nn.Module):
                 self.state = next_state
 
                 self.state_trajectory[-1].append(self.state)
+        print()
 
     def _set_parameters(self, params):
         for param in params:
