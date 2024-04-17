@@ -3,9 +3,9 @@ simulation_metadata:
     num_steps_per_episode: 28
     num_substeps_per_step: 2
     OPENAI_API_KEY: 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
-    device: "cuda" #"cpu"
+    device: "cuda"
     START_WEEK: 202207
-    NUM_WEEKS: 10
+    NUM_WEEKS: 4
     NEIGHBORHOOD: "Astoria"
     INCLUDE_WEEK_COUNT: True
     EXECUTION_MODE: debug

@@ -14,8 +14,8 @@ from torch.utils.data import DataLoader
 
 from utils.misc import week_num_to_epiweek
 
-# AGENT_TORCH_PATH = '/u/ngkuru/ship/MacroEcon/AgentTorch'
-AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
+AGENT_TORCH_PATH = '/u/ngkuru/ship/MacroEcon/AgentTorch'
+# AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
 
 import sys
 sys.path.insert(0, AGENT_TORCH_PATH)
@@ -76,9 +76,6 @@ elif CALIB_MODE == "calibNN":
     EPIWEEK_START: Week = week_num_to_epiweek(runner.config["simulation_metadata"]["START_WEEK"])
     NUM_WEEKS: int = runner.config["simulation_metadata"]["NUM_WEEKS"]
 
-    # assert that the number of days and weeks are consistent
-    # assert NUM_STEPS_PER_EPISODE == NUM_WEEKS * 7, "number of weeks and steps per episode are not consistent"
-
     # set up variables
     FEATURE_LIST = [
         Feature.RETAIL_CHANGE,
@@ -126,7 +123,7 @@ def _get_parameters(CALIB_MODE):
         return r0_values
 
 def _set_parameters(new_R):
-    print("SET PARAMETERS ONLY WORKS FOR R0 for now!")
+    # print("SET PARAMETERS ONLY WORKS FOR R0 for now!")
     '''Only sets R value for now..'''
     runner.initializer.transition_function['0']['new_transmission'].external_R = new_R
 
