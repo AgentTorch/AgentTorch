@@ -1,5 +1,5 @@
 from __future__ import annotations
-'''Command: python trainer.py --c config_opt_llm.yaml'''
+'''Command: python trainer.py --c yamls/config_opt_llm.yaml'''
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -8,13 +8,14 @@ from epiweeks import Week
 import torch
 import torch.optim as optim
 import torch.nn as nn
+import numpy as np
 
 from torch.utils.data import DataLoader
 
 from utils.misc import week_num_to_epiweek
 
-AGENT_TORCH_PATH = '/u/ngkuru/ship/MacroEcon/AgentTorch'
-# AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
+# AGENT_TORCH_PATH = '/u/ngkuru/ship/MacroEcon/AgentTorch'
+AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
 
 import sys
 sys.path.insert(0, AGENT_TORCH_PATH)
@@ -150,7 +151,9 @@ for episode in range(num_episodes):
     # target_weekly_cases = target_weekly_cases[: NUM_STEPS_PER_EPISODE // 7]
     target_weekly_cases = target_weekly_cases.to(device)
 
-    # breakpoint()
+    breakpoint()
+
+    np.save('/tmp/history_predicted_weekly_cases.npy'.format(), predicted_weekly_cases.cpu().data)
 
     # calculate the loss from the target cases
     loss_val = loss_function(predicted_weekly_cases, target_weekly_cases)

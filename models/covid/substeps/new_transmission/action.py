@@ -5,6 +5,7 @@ import torch
 import numpy as np
 import re
 import time
+import os
 
 # sys.path.append(MODEL_PATH)
 # sys.path.insert(0, AGENT_TORCH_PATH)
@@ -72,7 +73,6 @@ class MakeIsolationDecision(SubstepAction):
         week_index = t//7
         input_variables = self.input_variables
 
-
         agent_age = get_by_path(state, re.split("/", input_variables['age']))
 
         if self.mode == 'debug':
@@ -101,6 +101,11 @@ class MakeIsolationDecision(SubstepAction):
             }
             for age_group in AgeGroup
         ]
+
+        episode_history_file = '/tmp/history_predicted_weekly_cases.npy'
+        if os.path.exists(episode_history_file):
+            breakpoint()
+            cases_past_episode = np.load(episode_history_file) # use this as additional context to the prompt
 
         # time.sleep(1)
         # execute prompts from LLMAgent and compile response

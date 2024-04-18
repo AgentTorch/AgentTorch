@@ -1,6 +1,5 @@
 from enum import Enum
 
-
 class Neighborhood(Enum):
     ASTORIA = 0
     UPPER_WEST_SIDE = 1

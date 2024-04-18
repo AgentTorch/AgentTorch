@@ -43,13 +43,13 @@ class NewTransmission(SubstepTransitionMessagePassing):
                 
         I_bar = torch.gather(x_i[:, 4], 0, edge_network_numbers.long()).view(-1)
         
-        will_isolate = x_j[:, 6]
+        will_isolate = x_i[:, 6] # is the susceptible agent isolating? check x_i vs x_j
         not_isolated = 1 - will_isolate
 
         if self.mode == 'llm':
-            res = not_isolated*R*S_A_s*A_s_i*B_n*integrals/I_bar #/I_bar
+            res = not_isolated*R*S_A_s*A_s_i*B_n*integrals/I_bar
         else:
-            res = R*S_A_s*A_s_i*B_n*integrals/I_bar #/I_bar
+            res = R*S_A_s*A_s_i*B_n*integrals/I_bar
 
         return res.view(-1, 1)
     
