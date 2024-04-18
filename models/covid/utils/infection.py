@@ -24,9 +24,7 @@ def create_infection_csv(neighborhood: Neighborhood, epiweek: Week, save_path):
     )[:, 0]
     tensor_np = agent_stages.numpy().astype(int)
     tensor_np = np.array(tensor_np, dtype=np.uint8)
-    
     np.savetxt(save_path, tensor_np, delimiter='\n')
-    # np.savetxt('disease_stages_fictional.csv', tensor_np, delimiter='\n')
 
 
 if __name__ == '__main__':
