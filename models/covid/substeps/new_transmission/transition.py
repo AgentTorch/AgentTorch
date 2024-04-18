@@ -6,6 +6,7 @@ import re
 from AgentTorch.substep import SubstepTransitionMessagePassing
 from AgentTorch.helpers import get_by_path
 # from substeps.utils import *
+from AgentTorch.helpers.distributions import StraightThroughBernoulli
 
 class NewTransmission(SubstepTransitionMessagePassing):
     def __init__(self, config, input_variables, output_variables, arguments):
@@ -23,7 +24,11 @@ class NewTransmission(SubstepTransitionMessagePassing):
         self.INFINITY_TIME = self.config['simulation_metadata']['INFINITY_TIME']
         self.EXPOSED_TO_INFECTED_TIME = self.config['simulation_metadata']['EXPOSED_TO_INFECTED_TIME']
 
+        self.mode = self.config['simulation_metadata']['EXECUTION_MODE']
+
         self.external_R = torch.tensor(self.learnable_args['R2'].data, requires_grad=True)
+
+        self.st_bernoulli = StraightThroughBernoulli.apply
 
     def _lam(self, x_i, x_j, edge_attr, t, R, SFSusceptibility, SFInfector, lam_gamma_integrals):
         S_A_s = SFSusceptibility[x_i[:,0].long()]
@@ -40,11 +45,11 @@ class NewTransmission(SubstepTransitionMessagePassing):
         
         will_isolate = x_j[:, 6]
         not_isolated = 1 - will_isolate
-        
-        # res = not_isolated*R*S_A_s*A_s_i*B_n*integrals #/I_bar
-        
-        res = R*S_A_s*A_s_i*B_n*integrals/I_bar #/I_bar
-        # res = R*S_A_s*A_s_i*B_n*integrals #/I_bar
+
+        if self.mode == 'llm':
+            res = not_isolated*R*S_A_s*A_s_i*B_n*integrals/I_bar #/I_bar
+        else:
+            res = R*S_A_s*A_s_i*B_n*integrals/I_bar #/I_bar
 
         return res.view(-1, 1)
     
@@ -71,7 +76,6 @@ class NewTransmission(SubstepTransitionMessagePassing):
     def update_infected_times(self, t, agents_infected_times, newly_exposed_today):
         '''Note: not differentiable'''
         updated_infected_times = torch.clone(agents_infected_times).to(agents_infected_times.device)
-                
 #         updated_infected_times = newly_exposed_today*t + (1 - newly_exposed_today)*agents_infected_times
         updated_infected_times[newly_exposed_today.bool()] = t
 #         agents_infected_times[newly_exposed_today] = t
@@ -121,10 +125,13 @@ class NewTransmission(SubstepTransitionMessagePassing):
         new_transmission = self.propagate(agents_data.edge_index, x=agents_data.x, edge_attr=agents_data.edge_attr, t=agents_data.t, R=R, SFSusceptibility=SFSusceptibility, SFInfector=SFInfector, lam_gamma_integrals=all_lam_gamma.squeeze())
         
         prob_not_infected = torch.exp(-1*new_transmission)
-        p = torch.hstack((1-prob_not_infected,prob_not_infected))
-        cat_logits = torch.log(p+1e-9)
+        probs = torch.hstack((1-prob_not_infected,prob_not_infected))
+
+        # Gumbel softmax logic
+        # cat_logits = torch.log(probs+1e-9)        
+        # potentially_exposed_today = F.gumbel_softmax(logits=cat_logits,tau=1,hard=True,dim=1)[:,0]
+        potentially_exposed_today = self.st_bernoulli(probs)[:, 0].to(self.device) # using straight-through bernoulli     
         
-        potentially_exposed_today = F.gumbel_softmax(logits=cat_logits,tau=1,hard=True,dim=1)[:,0]        
         newly_exposed_today = (current_stages==self.SUSCEPTIBLE_VAR).squeeze()*potentially_exposed_today
         
         daily_infected = daily_infected + newly_exposed_today.sum()*time_step_one_hot

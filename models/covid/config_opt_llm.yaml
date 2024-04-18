@@ -1,14 +1,14 @@
 simulation_metadata:
-    num_episodes: 10
-    num_steps_per_episode: 14
+    num_episodes: 5
+    num_steps_per_episode: 28
     num_substeps_per_step: 2
     OPENAI_API_KEY: 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
     device: "cuda" #"cpu"
     START_WEEK: 202207
-    NUM_WEEKS: 10
+    NUM_WEEKS: 4
     NEIGHBORHOOD: "Astoria"
     INCLUDE_WEEK_COUNT: True
-    EXECUTION_MODE: debug
+    EXECUTION_MODE: debug #llm
     num_agents: 37518
     initial_infection_ratio: 0.04 # BE CAREFUL: NOT USED IN SIMULATION HERE
     population_dir: "/u/ayushc/projects/GradABM/MacroEcon/simulator_data/census_populations/NYC/BK0101_simulation_input"

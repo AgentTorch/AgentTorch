@@ -1,7 +1,6 @@
 from __future__ import annotations
 '''Command: python trainer.py --c config_opt_llm.yaml'''
 import warnings
-# Suppress all warnings
 warnings.filterwarnings("ignore")
 
 import argparse
@@ -74,7 +73,7 @@ elif CALIB_MODE == 'learnable_param':
 elif CALIB_MODE == "calibNN":
     # set the epiweeks to simulate
     EPIWEEK_START: Week = week_num_to_epiweek(runner.config["simulation_metadata"]["START_WEEK"])
-    NUM_WEEKS: int = runner.config["simulation_metadata"]["NUM_WEEKS"]
+    NUM_WEEKS: int = runner.config["simulation_metadata"]["num_steps_per_episode"] // 7
 
     # set up variables
     FEATURE_LIST = [
@@ -148,8 +147,10 @@ for episode in range(num_episodes):
     )
     target_weekly_cases = get_labels(NEIGHBORHOOD, EPIWEEK_START, NUM_WEEKS, LABEL_FEATURE)
     # for debugging
-    target_weekly_cases = target_weekly_cases[: NUM_STEPS_PER_EPISODE // 7]
+    # target_weekly_cases = target_weekly_cases[: NUM_STEPS_PER_EPISODE // 7]
     target_weekly_cases = target_weekly_cases.to(device)
+
+    # breakpoint()
 
     # calculate the loss from the target cases
     loss_val = loss_function(predicted_weekly_cases, target_weekly_cases)
