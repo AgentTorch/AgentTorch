@@ -69,58 +69,82 @@ class MakeIsolationDecision(SubstepAction):
         '''
             LLMAgent class has three functions: a) mask sub-groups, b) format_prompt, c) invoke LLM, d) aggregate response 
         '''
-        t = int(state['current_step'])
-        week_index = t//7
-        input_variables = self.input_variables
-
-        agent_age = get_by_path(state, re.split("/", input_variables['age']))
-
+        # if in debug mode, return random values for isolation
         if self.mode == 'debug':
             will_isolate = torch.rand(self.num_agents, 1).to(self.device)
             return {self.output_variables[0]: will_isolate}
 
-        # prompts are segregated based on agent age
-        masks = []
-        for age_group in AgeGroup:
-            # agent subgroups for each prompt
-            age_mask = (agent_age == age_group.value)
-            masks.append(age_mask.float())
+        # figure out time step
+        time_step = int(state['current_step'])
 
-        # generate the prompt list
-        prompt_list = [
-            {
-                "age": age_group.text,
-                "location": self.neighborhood.text,
-                "user_prompt": construct_user_prompt(
-                    self.include_week_count,
-                    self.epiweek_start,
-                    week_index,
-                    # this is a bug. case data is in float format in csv. should get it in int to
-                    # avoid further confusion.
-                    int(self.cases_week[week_index]),
-                    int(self.cases_4_week_avg[week_index]),
-                ),
-            }
-            for age_group in AgeGroup
-        ]
+        # if beginning of the week, recalculate isolation probabilities
+        if time_step % 7 == 0:
+            # figure out week index
+            week_index = time_step//7
+            print(f"sampling isolation probabilities for week {week_index}")
 
-        episode_history_file = '/tmp/history_predicted_weekly_cases.npy'
-        if os.path.exists(episode_history_file):
-            breakpoint()
-            cases_past_episode = np.load(episode_history_file) # use this as additional context to the prompt
+            # prompts are segregated based on agent age
+            masks = []
+            agent_age = get_by_path(state, re.split("/", self.input_variables["age"]))
+            for age_group in AgeGroup:
+                # agent subgroups for each prompt
+                age_mask = agent_age == age_group.value
+                masks.append(age_mask.float())
 
-        # time.sleep(1)
-        # execute prompts from LLMAgent and compile response
-        agent_output = await self.agent(prompt_list)
+            # generate the prompt list, prompt 7 times for each age group for each week to get
+            # probabilities
+            prompt_list = [
+                {
+                    "age": age_group.text,
+                    "location": self.neighborhood.text,
+                    "user_prompt": construct_user_prompt(
+                        self.include_week_count,
+                        self.epiweek_start,
+                        week_index,
+                        # this is a bug. case data is in float format in csv. should get it in int
+                        # to avoid further confusion.
+                        int(self.cases_week[week_index]),
+                        int(self.cases_4_week_avg[week_index]),
+                    ),
+                }
+                for age_group in AgeGroup
+            ] * 7
 
-        # assign prompt response to agents
-        will_isolate = torch.zeros((self.num_agents, 1)).to(self.device)
+            # use this as additional context to the prompt
+            episode_history_file = "/tmp/history_predicted_weekly_cases.npy"
+            if os.path.exists(episode_history_file):
+                cases_past_episode = np.load(episode_history_file)
 
-        for en, output_value in enumerate(agent_output):
-            output_response = output_value['text']
-            decision = output_response.split('.')[0]
-            reasoning = output_response.split('.')[1] # reasoning to be saved for RAG later
-            isolation_response = self.string_to_number(decision)
-            will_isolate = will_isolate + masks[en]*isolation_response
-        
+            # time.sleep(1)
+            # execute prompts from LLMAgent and compile response
+            agent_output = await self.agent(prompt_list)
+
+            # this is a bug. this probably belongs in the init function, but I don't know if this
+            # class gets initialized at each episode. if not, this would cause the week 0 running
+            # average to include the last episode's last week.
+            if time_step == 0:
+                self.isolation_probabilities = (
+                    torch.ones((self.num_agents, 1)).to(self.device) * 1 / 2
+                )
+
+            # assign prompt response to agents
+            self.last_isolation_probabilities = self.isolation_probabilities
+            self.isolation_probabilities = torch.zeros((self.num_agents, 1)).to(self.device)
+            for en, output_value in enumerate(agent_output):
+                output_response = output_value["text"]
+                decision = output_response.split(".")[0]
+                # reasoning to be saved for RAG later
+                reasoning = output_response.split(".")[1]
+                isolation_response = self.string_to_number(decision)
+                # this is a bug. it is a bit hacky, currently prompt_list[0], prompt_list[6], 12
+                # etc. belong to the age_group 0, while 1, 7 etc. belong to the age_group 1, and
+                # there are 7 responses for each group so we add each one of them with 1/7 weight
+                self.isolation_probabilities += masks[en % len(AgeGroup)] * isolation_response * 1/7
+
+        # sample isolation decision from probabilities
+        will_isolate = torch.bernoulli(
+            self.last_isolation_probabilities * 1 / 2
+            + self.isolation_probabilities * 1 / 2
+        )
+        print(f"day {time_step}, number of isolating agents {sum(will_isolate).item()}")
         return {self.output_variables[0]: will_isolate}

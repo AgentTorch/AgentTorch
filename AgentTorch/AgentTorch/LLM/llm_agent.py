@@ -25,7 +25,7 @@ class LLMAgent():
 
         if llm is None:
             llm = self.llm = ChatOpenAI(
-                model="gpt-3.5-turbo", openai_api_key=openai_api_key, temperature=0
+                model="gpt-3.5-turbo", openai_api_key=openai_api_key, temperature=1
             )
 
         self.prompt = ChatPromptTemplate.from_messages(
@@ -62,7 +62,10 @@ class LLMAgent():
 
     def save_memory(self,context_in,context_out):
         for query, response in zip(context_in, context_out):
-            self.agent_memory.save_context({"input": query["user_prompt"]}, {"output": response['text']})
+            # this is a bug. it will add the chat history for all 6 age groups in each prompt.
+            self.agent_memory.save_context(
+                {"input": query["user_prompt"]}, {"output": response["text"]}
+            )
 
 
 if __name__ == "__main__":
