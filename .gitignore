@@ -4,4 +4,5 @@ pythonProject1/.idea
 **/work.ipynb
 .vscode/
 **/nohup.out
-**/run_logs/
+**/run_logs/*
+models/covid/yamls/run-*.yaml

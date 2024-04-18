@@ -1,10 +1,10 @@
 simulation_metadata:
-    num_episodes: 10
+    num_episodes: 5
     num_steps_per_episode: 28
     num_substeps_per_step: 2
     OPENAI_API_KEY: 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
     device: "cuda"
-    START_WEEK: 202207
+    START_WEEK: 202212
     NUM_WEEKS: 4
     NEIGHBORHOOD: "Astoria"
     INCLUDE_WEEK_COUNT: True
@@ -15,7 +15,7 @@ simulation_metadata:
     mapping_path: ${simulation_metadata.population_dir}/population_mapping.json
     age_group_file: ${simulation_metadata.population_dir}/age.pickle
     infection_network_file: ${simulation_metadata.population_dir}/mobility_networks/0.csv
-    disease_stage_file: "202212_37518_diseasestages.csv"
+    disease_stage_file: "stage_csvs/Astoria_202212_stages.csv"
     SUSCEPTIBLE_VAR: 0
     EXPOSED_VAR: 1
     INFECTED_VAR: 2

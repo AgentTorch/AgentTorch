@@ -49,9 +49,9 @@ class LLMAgent():
         )
 
     async def __call__(self,prompt_list):
-        memory = self.get_memory()
+        # memory = self.get_memory()
         agent_output = await self.llm_chain.aapply(prompt_list)
-        #self.save_memory(prompt_inputs,agent_output) - Use memory in prompt when needed
+        # self.save_memory(prompt_list,agent_output)
         return agent_output
 
     def get_memory(self):

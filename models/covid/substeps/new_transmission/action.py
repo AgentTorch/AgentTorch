@@ -95,8 +95,10 @@ class MakeIsolationDecision(SubstepAction):
                     self.include_week_count,
                     self.epiweek_start,
                     week_index,
-                    self.cases_week[week_index],
-                    self.cases_4_week_avg[week_index],
+                    # this is a bug. case data is in float format in csv. should get it in int to
+                    # avoid further confusion.
+                    int(self.cases_week[week_index]),
+                    int(self.cases_4_week_avg[week_index]),
                 ),
             }
             for age_group in AgeGroup
