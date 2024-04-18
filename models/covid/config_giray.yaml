@@ -8,7 +8,7 @@ simulation_metadata:
     NUM_WEEKS: 4
     NEIGHBORHOOD: "Astoria"
     INCLUDE_WEEK_COUNT: True
-    EXECUTION_MODE: debug
+    EXECUTION_MODE: llm
     num_agents: 37518
     initial_infection_ratio: 0.04 # BE CAREFUL: NOT USED IN SIMULATION HERE
     population_dir: "/u/ngkuru/ship/MacroEcon/simulator_data/census_populations/NYC/simulation_input"
