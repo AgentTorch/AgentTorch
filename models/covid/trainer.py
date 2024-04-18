@@ -151,7 +151,8 @@ for episode in range(num_episodes):
     # target_weekly_cases = target_weekly_cases[: NUM_STEPS_PER_EPISODE // 7]
     target_weekly_cases = target_weekly_cases.to(device)
 
-    np.save('/tmp/history_predicted_weekly_cases.npy'.format(), predicted_weekly_cases.cpu().data)
+    if runner.config['simulation_metadata']['EXECUTION_MODE'] == 'llm':
+        np.save('/tmp/history_predicted_weekly_cases.npy'.format(), predicted_weekly_cases.cpu().data)
 
     # calculate the loss from the target cases
     loss_val = loss_function(predicted_weekly_cases, target_weekly_cases)
