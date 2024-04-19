@@ -2,7 +2,9 @@
 Source: https://github.com/sneakatyou/Syspop/tree/NYC/syspop/process
 '''
 import random
-from .address import add_random_address
+import sys
+sys.path.append("/Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/step2/process/")
+from address import add_random_address
 
 
 from copy import deepcopy
@@ -200,7 +202,7 @@ def create_household_composition_v3(
     
     # Calculate average number of children per family
     avg_children_per_family = proc_houshold_dataset["children_num"] / proc_houshold_dataset["Family_households"]
-    num_households = proc_houshold_dataset['household_num'][0]
+    num_households = proc_houshold_dataset['household_num'].iloc[0]
 
     unassigned_adults = proc_base_pop[proc_base_pop["age"].isin(adult_list)].copy()
     unassigned_children = proc_base_pop[proc_base_pop["age"].isin(children_list)].copy()
@@ -447,10 +449,10 @@ if __name__ == "__main__":
     sys.path.append('/Users/shashankkumar/Documents/GitHub/MacroEcon/data/')
     adult_list = ['20t29','30t39', '40t49', '50t64', '65A']
     children_list = ['U19']
-    base_pop_path = "/Users/shashankkumar/Documents/GitHub/MacroEcon/base_population.pkl"
+    base_pop_path = "/Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/census_populations/NYC/synthetic_populations/population_data.pkl"
     base_pop = pd.read_pickle(base_pop_path)
 
-    household_data_path = "/Users/shashankkumar/Documents/GitHub/MacroEcon/housing_v2.pkl"
+    household_data_path = "/Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/census_populations/NYC/user_input/household.pkl"
     household_data = pd.read_pickle(household_data_path)
 
     #load if available
