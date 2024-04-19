@@ -128,24 +128,21 @@ def _set_parameters(new_R):
     '''Only sets R value for now..'''
     runner.initializer.transition_function['0']['new_transmission'].external_R = new_R
 
-for episode in range(num_episodes):
+for episode in range(num_episodes):    
+    # reset gradients from previous iteration
     print(f"\nrunning episode {episode}...")
+    opt.zero_grad()
+    if episode >=1:
+        runner.reset()
 
     # get the r0 predictions for the episode
     r0_values = _get_parameters(CALIB_MODE)
     _set_parameters(r0_values)
     print(f"r0 values: {r0_values}")
-    
-    if episode >=1:
-        runner.reset()
 
-    allocated1, reserved1 = memory_checkpoint(name="1")
-
-    # run the simulation        
-    opt.zero_grad()
+    # allocated1, reserved1 = memory_checkpoint(name="1")
     runner.step(NUM_STEPS_PER_EPISODE)
-
-    allocated2, reserved2 = memory_checkpoint(name="2")
+    # allocated2, reserved2 = memory_checkpoint(name="2")
 
     # get daily number of infections
     traj = runner.state_trajectory[-1][-1]
@@ -159,14 +156,14 @@ for episode in range(num_episodes):
     target_weekly_cases = target_weekly_cases.to(device)
 
     # calculate the loss from the target cases
-    loss_val = loss_function(predicted_weekly_cases, target_weekly_cases)
+    loss_val = torch.sqrt(loss_function(predicted_weekly_cases, target_weekly_cases))
     loss_val.backward()
     print(f"predicted number of cases: {predicted_weekly_cases}, actual number of cases: {target_weekly_cases}, loss: {loss_val}")
 
-    allocated3, reserved3 = memory_checkpoint(name="3")
 
     # run the optimization step, and clear simulation
+    # allocated3, reserved3 = memory_checkpoint(name="3")
     opt.step()
-    print(torch.cuda.memory_summary())
+    # print(torch.cuda.memory_summary())
+    # print("---------------------------------")
     torch.cuda.empty_cache()
-    print("---------------------------------")
