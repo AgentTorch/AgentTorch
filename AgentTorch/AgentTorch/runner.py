@@ -12,7 +12,7 @@ from AgentTorch.controller import Controller
 from AgentTorch.initializer import Initializer
 # print("Using debug initializer -- the older version")
 
-from AgentTorch.helpers import set_by_path
+from AgentTorch.helpers import to_cpu
 
 class Runner(nn.Module):
     def __init__(self, config, registry) -> None:
@@ -27,7 +27,7 @@ class Runner(nn.Module):
 
         self.state = None
                 
-        self.trajectory = { 'states': deque(), 'observations': deque(), 'actions': deque(),'rewards': deque() }
+        # self.trajectory = { 'states': deque(), 'observations': deque(), 'actions': deque(),'rewards': deque() }
 
     def init(self):
         r"""
@@ -37,9 +37,10 @@ class Runner(nn.Module):
         self.state = self.initializer.state
 
         self.state_trajectory = []
-        self.state_trajectory.append([self.state])
-        for traj_var in self.trajectory.keys():
-            self.trajectory[traj_var].append(deque())
+        self.state_trajectory.append([to_cpu(self.state)]) # move state to cpu and save in trajectory
+        
+        # for traj_var in self.trajectory.keys():
+        #     self.trajectory[traj_var].append(deque())
 
 
     def reset(self):
@@ -55,19 +56,20 @@ class Runner(nn.Module):
 
         assert self.state is not None
 
-        for traj_var in self.trajectory.keys():
-            self.trajectory[traj_var].append(deque())
+        # for traj_var in self.trajectory.keys():
+        #     self.trajectory[traj_var].append(deque())
 
         if not num_steps:
             num_steps = self.config["simulation_metadata"]["num_steps_per_episode"]
         
         for time_step in range(num_steps):
             self.state['current_step'] = time_step # current_step is a string
-            for traj_var in self.trajectory.keys():
-                self.trajectory[traj_var][-1].append(deque())
+            
+            # for traj_var in self.trajectory.keys():
+            #     self.trajectory[traj_var][-1].append(deque())
 
             for substep in self.config['substeps'].keys():
-                self.trajectory["states"][-1][-1].append(self.state)
+                # self.trajectory["states"][-1][-1].append(self.state)
                 observation_profile, action_profile = {}, {}
                                 
                 for agent_type in self.config['substeps'][substep]['active_agents']:
@@ -77,13 +79,13 @@ class Runner(nn.Module):
                     observation_profile[agent_type] = self.controller.observe(self.state, self.initializer.observation_function, agent_type)
                     action_profile[agent_type] = self.controller.act(self.state, observation_profile[agent_type], self.initializer.policy_function, agent_type)
                                             
-                self.trajectory["observations"][-1][-1].append(observation_profile)
-                self.trajectory["actions"][-1][-1].append(action_profile)
+                # self.trajectory["observations"][-1][-1].append(observation_profile)
+                # self.trajectory["actions"][-1][-1].append(action_profile)
 
                 next_state = self.controller.progress(self.state, action_profile, self.initializer.transition_function)
                 self.state = next_state
 
-                self.state_trajectory[-1].append(self.state)
+                self.state_trajectory[-1].append(to_cpu(self.state)) # move state in state trajectory to cpu
 
     def _set_parameters(self, params):
         print("_set_parameters CURRENTLY BREAKS GRADIENT! PLEASE DON'T USE")

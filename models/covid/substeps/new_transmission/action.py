@@ -203,5 +203,7 @@ class MakeIsolationDecision(SubstepAction):
             self.last_isolation_probabilities * 1 / 2
             + self.isolation_probabilities * 1 / 2
         )
+
         print(f"day {time_step}, number of isolating agents {sum(will_isolate).item()}")
+        
         return {self.output_variables[0]: will_isolate}

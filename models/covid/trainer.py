@@ -11,7 +11,6 @@ import torch.nn as nn
 import numpy as np
 
 from torch.utils.data import DataLoader
-
 from utils.misc import week_num_to_epiweek
 
 # AGENT_TORCH_PATH = '/u/ngkuru/ship/MacroEcon/AgentTorch'
@@ -28,6 +27,8 @@ from utils.data import NN_INPUT_WEEKS, get_dataloader, get_labels
 from utils.feature import Feature
 from utils.misc import name_to_neighborhood
 from utils.neighborhood import Neighborhood
+
+from AgentTorch.helpers import memory_checkpoint
 
 # *************************************************************************
 # Parsing command line arguments
@@ -129,43 +130,43 @@ def _set_parameters(new_R):
 
 for episode in range(num_episodes):
     print(f"\nrunning episode {episode}...")
+
     # get the r0 predictions for the episode
     r0_values = _get_parameters(CALIB_MODE)
     _set_parameters(r0_values)
     print(f"r0 values: {r0_values}")
+    
+    if episode >=1:
+        runner.reset()
 
-    # run the simulation
+    allocated1, reserved1 = memory_checkpoint(name="1")
+
+    # run the simulation        
     opt.zero_grad()
     runner.step(NUM_STEPS_PER_EPISODE)
 
+    allocated2, reserved2 = memory_checkpoint(name="2")
+
     # get daily number of infections
     traj = runner.state_trajectory[-1][-1]
-    daily_infections_arr = traj["environment"]["daily_infected"]
+    daily_infections_arr = traj["environment"]["daily_infected"].to(device)
 
     # get weekly number of infections from daily number of infections
     predicted_weekly_cases = (
         daily_infections_arr.reshape(-1, 7).sum(axis=1).to(dtype=torch.float32)
     )
     target_weekly_cases = get_labels(NEIGHBORHOOD, EPIWEEK_START, NUM_WEEKS, LABEL_FEATURE)
-    # for debugging
-    # target_weekly_cases = target_weekly_cases[: NUM_STEPS_PER_EPISODE // 7]
     target_weekly_cases = target_weekly_cases.to(device)
-
-    if runner.config['simulation_metadata']['EXECUTION_MODE'] == 'llm':
-        np.save('/tmp/history_predicted_weekly_cases.npy'.format(), predicted_weekly_cases.cpu().data)
 
     # calculate the loss from the target cases
     loss_val = loss_function(predicted_weekly_cases, target_weekly_cases)
     loss_val.backward()
-
     print(f"predicted number of cases: {predicted_weekly_cases}, actual number of cases: {target_weekly_cases}, loss: {loss_val}")
 
-    # Check the gradients for all parameters in the optimizer
-    # for param_group in opt.param_groups:
-    #     for param in param_group["params"]:
-    #         # print(f"Parameter: {param.data}, Gradient: {param.grad}")
-    #         print(f"Parameter: {param.data}")
+    allocated3, reserved3 = memory_checkpoint(name="3")
 
     # run the optimization step, and clear simulation
     opt.step()
-    runner.reset()
+    print(torch.cuda.memory_summary())
+    torch.cuda.empty_cache()
+    print("---------------------------------")

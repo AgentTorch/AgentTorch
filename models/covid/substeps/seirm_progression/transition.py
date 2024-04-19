@@ -56,6 +56,9 @@ class SEIRMProgression(SubstepTransition):
                 
         new_transition_times[(curr_stages==self.INFECTED_VAR)*(current_transition_times == t)] = self.INFINITY_TIME
         new_transition_times[(curr_stages==self.EXPOSED_VAR)*(current_transition_times == t)] = (t + self.INFECTED_TO_RECOVERED_TIME)
+
+        del current_transition_times
+        del current_stages
         
         return new_transition_times
         

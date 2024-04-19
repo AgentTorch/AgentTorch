@@ -41,6 +41,7 @@ def set_by_path(root, items, value):
     val_obj = get_by_path(root, items[:-1])
 
     if isinstance(val_obj, nn.ModuleDict):
+        print("set_by_path on nn.ModuleDict breaks gradient currently!")
         val_obj[items[-1]].param.data.copy_(value)
         val_obj[items[-1]].param.requires_grad = value.requires_grad
     else:
@@ -80,6 +81,27 @@ def copy_module(dict_to_copy):
             
     return copied_dict
 
+def to_cpu(dict_to_copy):
+    r"""
+        Creates a new dictionary with a copy of each PyTorch tensor in the input dictionary.
+        Handles nested dictionaries of PyTorch tensors of variable depth.
+    """
+    copied_dict = {}
+    for key, value in dict_to_copy.items():
+        # value = dict_to_copy[key]
+        if torch.is_tensor(value):
+            copied_dict[key] = torch.clone(value).cpu()
+        elif isinstance(value, dict):
+            copied_dict[key] = to_cpu(value)
+        elif not torch.is_tensor(value):
+            copied_dict[key] = value
+        else:
+            raise TypeError("Type error.. ", type(value))
+    
+    del dict_to_copy
+    
+    return copied_dict
+
 def process_shape(config, s):
     if type(s) == str:
         return get_by_path(config, re.split('/', s))
@@ -116,3 +138,12 @@ def read_from_file(shape, params):
     data_tensor = torch.from_numpy(data_values)
         
     return data_tensor
+
+def memory_checkpoint(name):
+    print("Checkpoint: ", name)
+    checkpoint_allocated = torch.cuda.memory_allocated()
+    checkpoint_reserved = torch.cuda.memory_reserved()
+
+    print("Allocated: ", checkpoint_allocated, " Reserved: ", checkpoint_reserved)
+
+    return checkpoint_allocated, checkpoint_reserved

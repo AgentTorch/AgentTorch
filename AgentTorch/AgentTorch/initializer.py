@@ -4,18 +4,6 @@ import torch.nn as nn
 import copy
 
 from AgentTorch.helpers.general import *
-
-class MakeModule(nn.Module):
-    def __init__(self, tensor, tensor_grad):
-        super(MakeModule, self).__init__()
-        self.param = nn.Parameter(tensor)
-        self.param.requires_grad = tensor_grad
-        
-    def forward(self):
-        return self.param
-    
-    def __call__(self):
-        return self.param
     
 class Initializer(nn.Module):
     def __init__(self, config, registry):
