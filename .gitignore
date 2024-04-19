@@ -6,3 +6,4 @@ pythonProject1/.idea
 **/nohup.out
 **/run_logs/*
 models/covid/yamls/run_*.yaml
+models/covid/experiments/
