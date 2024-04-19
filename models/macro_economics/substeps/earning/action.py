@@ -13,7 +13,7 @@ import sys
 import pdb
 from AgentTorch.helpers.distributions import StraightThroughBernoulli
 
-# sys.path.append(MODEL_PATH)
+sys.path.append(MODEL_PATH)
 # sys.path.insert(0, AGENT_TORCH_PATH)
 from AgentTorch.LLM.llm_agent import LLMAgent
 from AgentTorch.substep import SubstepAction
@@ -47,6 +47,8 @@ class WorkConsumptionPropensity(SubstepAction):
         
         gender = get_by_path(state, re.split("/", self.input_variables['gender']))
         age = get_by_path(state,re.split("/", self.input_variables['age']))
+        county = get_by_path(state,re.split("/", self.input_variables['county']))
+        
         
         consumption_propensity = get_by_path(state,re.split("/", self.input_variables['consumption_propensity']))
         work_propensity = get_by_path(state,re.split("/", self.input_variables['work_propensity']))
@@ -65,17 +67,27 @@ class WorkConsumptionPropensity(SubstepAction):
         output_values = []
         
         for target_values in self.combinations_of_prompt_variables_with_index:
-            gender_mask = (gender == target_values['gender'])
-            age_mask = (age == target_values['age'])
-            mask = torch.logical_and(gender_mask, age_mask).unsqueeze(1) # ayush fix -> to ensure consistent adding later
+            mask = torch.tensor([True]*len(gender))  # Initialize mask as tensor of True values
+            for key, value in target_values.items():
+                if key in locals():  # Check if variable with this name exists
+                    mask = torch.logical_and(mask, locals()[key] == value)
+            mask = mask.unsqueeze(1)  # Ensure consistent adding later
             float_mask = mask.float()
             masks.append(float_mask)
+        
+        # for target_values in self.combinations_of_prompt_variables_with_index:
+        #     gender_mask = (gender == target_values['gender'])
+        #     age_mask = (age == target_values['age'])
+        #     mask = torch.logical_and(gender_mask, age_mask).unsqueeze(1) # ayush fix -> to ensure consistent adding later
+        #     float_mask = mask.float()
+        #     masks.append(float_mask)
         
         prompt_list = []
         for en,_ in enumerate(self.combinations_of_prompt_variables_with_index):
             age = self.combinations_of_prompt_variables[en]['age']
             gender = self.combinations_of_prompt_variables[en]['gender']
-            prompt = prompt_template_var.format(age = age,gender = gender)
+            county = self.combinations_of_prompt_variables[en]['county']
+            prompt = prompt_template_var.format(age = age,gender = gender,county = county)
             prompt_list.append(prompt)
 
         agent_output = await self.agent(prompt_list)

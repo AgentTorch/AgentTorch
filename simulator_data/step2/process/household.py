@@ -5,7 +5,7 @@ import random
 import sys
 sys.path.append("/Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/step2/process/")
 from address import add_random_address
-
+from tqdm import tqdm
 
 from copy import deepcopy
 from datetime import datetime
@@ -209,17 +209,17 @@ def create_household_composition_v3(
     household_types_choices = ['Family','Nonfamily']
     household_id = 0
     for _, row in sorted_proc_houshold_dataset.iterrows():
-        for _ in range(num_households):
+        for num in tqdm(range(num_households), desc="Processing"):
             household_type = random.choices(
             household_types_choices, weights=household_proportions.values.flatten())[0]
 
             # Simulate family composition (if family household)
             if household_type == "Family":
-                children_num = int(random.randint(0,5) * avg_children_per_family) if proc_houshold_dataset["children_num"][0]> 0 else 0
+                children_num = int(random.randint(0,5) * avg_children_per_family) if proc_houshold_dataset["children_num"].iloc[0]> 0 else 0
             else:
                 children_num = 0
     # Simulate number of individuals
-            total_individuals = int(random.randint(0,2) * proc_houshold_dataset["Average_household_size"][0])
+            total_individuals = int(random.randint(0,2) * proc_houshold_dataset["Average_household_size"].iloc[0])
             if (total_individuals - children_num) <= 0:
                 adults_num = total_individuals
                 children_num = 0

@@ -1,10 +1,11 @@
-AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
+# AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
 #'/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch'
 
+import pickle
 import pandas as pd
 import numpy as np 
 import sys
-sys.path.append(AGENT_TORCH_PATH)
+# sys.path.append(AGENT_TORCH_PATH)
 import torch
 import torch.optim as optim
 import sys
@@ -52,7 +53,7 @@ def simulation_registry():
 class SimulationRunner(Runner):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        df = pd.read_csv("/u/ayushc/projects/GradABM/MacroEcon/simulator_data/NYC/brooklyn_unemp.csv")
+        df = pd.read_csv("/Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/NYC/brooklyn_unemp.csv")
         df.sort_values(by=['year','month'],ascending=True,inplace=True)
         arr = df['unemployment_rate'].values
         tensor = torch.from_numpy(arr)
@@ -81,7 +82,7 @@ class SimulationRunner(Runner):
             # loss =  self.mse_loss(unemployment_rate, test_set_for_episode)
             loss.backward()
             print([(p, p.grad) for p in self.parameters()])
-            breakpoint()
+            # breakpoint()
             for param in self.parameters():
                 print(param.grad)
             self.optimizer.step()
@@ -91,3 +92,11 @@ class SimulationRunner(Runner):
 
     def execute(self):
         self.forward()
+        # Save the state data
+        environment_obj = self.state_trajectory[-1][-1]['environment']
+        agent_obj = self.state_trajectory[-1][-1]['agents']
+        # Create a dictionary
+        state_data_dict = {'environment': environment_obj, 'agents': agent_obj}
+        with open('state_data_dict.pkl', 'wb') as f:
+            pickle.dump(state_data_dict, f)
+            

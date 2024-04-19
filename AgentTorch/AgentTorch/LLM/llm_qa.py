@@ -11,6 +11,7 @@ import glob
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from typing import List, Union, Optional
 import dspy
+from dsp.utils import deduplicate
 
 class DotDict(dict):
     """dot.notation access to dictionary attributes"""
@@ -60,7 +61,6 @@ class DocumentRetriever:
     def get_documents(self,query,k):
         return self.retriever.get_relevant_documents(query,k=k)
 
-
 class QueryRunnerUsingLangChain:
     def __init__(self, retriever, openai_api_key):
         self.qa = RetrievalQA.from_chain_type(llm=OpenAI(openai_api_key = openai_api_key), chain_type="stuff", retriever=retriever)
@@ -79,8 +79,8 @@ class QueryRunnerUsingLangChain:
         self.run_query(query)
 
 class DSPythonicRMClient(dspy.Retrieve):
-    def __init__(self, k:int):
-        super().__init__(k=k)
+    def __init__(self, model_name,model_kwargs, encode_kwargs, directory,search_kwargs):
+        super().__init__(k=search_kwargs['k'])
         self.retriever = DocumentRetriever(model_name, model_kwargs, encode_kwargs, directory,search_kwargs=search_kwargs)
     
     def forward(self, query_or_queries:str, k:Optional[int]) -> dspy.Prediction:
@@ -133,8 +133,9 @@ if __name__ == "__main__":
     model_name = "BAAI/bge-small-en"
     model_kwargs = {"device": "cpu"}
     encode_kwargs = {"normalize_embeddings": True}
-    directory = "/Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/census_populations/NYC/simulation_input/simulation_memory_output/1/12"
-    rm = DSPythonicRMClient(k=5)
+    directory = "/Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/census_populations/NYC/simulation_memory_output"
+    search_kwargs = {"k": 5}
+    rm = DSPythonicRMClient(model_name=model_name,model_kwargs=model_kwargs,encode_kwargs=encode_kwargs,directory=directory,search_kwargs=search_kwargs)
     turbo = dspy.OpenAI(model='gpt-3.5-turbo', api_key=OPENAI_API_KEY)
     dspy.settings.configure(lm=turbo, rm=rm)
     # Ask any question you like to this simple RAG program.
