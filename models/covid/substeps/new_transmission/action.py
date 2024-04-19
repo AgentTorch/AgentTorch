@@ -14,20 +14,22 @@ from AgentTorch.helpers import get_by_path
 from AgentTorch.substep import SubstepAction
 from AgentTorch.LLM.llm_agent import LLMAgent
 
-from utils.data import get_data
+from utils.data import get_data, get_labels
 from utils.feature import Feature
 from utils.llm import AgeGroup, SYSTEM_PROMPT, construct_user_prompt
 from utils.misc import week_num_to_epiweek, name_to_neighborhood
+from AgentTorch.helpers.distributions import StraightThroughBernoulli
+
 
 class MakeIsolationDecision(SubstepAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # set values from config
-        OPENAI_API_KEY = self.config['simulation_metadata']['OPENAI_API_KEY']
-        self.device = torch.device(self.config['simulation_metadata']['device'])
-        self.mode = self.config['simulation_metadata']['EXECUTION_MODE']
-        self.num_agents = self.config['simulation_metadata']['num_agents']
+        OPENAI_API_KEY = self.config["simulation_metadata"]["OPENAI_API_KEY"]
+        self.device = torch.device(self.config["simulation_metadata"]["device"])
+        self.mode = self.config["simulation_metadata"]["EXECUTION_MODE"]
+        self.num_agents = self.config["simulation_metadata"]["num_agents"]
         self.epiweek_start = week_num_to_epiweek(
             self.config["simulation_metadata"]["START_WEEK"]
         )
@@ -35,20 +37,55 @@ class MakeIsolationDecision(SubstepAction):
         self.neighborhood = name_to_neighborhood(
             self.config["simulation_metadata"]["NEIGHBORHOOD"]
         )
-        self.include_week_count = self.config["simulation_metadata"]["INCLUDE_WEEK_COUNT"]
+        self.include_week_count = self.config["simulation_metadata"][
+            "INCLUDE_WEEK_COUNT"
+        ]
+        self.use_ground_truth_case_numbers = self.config["simulation_metadata"][
+            "USE_GROUND_TRUTH_CASE_NUMBERS"
+        ]
+        self.use_ground_truth_4_week_avg = self.config["simulation_metadata"][
+            "USE_GROUND_TRUTH_4WK_AVG"
+        ]
 
         # set up llm agent
-        self.agent = LLMAgent(agent_profile=SYSTEM_PROMPT, openai_api_key=OPENAI_API_KEY)
-
-        # retrieve data
-        data = get_data(
-            self.neighborhood,
-            self.epiweek_start,
-            self.num_weeks,
-            [Feature.CASES, Feature.CASES_4WK_AVG],
+        self.agent = LLMAgent(
+            agent_profile=SYSTEM_PROMPT, openai_api_key=OPENAI_API_KEY
         )
-        self.cases_week = data[:, 0]
-        self.cases_4_week_avg = data[:, 1]
+
+        # retrieve case numbers
+        if self.use_ground_truth_case_numbers:
+            # get the full range of case numbers
+            self.cases_week = get_labels(
+                self.neighborhood, self.epiweek_start - 1, self.num_weeks, Feature.CASES
+            )
+        else:
+            # get only the starting case numbers for the prompt
+            self.cases_week = list(
+                get_labels(
+                    self.neighborhood, self.epiweek_start - 1, 1, Feature.CASES
+                ).to(self.device)
+            )
+
+        # retrieve 4 week case averages
+        if self.use_ground_truth_4_week_avg:
+            # get the full range of 4 week averages
+            self.cases_4_week_avg = get_labels(
+                self.neighborhood,
+                self.epiweek_start - 1,
+                self.num_weeks,
+                Feature.CASES_4WK_AVG,
+            )
+        else:
+            # this is a bug. we are using the ground truth data for the first 3 weeks of our
+            # simulation still, and then moving on to the case numbers.
+            self.cases_4_week_avg = list(
+                get_labels(
+                    self.neighborhood,
+                    self.epiweek_start - 1,
+                    3,
+                    Feature.CASES_4WK_AVG,
+                )
+            )
 
     def string_to_number(self, string):
         if string.lower() == "yes":
@@ -66,22 +103,38 @@ class MakeIsolationDecision(SubstepAction):
             return "the same as last week"
 
     async def forward(self, state, observation):
-        '''
-            LLMAgent class has three functions: a) mask sub-groups, b) format_prompt, c) invoke LLM, d) aggregate response 
-        '''
+        """
+        LLMAgent class has three functions: a) mask sub-groups, b) format_prompt, c) invoke LLM, d) aggregate response
+        """
         # if in debug mode, return random values for isolation
-        if self.mode == 'debug':
+        if self.mode == "debug":
             will_isolate = torch.rand(self.num_agents, 1).to(self.device)
             return {self.output_variables[0]: will_isolate}
 
         # figure out time step
-        time_step = int(state['current_step'])
+        time_step = int(state["current_step"])
 
         # if beginning of the week, recalculate isolation probabilities
         if time_step % 7 == 0:
             # figure out week index
-            week_index = time_step//7
-            print(f"sampling isolation probabilities for week {week_index}")
+            week_index = time_step // 7
+            print(f"\nstarting week {week_index}...", end=" ")
+
+            # update case numbers
+            if week_index > 0:
+                cases = sum(
+                    state["environment"]["daily_infected"][time_step - 7 : time_step]
+                )
+                print(f"incoming #cases {cases}...", end=" ")
+                if not self.use_ground_truth_case_numbers:
+                    self.cases_week.append(cases)
+                if not self.use_ground_truth_4_week_avg and week_index > 2:
+                    self.cases_4_week_avg.append(sum(self.cases_week[-4:])/4)
+
+            print(
+                f"#cases, #cases_4wk for prompt {int(self.cases_week[week_index])}, "
+                + f"{int(self.cases_4_week_avg[week_index])}... sampling isolation probabilities"
+            )
 
             # prompts are segregated based on agent age
             masks = []
@@ -124,12 +177,14 @@ class MakeIsolationDecision(SubstepAction):
             # average to include the last episode's last week.
             if time_step == 0:
                 self.isolation_probabilities = (
-                    torch.ones((self.num_agents, 1)).to(self.device) * 1 / 2
+                    torch.ones((self.num_agents, 1)).to(self.device) / 2
                 )
 
             # assign prompt response to agents
             self.last_isolation_probabilities = self.isolation_probabilities
-            self.isolation_probabilities = torch.zeros((self.num_agents, 1)).to(self.device)
+            self.isolation_probabilities = torch.zeros((self.num_agents, 1)).to(
+                self.device
+            )
             for en, output_value in enumerate(agent_output):
                 output_response = output_value["text"]
                 decision = output_response.split(".")[0]
@@ -139,10 +194,12 @@ class MakeIsolationDecision(SubstepAction):
                 # this is a bug. it is a bit hacky, currently prompt_list[0], prompt_list[6], 12
                 # etc. belong to the age_group 0, while 1, 7 etc. belong to the age_group 1, and
                 # there are 7 responses for each group so we add each one of them with 1/7 weight
-                self.isolation_probabilities += masks[en % len(AgeGroup)] * isolation_response * 1/7
+                self.isolation_probabilities += (
+                    masks[en % len(AgeGroup)] * isolation_response * 1 / 7
+                )
 
         # sample isolation decision from probabilities
-        will_isolate = torch.bernoulli(
+        will_isolate = StraightThroughBernoulli.apply(
             self.last_isolation_probabilities * 1 / 2
             + self.isolation_probabilities * 1 / 2
         )
