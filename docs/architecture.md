@@ -6,17 +6,10 @@ examples.
 
 ---
 
-A high-level overview of AgentTorch is provided by the following block diagram:
+A high-level overview of the AgentTorch Python API is provided by the following
+block diagram:
 
-![Block Diagram](https://github.com/gamemaker1/agent-torch/assets/34235681/b8adb863-034b-4e4a-8b70-8ee4945a5166)
-
-#### Application
-
-The application layer enables the user to make and use their own AgentTorch
-Large Population Models. For example, the Neo web interface allows you to use
-AgentTorch to model epidemiological situations.
-
-#### API
+![Agent Torch Block Diagram](https://github.com/AgentTorch/AgentTorch/assets/34235681/3ecadf85-d949-44a6-92b3-5dbfa337fb20)
 
 The AgentTorch Python API provides developers with the ability to
 programmatically create and configure LPMs. This functionality is detailed
@@ -76,12 +69,3 @@ accordance with the domain of the model. For example,
 [in the COVID model](/models/covid), citizens of the populace
 [are defined as `Agents`](/models/covid/config.yaml#L189), and `Transmission`
 and `Quarantine` [as substeps](/models/covid/substeps).
-
-#### Specifications
-
-The algorithms used in this project are implemented based on cited research
-papers. These would eventually evolve into a comprehensive specification for
-creating and configuring LPMs.
-
-The data used to configure the model is provided in open data formats, like
-YAML, JSON or CSV.
