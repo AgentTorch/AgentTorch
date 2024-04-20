@@ -1,7 +1,15 @@
+# AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
+#'/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch'
+
+import pickle
 import pandas as pd
+import numpy as np 
+import sys
+# sys.path.append(AGENT_TORCH_PATH)
 import torch
 import torch.optim as optim
-
+import sys
+# sys.path.append("/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch/AgentTorch")
 from AgentTorch import Runner, Registry
 
 def simulation_registry():
@@ -53,6 +61,10 @@ class SimulationRunner(Runner):
         self.mse_loss = torch.nn.MSELoss()
         
     def forward(self):
+        # for name, params in self.named_parameters():
+        #     print(name)
+        # for params in self.parameters():
+        #     print(params)
         self.optimizer = optim.Adam(self.parameters(), 
                 lr=self.config['simulation_metadata']['learning_params']['lr'], 
                 betas=self.config['simulation_metadata']['learning_params']['betas'])
@@ -64,19 +76,35 @@ class SimulationRunner(Runner):
             num_steps_per_episode = self.config["simulation_metadata"]["num_steps_per_episode"]
             self.step(num_steps_per_episode)
 
+
             breakpoint()
 
             unemployment_rate_list = [state['environment']['U'] for state in self.state_trajectory[-1] if state['current_substep'] == str(self.config['simulation_metadata']['num_substeps_per_step'] - 1)]
             unemployment_rate_tensor = torch.tensor(unemployment_rate_list,requires_grad=True).float()
             test_set_for_episode = self.unemployment_test_dataset[episode][:num_steps_per_episode].float()
             loss =  self.mse_loss(unemployment_rate_tensor, test_set_for_episode)
+            unemployment_rate = self.state_trajectory[-1][-1]['environment']['U'].squeeze()
+            loss = unemployment_rate.sum()
+            # test_set_for_episode = self.unemployment_test_dataset[episode][:num_steps_per_episode].float().squeeze()
+            # loss =  self.mse_loss(unemployment_rate, test_set_for_episode)
             loss.backward()
+            print([(p, p.grad) for p in self.parameters()])
+            # breakpoint()
+            for param in self.parameters():
+                print(param.grad)
             self.optimizer.step()
 
             self.optimizer.zero_grad()
             self.reset()
-
             #self.controller.learn_after_episode(jax.tree_map(lambda x: x[-1], self.trajectory), self.initializer, self.optimizer)
 
     def execute(self):
         self.forward()
+        # Save the state data
+        environment_obj = self.state_trajectory[-1][-1]['environment']
+        agent_obj = self.state_trajectory[-1][-1]['agents']
+        # Create a dictionary
+        state_data_dict = {'environment': environment_obj, 'agents': agent_obj}
+        with open('state_data_dict.pkl', 'wb') as f:
+            pickle.dump(state_data_dict, f)
+            

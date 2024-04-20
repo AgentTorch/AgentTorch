@@ -1,25 +1,19 @@
-MACRO_ECON_PATH  = '/u/ayushc/projects/GradABM/MacroEcon/models'
+MACRO_ECON_PATH  = '/Users/shashankkumar/Documents/GitHub/MacroEcon/models'
 
+import os
 from langchain_openai import ChatOpenAI
 import torch
 import torch.nn as nn
-from langchain_core.prompts import ChatPromptTemplate
-from langchain.chains import LLMChain
-from langchain.schema import StrOutputParser
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
-from langchain.prompts import PromptTemplate
-from langchain_openai import OpenAI
 from langchain.prompts import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate,
     MessagesPlaceholder,
 )
 from langchain_core.messages import SystemMessage
-from langchain.callbacks import get_openai_callback
-
 class LLMAgent():
-    def __init__(self,agent_profile = None, memory = None,llm = None,openai_api_key = None) -> None:
+    def __init__(self,agent_profile = None, memory = None,llm = None,openai_api_key = None,num_agents = 1) -> None:
         assert agent_profile is not None, "Agent profile is required"
         
         if llm is None:
@@ -42,31 +36,55 @@ class LLMAgent():
         if memory is not None:
             self.agent_memory = memory
         else:
-            self.agent_memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-        
+            self.agent_memory = [ConversationBufferMemory(memory_key="chat_history", return_messages=True) for _ in range(num_agents)]
+        # self.llm_chain = [LLMChain(
+        #     llm=llm,
+        #     prompt=self.prompt,
+        #     verbose=False,
+        #     memory=self.agent_memory[id],
+        # ) for id in range(num_agents)]
         self.llm_chain = LLMChain(
             llm=llm,
             prompt=self.prompt,
             verbose=False,
-            memory=self.agent_memory,
         )
     
-    async def __call__(self,prompt_list):
-        memory = self.get_memory()
-        prompt_inputs = [{'agent_query': prompt, 'chat_history': memory['chat_history']} for prompt in prompt_list]
-        agent_output = await self.llm_chain.aapply(prompt_inputs)
-        self.save_memory(prompt_inputs,agent_output)
-        return agent_output
+    async def __call__(self,prompt_list,last_k = 12,agent_id = 0):
+        last_k = 2*last_k + 8 # get last 24 messages 12 for each AI and Human and 8 for reflection prompts
+        prompt_inputs = [{'agent_query': prompt, 'chat_history': self.get_memory(last_k,agent_id=agent_id)['chat_history']} for agent_id,prompt in enumerate(prompt_list)]
+        agent_outputs = await self.llm_chain.aapply(prompt_inputs)
+        for id,(prompt_input,agent_output) in enumerate(zip(prompt_inputs,agent_outputs)):
+            self.save_memory(prompt_input,agent_output,agent_id=id)
+        return agent_outputs
     
-    def get_memory(self):
-        return self.agent_memory.load_memory_variables({})
+    def clear_memory(self,agent_id = 0):
+        self.agent_memory[agent_id].clear()
+    
+    def get_memory(self,last_k = None,agent_id = 0):
+        if last_k is not None:
+            last_k_memory = {'chat_history': self.agent_memory[agent_id].load_memory_variables({})['chat_history'][-last_k:]}
+            return last_k_memory
+        else:
+            return self.agent_memory[agent_id].load_memory_variables({})
 
-    def reflect(self,reflection_prompt):
-        return self.llm_chain.predict(agent_query=reflection_prompt)
+    async def reflect(self,reflection_prompt,last_k = 3,agent_id = 0):
+        last_k = 2*last_k #get last 6 messages for each AI and Human
+        memory = self.get_memory(last_k=last_k,agent_id=agent_id)
+        return await self.__call__(prompt_list=[reflection_prompt],last_k=last_k,agent_id=agent_id)
     
-    def save_memory(self,context_in,context_out):
-        for query,response in zip(context_in,context_out):
-            self.agent_memory.save_context({"input":query['agent_query']}, {"output":response['text']})
+    def save_memory(self,context_in,context_out,agent_id = 0):
+        self.agent_memory[agent_id].save_context({"input":context_in['agent_query']}, {"output":context_out['text']})
+    
+    def export_memory_to_file(self, file_dir):
+        if not os.path.exists(file_dir):
+            os.makedirs(file_dir)
+            
+        for id in range(len(self.agent_memory)):
+            file_name = "output_mem"+"_"+str(id)+".md"
+            file_path = os.path.join(file_dir, file_name)
+            memory = self.get_memory(agent_id=id)
+            with open(file_path, 'w') as f:
+                f.write(str(memory))
         
 
 
@@ -75,6 +93,7 @@ if __name__ == "__main__":
     import sys
     sys.path.append(MACRO_ECON_PATH)
     from macro_economics.prompt import complete_final_report_prompt
+    import asyncio
     # define open AI key
 
     def format_financial_report(config):
@@ -135,5 +154,6 @@ if __name__ == "__main__":
     }   
     query = format_financial_report(config)
     # define open AI key
-    agent = LLMAgent(agent_profile = agent_profile,open_api_key=OPENAI_API_KEY)
-    print(agent(query))
+    agent = LLMAgent(agent_profile = agent_profile,openai_api_key=OPENAI_API_KEY,num_agents=2)
+    results = asyncio.run(agent(prompt_list=[query,query]))
+    print(results)

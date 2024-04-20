@@ -6,12 +6,15 @@ MODEL_PATH = '/u/ayushc/projects/GradABM/MacroEcon/models'
 # OPENAI_API_KEY = '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'
 
 import json
+import os
 import torch
 import re
 import sys
+import pdb
+from AgentTorch.helpers.distributions import StraightThroughBernoulli
 
-sys.path.insert(0, AGENT_TORCH_PATH)
-
+sys.path.append(MODEL_PATH)
+# sys.path.insert(0, AGENT_TORCH_PATH)
 from AgentTorch.LLM.llm_agent import LLMAgent
 from AgentTorch.substep import SubstepAction
 from AgentTorch.helpers import get_by_path
@@ -26,17 +29,28 @@ class WorkConsumptionPropensity(SubstepAction):
         OPENAI_API_KEY = self.config['simulation_metadata']['OPENAI_API_KEY']
         
         self.mode = self.config['simulation_metadata']['execution_mode']        
-        self.agent = LLMAgent(agent_profile = agent_profile,openai_api_key = OPENAI_API_KEY)
         self.mapping = self.load_mapping(self.config['simulation_metadata']['mapping_path'])
         self.variables = self.get_variables(prompt_template_var)
         self.filtered_mapping = self.filter_mapping(self.mapping,self.variables)
         self.combinations_of_prompt_variables, self.combinations_of_prompt_variables_with_index = self.get_combinations_of_prompt_variables(self.filtered_mapping)
+        self.num_llm_agents = len(self.combinations_of_prompt_variables)
+        self.agent = LLMAgent(agent_profile = agent_profile,openai_api_key = OPENAI_API_KEY,num_agents = self.num_llm_agents)
+        self.save_memory_dir = self.config['simulation_metadata']['memory_dir']
+        self.num_steps_per_episode = self.config['simulation_metadata']['num_steps_per_episode']
+
+        self.st_bernoulli = StraightThroughBernoulli.apply
+        
     
     async def forward(self, state, observation):        
         print("Substep Action: Earning decision")
         num_agents = self.config['simulation_metadata']['num_agents']
+        number_of_months = state['current_step'] + 1
+        current_episode = 1
+        
         gender = get_by_path(state, re.split("/", self.input_variables['gender']))
         age = get_by_path(state,re.split("/", self.input_variables['age']))
+        county = get_by_path(state,re.split("/", self.input_variables['county']))
+        
         
         consumption_propensity = get_by_path(state,re.split("/", self.input_variables['consumption_propensity']))
         work_propensity = get_by_path(state,re.split("/", self.input_variables['work_propensity']))
@@ -55,17 +69,27 @@ class WorkConsumptionPropensity(SubstepAction):
         output_values = []
         
         for target_values in self.combinations_of_prompt_variables_with_index:
-            gender_mask = (gender == target_values['gender'])
-            age_mask = (age == target_values['age'])
-            mask = torch.logical_and(gender_mask, age_mask).unsqueeze(1) # ayush fix -> to ensure consistent adding later
+            mask = torch.tensor([True]*len(gender))  # Initialize mask as tensor of True values
+            for key, value in target_values.items():
+                if key in locals():  # Check if variable with this name exists
+                    mask = torch.logical_and(mask, locals()[key] == value)
+            mask = mask.unsqueeze(1)  # Ensure consistent adding later
             float_mask = mask.float()
             masks.append(float_mask)
+        
+        # for target_values in self.combinations_of_prompt_variables_with_index:
+        #     gender_mask = (gender == target_values['gender'])
+        #     age_mask = (age == target_values['age'])
+        #     mask = torch.logical_and(gender_mask, age_mask).unsqueeze(1) # ayush fix -> to ensure consistent adding later
+        #     float_mask = mask.float()
+        #     masks.append(float_mask)
         
         prompt_list = []
         for en,_ in enumerate(self.combinations_of_prompt_variables_with_index):
             age = self.combinations_of_prompt_variables[en]['age']
             gender = self.combinations_of_prompt_variables[en]['gender']
-            prompt = prompt_template_var.format(age = age,gender = gender)
+            county = self.combinations_of_prompt_variables[en]['county']
+            prompt = prompt_template_var.format(age = age,gender = gender,county = county)
             prompt_list.append(prompt)
 
         agent_output = await self.agent(prompt_list)
@@ -79,8 +103,13 @@ class WorkConsumptionPropensity(SubstepAction):
             work_propensity = torch.add(work_propensity,work_propensity_for_group)
 
         # work_propensity = torch.rand(16573530,1)
-        will_work = torch.bernoulli(work_propensity)
-                        
+        will_work = self.st_bernoulli(work_propensity) #torch.bernoulli(work_propensity)
+        
+        if number_of_months == self.num_steps_per_episode:
+            current_memory_dir = os.path.join(self.save_memory_dir ,str(current_episode), str(number_of_months))
+            self.agent.export_memory_to_file(current_memory_dir)
+            
+        
         return {self.output_variables[0] : will_work, 
                 self.output_variables[1] : consumption_propensity}
     
