@@ -83,7 +83,8 @@ def create_base_pop(df_age_gender,df_ethnicity,age,area):
             "area": area,
             "age": age,
             "gender": gender,
-            "ethnicity": ethnicity
+            "ethnicity": ethnicity,
+            "county": area[:2]
         }
         population.append(individual)
     # for gender, ethnicity,education,employment_insurance in zip(genders, ethnicities,education,employment_insurance):
