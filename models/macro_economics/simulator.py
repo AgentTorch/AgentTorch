@@ -11,7 +11,6 @@ import torch.optim as optim
 import sys
 # sys.path.append("/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch/AgentTorch")
 from AgentTorch import Runner, Registry
-from torch.nn import functional as F
 
 def simulation_registry():
     reg = Registry()
@@ -53,7 +52,8 @@ def simulation_registry():
 class SimulationRunner(Runner):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        df = pd.read_csv("/Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/NYC/brooklyn_unemp.csv")
+        data_path = '/u/ayushc/projects/GradABM/MacroEcon/simulator_data/NYC/brooklyn_unemp.csv'
+        df = pd.read_csv(data_path)
         df.sort_values(by=['year','month'],ascending=True,inplace=True)
         arr = df['unemployment_rate'].values
         tensor = torch.from_numpy(arr)
@@ -74,8 +74,15 @@ class SimulationRunner(Runner):
         for episode in range(self.config['simulation_metadata']['num_episodes']):
             print("episode: ", episode)
             num_steps_per_episode = self.config["simulation_metadata"]["num_steps_per_episode"]
-            self.reset()
             self.step(num_steps_per_episode)
+
+
+            breakpoint()
+
+            unemployment_rate_list = [state['environment']['U'] for state in self.state_trajectory[-1] if state['current_substep'] == str(self.config['simulation_metadata']['num_substeps_per_step'] - 1)]
+            unemployment_rate_tensor = torch.tensor(unemployment_rate_list,requires_grad=True).float()
+            test_set_for_episode = self.unemployment_test_dataset[episode][:num_steps_per_episode].float()
+            loss =  self.mse_loss(unemployment_rate_tensor, test_set_for_episode)
             unemployment_rate = self.state_trajectory[-1][-1]['environment']['U'].squeeze()
             loss = unemployment_rate.sum()
             # test_set_for_episode = self.unemployment_test_dataset[episode][:num_steps_per_episode].float().squeeze()
@@ -86,8 +93,9 @@ class SimulationRunner(Runner):
             for param in self.parameters():
                 print(param.grad)
             self.optimizer.step()
+
             self.optimizer.zero_grad()
-            
+            self.reset()
             #self.controller.learn_after_episode(jax.tree_map(lambda x: x[-1], self.trajectory), self.initializer, self.optimizer)
 
     def execute(self):

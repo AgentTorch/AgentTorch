@@ -94,7 +94,7 @@ class UpdateMacroRates(SubstepTransition):
         unemployed_agents = agents_not_working * unemployment_adaptation_coefficient
         current_unemployment_rate = unemployed_agents / self.num_agents
         unemployment_rate = unemployment_rate + (current_unemployment_rate*time_step_one_hot)
-        
+
         # hourly wages
         new_hourly_wages = self.updateHourlyWage(hourly_wage, imbalance) # self.calculateHourlyWage() to revert
                 

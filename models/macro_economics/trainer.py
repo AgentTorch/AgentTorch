@@ -2,7 +2,6 @@ MODEL_PATH = '/u/ayushc/projects/GradABM/MacroEcon/models'
 AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
 
 import argparse
-import numpy as np
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
@@ -23,7 +22,6 @@ parser.add_argument(
     "-c", "--config", help="Name of the yaml config file with the parameters."
 )
 # *************************************************************************
-
 # args = parser.parse_args()
 # if args:
 #     config_file = args.config
@@ -39,10 +37,7 @@ registry = simulation_registry()
 runner = SimulationRunner(config, registry)
 device = torch.device(runner.config['simulation_metadata']['device'])
 
-print("Initializing runner..")
 runner.init()
-print(" initialized!!!!!!!")
-print("---"*8)
 
 loss_log = []
 
@@ -54,6 +49,7 @@ scheduler = optim.lr_scheduler.ExponentialLR(optimizer,
 
 num_steps_per_episode = runner.config["simulation_metadata"]["num_steps_per_episode"]
 
+print("executing runner")
 # execute all simulation episodes with a utility function in OpDynRunner
 runner.execute()
 

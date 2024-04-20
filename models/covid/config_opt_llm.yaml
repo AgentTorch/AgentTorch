@@ -20,6 +20,7 @@ simulation_metadata:
     EXPOSED_TO_INFECTED_TIME: 3
     INFECTED_TO_RECOVERED_TIME: 5
     INFINITY_TIME: 130
+    RECOVERED_TO_SUSCEPTIBLE_TIME: 60
     quarantine_days: 12
     test_result_delay_days: 3
     test_ineligible_days: 2
@@ -30,21 +31,30 @@ simulation_metadata:
             - 0.5
         lr_gamma:  0.9999
         model_path: "saved_model.pth"
-    
+
 state:
     environment:
         R:
             name: "R"
-            learnable: True
+            learnable: False
             shape:
                 - 1
             initialization_function: null
-            value: 5.12
+            value: 4.75
             dtype: "float"
             
         daily_infected:
             name: "daily_infected"
-            learnable: True
+            learnable: False
+            shape:
+                - ${simulation_metadata.num_steps_per_episode}
+            initialization_function: null
+            value: 0
+            dtype: "float"
+        
+        daily_deaths:
+            name: "daily_deaths"
+            learnable: False
             shape:
                 - ${simulation_metadata.num_steps_per_episode}
             initialization_function: null
@@ -85,7 +95,7 @@ state:
         
         mortality_rate:
             name: "Mortality Rate"
-            learnable: True
+            learnable: False
             shape:
                 - 1
             initialization_function: null
@@ -438,8 +448,8 @@ substeps:
         policy:
             citizens: null
         transition:
-            seirm_progression:
-                generator: "SEIRMProgression"
+            seirms_progression:
+                generator: "SEIRMSProgression"
                 arguments:
                    M:
                         name: "Mortality Rate"
@@ -454,9 +464,11 @@ substeps:
                     next_stage_time: 'agents/citizens/next_stage_time'
                     exposed_to_infected_time: 'environment/exposed_to_infected_time'
                     infected_to_recovered_time: 'environment/infected_to_recovered_time'
+                    daily_deaths: 'environment/daily_deaths'
                 output_variables:
                     - disease_stage
                     - next_stage_time
+                    - daily_deaths
         reward: null
         
 #     "2":

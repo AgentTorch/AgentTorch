@@ -19,16 +19,44 @@ def get_by_path(root, items):
     else:
         return property_obj
 
+# def set_by_path(root, items, value):
+#     r"""
+#         Set a value in a nested object in root by item sequence
+#     """
+#     val_obj = get_by_path(root, items[:-1])
+#     if isinstance(val_obj, nn.ModuleDict):
+#         # with torch.no_grad():
+#         # # val_obj[items[-1]].param = nn.Parameter(value,requires_grad=value.requires_grad)
+#         #     val_obj[items[-1]].param.copy_(value)
+#         with torch.no_grad():
+#             val_obj_detachded = val_obj[items[-1]].detach()
+#             val_obj_detachded.param.copy_(value)
+#     else:
+#         with torch.no_grad():
+#             val_obj[items[-1]].copy_(value)
+#     return root
+
 def set_by_path(root, items, value):
-    r"""
-        Set a value in a nested object in root by item sequence
-    """
+    r""" Set a value in a nested object in root by item sequence """
     val_obj = get_by_path(root, items[:-1])
+
     if isinstance(val_obj, nn.ModuleDict):
-        val_obj[items[-1]].param = nn.Parameter(value)
+        val_obj[items[-1]].param.data.copy_(value)
+        val_obj[items[-1]].param.requires_grad = value.requires_grad
     else:
         val_obj[items[-1]] = value
-    return root
+        return root
+
+# def set_by_path(root, items, value):
+#     r"""
+#         Set a value in a nested object in root by item sequence
+#     """
+#     val_obj = get_by_path(root, items[:-1])
+#     if isinstance(val_obj, nn.ModuleDict):
+#         val_obj[items[-1]].param = nn.Parameter(value)
+#     else:
+#         val_obj[items[-1]] = value
+#     return root
 
 def del_by_path(root, items):
     """Delete a key-value in a nested object in root by item sequence."""

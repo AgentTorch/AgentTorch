@@ -19,8 +19,8 @@ def get_registry():
     reg.register(NewTransmission, "new_transmission", key="transition")
 
     # Substep: Disease Stage Progression
-    from substeps.seirm_progression.transition import SEIRMProgression
-    reg.register(SEIRMProgression, "seirm_progression", key="transition")
+    from substeps.seirms_progression.transition import SEIRMSProgression
+    reg.register(SEIRMSProgression, "seirms_progression", key="transition")
 
     # Substep: Quarantine Intervention
     from substeps.quarantine.transition import UpdateQuarantineStatus
