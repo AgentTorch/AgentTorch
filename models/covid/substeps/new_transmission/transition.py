@@ -1,13 +1,11 @@
 import torch
-from torch import distributions, nn
 from torch_geometric.data import Data
 import torch.nn.functional as F
 import re
-import pdb
 
 from AgentTorch.substep import SubstepTransitionMessagePassing
 from AgentTorch.helpers import get_by_path
-from substeps.utils import *
+# from substeps.utils import *
 
 class NewTransmission(SubstepTransitionMessagePassing):
     def __init__(self, config, input_variables, output_variables, arguments):
@@ -23,6 +21,8 @@ class NewTransmission(SubstepTransitionMessagePassing):
         self.STAGE_UPDATE_VAR = 1
         self.INFINITY_TIME = self.config['simulation_metadata']['INFINITY_TIME']
         self.EXPOSED_TO_INFECTED_TIME = self.config['simulation_metadata']['EXPOSED_TO_INFECTED_TIME']
+
+        self.external_R = torch.tensor(self.learnable_args['R2'].data, requires_grad=True)
 
     def _lam(self, x_i, x_j, edge_attr, t, R, SFSusceptibility, SFInfector, lam_gamma_integrals):
         S_A_s = SFSusceptibility[x_i[:,0].long()]
@@ -78,14 +78,10 @@ class NewTransmission(SubstepTransitionMessagePassing):
     def forward(self, state, action=None):
         input_variables = self.input_variables
         t = int(state['current_step'])
-        print("Substep: Disease Transmission")
         
-        # R = state['environment']['R']
-        R_debug = get_by_path(state, re.split("/", input_variables['R']))
-        R = self.learnable_args['R2']
-        
-        pdb.set_trace()
-        
+        # R = self.learnable_args['R2']
+        R = self.external_R
+
         time_step_one_hot = self._generate_one_hot_tensor(t, self.num_timesteps)
                 
         SFSusceptibility = get_by_path(state, re.split("/", input_variables['SFSusceptibility']))
@@ -97,7 +93,7 @@ class NewTransmission(SubstepTransitionMessagePassing):
         agents_ages = get_by_path(state, re.split("/", input_variables['age']))                     
         current_stages = get_by_path(state, re.split("/", input_variables['disease_stage']))
         current_transition_times = get_by_path(state, re.split("/", input_variables['next_stage_time']))
-        
+                
         all_edgelist, all_edgeattr = get_by_path(state, re.split("/", input_variables["adjacency_matrix"]))
         
         daily_infected = get_by_path(state, re.split("/", input_variables["daily_infected"]))
@@ -127,9 +123,7 @@ class NewTransmission(SubstepTransitionMessagePassing):
         newly_exposed_today = (current_stages==self.SUSCEPTIBLE_VAR).squeeze()*potentially_exposed_today
         
         daily_infected = daily_infected + newly_exposed_today.sum()*time_step_one_hot
-        print("daily infected gradient: ", daily_infected.requires_grad)
-        
-        # d(newly_exposed_today) / d(R)
+        daily_infected = daily_infected.squeeze(0)
                 
         newly_exposed_today = newly_exposed_today.unsqueeze(1)
         
@@ -139,4 +133,5 @@ class NewTransmission(SubstepTransitionMessagePassing):
                                 
         return {self.output_variables[0]: updated_stages, 
                 self.output_variables[1]: updated_next_stage_times, 
-                self.output_variables[2]: updated_infected_times, self.output_variables[3]: daily_infected}
+                self.output_variables[2]: updated_infected_times, 
+                self.output_variables[3]: daily_infected}

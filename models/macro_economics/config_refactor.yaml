@@ -20,7 +20,7 @@ simulation_metadata:
   num_episodes: 1
   num_steps_per_episode: 3
   num_substeps_per_step: 4
-  population_dir: /Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/NYC
+  population_dir: /u/ayushc/projects/GradABM/MacroEcon/simulator_data/NYC
   mapping_path: ${simulation_metadata.population_dir}/mapping.json
   target_inflation_rate: 0.02
   tax_brackets:
