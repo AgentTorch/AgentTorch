@@ -1,7 +1,10 @@
+import asyncio
 import torch
 import torch.nn as nn
 import re
+import copy
 from AgentTorch.helpers import get_by_path, set_by_path, copy_module
+from AgentTorch.utils import is_async_method
 
 class Controller(nn.Module):
     def __init__(self, config):
@@ -16,7 +19,6 @@ class Controller(nn.Module):
             for obs in self.config["substeps"][substep]['observation'][agent_type].keys():
                 observation = {**observation_function[substep][agent_type][obs](state), **observation}
         except Exception as e:
-            print(e)
             observation = None
 
         return observation
@@ -27,15 +29,19 @@ class Controller(nn.Module):
 
         try:
             for policy in self.config["substeps"][substep]["policy"][agent_type].keys():
-                action = {**policy_function[substep][agent_type][policy](state, observation), **action}
-        except:
+                if is_async_method(policy_function[substep][agent_type][policy],'forward'):
+                    action = {**asyncio.run(policy_function[substep][agent_type][policy](state, observation)), **action}
+                else:
+                    action = {**policy_function[substep][agent_type][policy](state, observation), **action}
+        except Exception as e:
             action = None
             
         return action
     
     def progress(self, state, action, transition_function):
         next_state = copy_module(state)
-            
+        # next_state = copy.deepcopy(state)    
+        
         substep = state['current_substep']
         next_substep = (int(substep) + 1)%self.config["simulation_metadata"]["num_substeps_per_step"]
         next_state['current_substep'] = str(next_substep)
@@ -45,7 +51,7 @@ class Controller(nn.Module):
             for var_name in updated_vals:
                 assert self.config["substeps"][substep]["transition"][trans_func]['input_variables'][var_name]
                 
-                source_path =  self.config["substeps"][substep]["transition"][trans_func]["input_variables"][var_name]
+                source_path = self.config["substeps"][substep]["transition"][trans_func]["input_variables"][var_name]
                 set_by_path(next_state, re.split("/", source_path), updated_vals[var_name])
                 
         return next_state

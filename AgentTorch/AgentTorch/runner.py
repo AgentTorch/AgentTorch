@@ -9,8 +9,8 @@ import re
 from abc import ABC, abstractmethod
 
 from AgentTorch.controller import Controller
-from AgentTorch.registry import Registry
 from AgentTorch.initializer import Initializer
+# print("Using debug initializer -- the older version")
 
 from AgentTorch.helpers import set_by_path
 
@@ -20,7 +20,7 @@ class Runner(nn.Module):
 
         self.config = config
         self.registry = registry
-        assert self.config["simulation_metadata"]["num_substeps_per_step"] == len(list(self.config['substeps'].keys()))
+        # assert self.config["simulation_metadata"]["num_substeps_per_step"] == len(list(self.config['substeps'].keys()))
         
         self.initializer = Initializer(self.config, self.registry)
         self.controller = Controller(self.config)
@@ -62,14 +62,14 @@ class Runner(nn.Module):
             num_steps = self.config["simulation_metadata"]["num_steps_per_episode"]
         
         for time_step in range(num_steps):
-            self.state['current_step'] = time_step
+            self.state['current_step'] = time_step # current_step is a string
             for traj_var in self.trajectory.keys():
                 self.trajectory[traj_var][-1].append(deque())
 
             for substep in self.config['substeps'].keys():
                 self.trajectory["states"][-1][-1].append(self.state)
                 observation_profile, action_profile = {}, {}
-
+                                
                 for agent_type in self.config['substeps'][substep]['active_agents']:
                     assert substep == self.state['current_substep']
                     assert time_step == self.state['current_step']
@@ -87,7 +87,11 @@ class Runner(nn.Module):
 
     def _set_parameters(self, params):
         for param in params:
-            set_by_path(root=self.state, items=re.split('.', param), value=params[param])
+            mode, param_name = param.split('/')[0], param.split('/')[1]
+            self.state[mode][param_name].data.copy_(params[param])
+            self.state[mode][param_name].requires_grad = True
+            # self.state['parameters'][param_name].data.copy_(params[param])
+            # set_by_path(root=self.state, items=re.split('.', param), value=params[param])
         
     def step_from_params(self, num_steps=None, params=None):
         r"""
@@ -95,7 +99,6 @@ class Runner(nn.Module):
         """
         self._set_parameters(params)
         self.step(num_steps)
-
 
     def forward(self):
         r"""

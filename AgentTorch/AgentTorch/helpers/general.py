@@ -2,6 +2,7 @@ import re
 from functools import reduce
 import operator
 import torch
+from torch import nn
 import copy
 from omegaconf import OmegaConf
 import pandas as pd
@@ -10,15 +11,52 @@ def get_by_path(root, items):
     r"""
         Access a nested object in root by item sequence
     """
-    return reduce(operator.getitem, items, root)
+    property_obj = reduce(operator.getitem, items, root)
+    if isinstance(property_obj, nn.ModuleDict):
+        return property_obj
+    elif isinstance(property_obj, nn.Module):
+        return property_obj()
+    else:
+        return property_obj
+
+# def set_by_path(root, items, value):
+#     r"""
+#         Set a value in a nested object in root by item sequence
+#     """
+#     val_obj = get_by_path(root, items[:-1])
+#     if isinstance(val_obj, nn.ModuleDict):
+#         # with torch.no_grad():
+#         # # val_obj[items[-1]].param = nn.Parameter(value,requires_grad=value.requires_grad)
+#         #     val_obj[items[-1]].param.copy_(value)
+#         with torch.no_grad():
+#             val_obj_detachded = val_obj[items[-1]].detach()
+#             val_obj_detachded.param.copy_(value)
+#     else:
+#         with torch.no_grad():
+#             val_obj[items[-1]].copy_(value)
+#     return root
 
 def set_by_path(root, items, value):
-    r"""
-        Set a value in a nested object in root by item sequence
-    """
+    r""" Set a value in a nested object in root by item sequence """
     val_obj = get_by_path(root, items[:-1])
-    val_obj[items[-1]] = value
-    return root
+
+    if isinstance(val_obj, nn.ModuleDict):
+        val_obj[items[-1]].param.data.copy_(value)
+        val_obj[items[-1]].param.requires_grad = value.requires_grad
+    else:
+        val_obj[items[-1]] = value
+        return root
+
+# def set_by_path(root, items, value):
+#     r"""
+#         Set a value in a nested object in root by item sequence
+#     """
+#     val_obj = get_by_path(root, items[:-1])
+#     if isinstance(val_obj, nn.ModuleDict):
+#         val_obj[items[-1]].param = nn.Parameter(value)
+#     else:
+#         val_obj[items[-1]] = value
+#     return root
 
 def del_by_path(root, items):
     """Delete a key-value in a nested object in root by item sequence."""
