@@ -156,7 +156,7 @@ for episode in range(num_episodes):
     target_weekly_cases = target_weekly_cases.to(device)
 
     # calculate the loss from the target cases
-    loss_val = torch.sqrt(loss_function(predicted_weekly_cases, target_weekly_cases))
+    loss_val = loss_function(predicted_weekly_cases, target_weekly_cases)
     loss_val.backward()
     print(f"predicted number of cases: {predicted_weekly_cases}, actual number of cases: {target_weekly_cases}, loss: {loss_val}")
 

@@ -1,0 +1,1047 @@
+/u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/langchain/callbacks/__init__.py:37: LangChainDeprecationWarning: Importing this callback from langchain is deprecated. Importing it from langchain will no longer be supported as of langchain==0.2.0. Please import from langchain-community instead:
+
+`from langchain_community.callbacks import get_openai_callback`.
+
+To install langchain-community run `pip install -U langchain-community`.
+  warnings.warn(
+Task exception was never retrieved
+future: <Task finished name='Task-2765' coro=<AsyncClient.aclose() done, defined at /u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/httpx/_client.py:2011> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/httpx/_client.py", line 2018, in aclose
+    await self._transport.aclose()
+  File "/u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/httpx/_transports/default.py", line 385, in aclose
+    await self._pool.aclose()
+  File "/u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/httpcore/_async/connection_pool.py", line 313, in aclose
+    await self._close_connections(closing_connections)
+  File "/u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/httpcore/_async/connection_pool.py", line 305, in _close_connections
+    await connection.aclose()
+  File "/u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/httpcore/_async/connection.py", line 171, in aclose
+    await self._connection.aclose()
+  File "/u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/httpcore/_async/http11.py", line 265, in aclose
+    await self._network_stream.aclose()
+  File "/u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/httpcore/_backends/anyio.py", line 55, in aclose
+    await self._stream.aclose()
+  File "/u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/anyio/streams/tls.py", line 202, in aclose
+    await self.transport_stream.aclose()
+  File "/u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 1191, in aclose
+    self._transport.close()
+  File "/usr/lib/python3.10/asyncio/selector_events.py", line 706, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 753, in call_soon
+    self._check_closed()
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 515, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+Task exception was never retrieved
+future: <Task finished name='Task-7411' coro=<AsyncClient.aclose() done, defined at /u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/httpx/_client.py:2011> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/httpx/_client.py", line 2018, in aclose
+    await self._transport.aclose()
+  File "/u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/httpx/_transports/default.py", line 385, in aclose
+    await self._pool.aclose()
+  File "/u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/httpcore/_async/connection_pool.py", line 313, in aclose
+    await self._close_connections(closing_connections)
+  File "/u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/httpcore/_async/connection_pool.py", line 305, in _close_connections
+    await connection.aclose()
+  File "/u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/httpcore/_async/connection.py", line 171, in aclose
+    await self._connection.aclose()
+  File "/u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/httpcore/_async/http11.py", line 265, in aclose
+    await self._network_stream.aclose()
+  File "/u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/httpcore/_backends/anyio.py", line 55, in aclose
+    await self._stream.aclose()
+  File "/u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/anyio/streams/tls.py", line 202, in aclose
+    await self.transport_stream.aclose()
+  File "/u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 1191, in aclose
+    self._transport.close()
+  File "/usr/lib/python3.10/asyncio/selector_events.py", line 706, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 753, in call_soon
+    self._check_closed()
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 515, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+Running experiment with config file:  experiments/0419_1900_simgt_2e2_mse/config.yaml
+Skipping:  objects
+named learnable_params:  [('initializer.transition_function.0.new_transmission.learnable_args.R2', Parameter containing:
+tensor([4.7500, 4.7500, 4.7500, 4.7500, 4.7500, 4.7500, 4.7500, 4.7500, 4.7500,
+        4.7500], device='cuda:0', requires_grad=True)), ('initializer.transition_function.1.seirm_progression.learnable_args.M', Parameter containing:
+tensor([0.1200], device='cuda:0', requires_grad=True))]
+
+running episode 0...
+r0 values: tensor([3.8411, 3.8427, 3.8049, 3.7789, 3.7732, 3.7277, 3.7071, 3.7226, 3.7709,
+        3.7300], device='cuda:0', grad_fn=<SelectBackward0>)
+
+starting week 0... #cases, #cases_4wk for prompt 66, 53... sampling isolation probabilities
+day 0, number of isolating agents 25544.0
+day 1, number of isolating agents 25496.0
+day 2, number of isolating agents 25527.0
+day 3, number of isolating agents 25561.0
+day 4, number of isolating agents 25537.0
+day 5, number of isolating agents 25631.0
+day 6, number of isolating agents 25582.0
+
+starting week 1... incoming #cases 89.0... #cases, #cases_4wk for prompt 89, 69... sampling isolation probabilities
+day 7, number of isolating agents 31516.0
+day 8, number of isolating agents 31397.0
+day 9, number of isolating agents 31510.0
+day 10, number of isolating agents 31531.0
+day 11, number of isolating agents 31544.0
+day 12, number of isolating agents 31459.0
+day 13, number of isolating agents 31472.0
+
+starting week 2... incoming #cases 106.0... #cases, #cases_4wk for prompt 106, 88... sampling isolation probabilities
+day 14, number of isolating agents 30786.0
+day 15, number of isolating agents 30794.0
+day 16, number of isolating agents 30846.0
+day 17, number of isolating agents 30695.0
+day 18, number of isolating agents 30742.0
+day 19, number of isolating agents 30601.0
+day 20, number of isolating agents 30827.0
+
+starting week 3... incoming #cases 191.0... #cases, #cases_4wk for prompt 191, 105... sampling isolation probabilities
+day 21, number of isolating agents 32731.0
+day 22, number of isolating agents 32666.0
+day 23, number of isolating agents 32743.0
+day 24, number of isolating agents 32775.0
+day 25, number of isolating agents 32657.0
+day 26, number of isolating agents 32719.0
+day 27, number of isolating agents 32697.0
+
+starting week 4... incoming #cases 181.0... #cases, #cases_4wk for prompt 181, 120... sampling isolation probabilities
+day 28, number of isolating agents 34799.0
+day 29, number of isolating agents 34727.0
+day 30, number of isolating agents 34745.0
+day 31, number of isolating agents 34776.0
+day 32, number of isolating agents 34789.0
+day 33, number of isolating agents 34673.0
+day 34, number of isolating agents 34736.0
+
+starting week 5... incoming #cases 116.0... #cases, #cases_4wk for prompt 116, 128... sampling isolation probabilities
+day 35, number of isolating agents 22103.0
+day 36, number of isolating agents 21967.0
+day 37, number of isolating agents 21937.0
+day 38, number of isolating agents 21998.0
+day 39, number of isolating agents 21990.0
+day 40, number of isolating agents 22024.0
+day 41, number of isolating agents 22114.0
+
+starting week 6... incoming #cases 576.0... #cases, #cases_4wk for prompt 576, 144... sampling isolation probabilities
+day 42, number of isolating agents 23402.0
+day 43, number of isolating agents 23396.0
+day 44, number of isolating agents 23370.0
+day 45, number of isolating agents 23495.0
+day 46, number of isolating agents 23349.0
+day 47, number of isolating agents 23363.0
+day 48, number of isolating agents 23321.0
+
+starting week 7... incoming #cases 1542.0... #cases, #cases_4wk for prompt 1542, 153... sampling isolation probabilities
+day 49, number of isolating agents 36824.0
+day 50, number of isolating agents 36815.0
+day 51, number of isolating agents 36825.0
+day 52, number of isolating agents 36829.0
+day 53, number of isolating agents 36819.0
+day 54, number of isolating agents 36813.0
+day 55, number of isolating agents 36822.0
+
+starting week 8... incoming #cases 213.0... #cases, #cases_4wk for prompt 213, 150... sampling isolation probabilities
+day 56, number of isolating agents 34386.0
+day 57, number of isolating agents 34226.0
+day 58, number of isolating agents 34378.0
+day 59, number of isolating agents 34340.0
+day 60, number of isolating agents 34346.0
+day 61, number of isolating agents 34386.0
+day 62, number of isolating agents 34221.0
+
+starting week 9... incoming #cases 260.0... #cases, #cases_4wk for prompt 260, 154... sampling isolation probabilities
+day 63, number of isolating agents 34562.0
+day 64, number of isolating agents 34660.0
+day 65, number of isolating agents 34510.0
+day 66, number of isolating agents 34582.0
+day 67, number of isolating agents 34505.0
+day 68, number of isolating agents 34613.0
+day 69, number of isolating agents 34543.0
+predicted number of cases: tensor([  89.,  106.,  191.,  181.,  116.,  576., 1542.,  213.,  260.,  141.],
+       device='cuda:0', grad_fn=<ToCopyBackward0>), actual number of cases: tensor([101., 138., 114., 129., 130., 201., 151., 120., 142., 111.],
+       device='cuda:0'), loss: 210897.609375
+
+running episode 1...
+Skipping:  objects
+r0 values: tensor([3.6039, 3.5175, 3.4830, 3.4516, 3.4435, 3.4202, 3.3865, 3.4435, 3.4595,
+        3.4470], device='cuda:0', grad_fn=<SelectBackward0>)
+
+starting week 0... #cases, #cases_4wk for prompt 66, 53... sampling isolation probabilities
+day 0, number of isolating agents 25423.0
+day 1, number of isolating agents 25338.0
+day 2, number of isolating agents 25303.0
+day 3, number of isolating agents 25541.0
+day 4, number of isolating agents 25384.0
+day 5, number of isolating agents 25392.0
+day 6, number of isolating agents 25344.0
+
+starting week 1... incoming #cases 65.0... #cases, #cases_4wk for prompt 65, 69... sampling isolation probabilities
+day 7, number of isolating agents 24635.0
+day 8, number of isolating agents 24649.0
+day 9, number of isolating agents 24573.0
+day 10, number of isolating agents 24647.0
+day 11, number of isolating agents 24695.0
+day 12, number of isolating agents 24664.0
+day 13, number of isolating agents 24674.0
+
+starting week 2... incoming #cases 195.0... #cases, #cases_4wk for prompt 195, 88... sampling isolation probabilities
+day 14, number of isolating agents 27504.0
+day 15, number of isolating agents 27280.0
+day 16, number of isolating agents 27355.0
+day 17, number of isolating agents 27331.0
+day 18, number of isolating agents 27409.0
+day 19, number of isolating agents 27535.0
+day 20, number of isolating agents 27486.0
+
+starting week 3... incoming #cases 405.0... #cases, #cases_4wk for prompt 405, 105... sampling isolation probabilities
+day 21, number of isolating agents 36004.0
+day 22, number of isolating agents 36020.0
+day 23, number of isolating agents 35978.0
+day 24, number of isolating agents 35981.0
+day 25, number of isolating agents 35947.0
+day 26, number of isolating agents 35970.0
+day 27, number of isolating agents 36082.0
+
+starting week 4... incoming #cases 123.0... #cases, #cases_4wk for prompt 123, 120... sampling isolation probabilities
+day 28, number of isolating agents 31757.0
+day 29, number of isolating agents 31532.0
+day 30, number of isolating agents 31538.0
+day 31, number of isolating agents 31568.0
+day 32, number of isolating agents 31623.0
+day 33, number of isolating agents 31526.0
+day 34, number of isolating agents 31626.0
+
+starting week 5... incoming #cases 216.0... #cases, #cases_4wk for prompt 216, 128... sampling isolation probabilities
+day 35, number of isolating agents 29220.0
+day 36, number of isolating agents 29225.0
+day 37, number of isolating agents 29250.0
+day 38, number of isolating agents 29112.0
+day 39, number of isolating agents 29172.0
+day 40, number of isolating agents 29181.0
+day 41, number of isolating agents 29202.0
+
+starting week 6... incoming #cases 375.0... #cases, #cases_4wk for prompt 375, 144... sampling isolation probabilities
+day 42, number of isolating agents 32763.0
+day 43, number of isolating agents 32768.0
+day 44, number of isolating agents 32754.0
+day 45, number of isolating agents 32761.0
+day 46, number of isolating agents 32712.0
+day 47, number of isolating agents 32748.0
+day 48, number of isolating agents 32826.0
+
+starting week 7... incoming #cases 292.0... #cases, #cases_4wk for prompt 292, 153... sampling isolation probabilities
+day 49, number of isolating agents 35308.0
+day 50, number of isolating agents 35328.0
+day 51, number of isolating agents 35336.0
+day 52, number of isolating agents 35353.0
+day 53, number of isolating agents 35307.0
+day 54, number of isolating agents 35315.0
+day 55, number of isolating agents 35308.0
+
+starting week 8... incoming #cases 141.0... #cases, #cases_4wk for prompt 141, 150... sampling isolation probabilities
+day 56, number of isolating agents 20726.0
+day 57, number of isolating agents 20680.0
+day 58, number of isolating agents 20616.0
+day 59, number of isolating agents 20635.0
+day 60, number of isolating agents 20664.0
+day 61, number of isolating agents 20724.0
+day 62, number of isolating agents 20638.0
+
+starting week 9... incoming #cases 649.0... #cases, #cases_4wk for prompt 649, 154... sampling isolation probabilities
+day 63, number of isolating agents 21262.0
+day 64, number of isolating agents 21050.0
+day 65, number of isolating agents 21115.0
+day 66, number of isolating agents 21126.0
+day 67, number of isolating agents 21299.0
+day 68, number of isolating agents 21100.0
+day 69, number of isolating agents 21092.0
+predicted number of cases: tensor([  65.,  195.,  405.,  123.,  216.,  375.,  292.,  141.,  649., 1723.],
+       device='cuda:0', grad_fn=<ToCopyBackward0>), actual number of cases: tensor([101., 138., 114., 129., 130., 201., 151., 120., 142., 111.],
+       device='cuda:0'), loss: 300284.90625
+
+running episode 2...
+Skipping:  objects
+r0 values: tensor([1.4664, 1.4622, 1.4600, 1.4599, 1.4593, 1.4598, 1.4600, 1.4598, 1.4601,
+        1.4592], device='cuda:0', grad_fn=<SelectBackward0>)
+
+starting week 0... #cases, #cases_4wk for prompt 66, 53... sampling isolation probabilities
+day 0, number of isolating agents 26244.0
+day 1, number of isolating agents 26118.0
+day 2, number of isolating agents 26099.0
+day 3, number of isolating agents 26329.0
+day 4, number of isolating agents 26192.0
+day 5, number of isolating agents 26132.0
+day 6, number of isolating agents 26124.0
+
+starting week 1... incoming #cases 29.0... #cases, #cases_4wk for prompt 29, 69... sampling isolation probabilities
+day 7, number of isolating agents 24013.0
+day 8, number of isolating agents 23927.0
+day 9, number of isolating agents 23945.0
+day 10, number of isolating agents 23919.0
+day 11, number of isolating agents 23953.0
+day 12, number of isolating agents 23970.0
+day 13, number of isolating agents 23780.0
+
+starting week 2... incoming #cases 44.0... #cases, #cases_4wk for prompt 44, 88... sampling isolation probabilities
+day 14, number of isolating agents 12952.0
+day 15, number of isolating agents 12625.0
+day 16, number of isolating agents 12800.0
+day 17, number of isolating agents 12814.0
+day 18, number of isolating agents 12740.0
+day 19, number of isolating agents 12693.0
+day 20, number of isolating agents 12710.0
+
+starting week 3... incoming #cases 88.0... #cases, #cases_4wk for prompt 88, 105... sampling isolation probabilities
+day 21, number of isolating agents 12836.0
+day 22, number of isolating agents 12828.0
+day 23, number of isolating agents 12856.0
+day 24, number of isolating agents 12895.0
+day 25, number of isolating agents 12900.0
+day 26, number of isolating agents 12814.0
+day 27, number of isolating agents 12902.0
+
+starting week 4... incoming #cases 195.0... #cases, #cases_4wk for prompt 195, 120... sampling isolation probabilities
+day 28, number of isolating agents 24388.0
+day 29, number of isolating agents 24267.0
+day 30, number of isolating agents 24424.0
+day 31, number of isolating agents 24228.0
+day 32, number of isolating agents 24438.0
+day 33, number of isolating agents 24272.0
+day 34, number of isolating agents 24317.0
+
+starting week 5... incoming #cases 221.0... #cases, #cases_4wk for prompt 221, 128... sampling isolation probabilities
+day 35, number of isolating agents 34334.0
+day 36, number of isolating agents 34442.0
+day 37, number of isolating agents 34371.0
+day 38, number of isolating agents 34497.0
+day 39, number of isolating agents 34452.0
+day 40, number of isolating agents 34331.0
+day 41, number of isolating agents 34376.0
+
+starting week 6... incoming #cases 59.0... #cases, #cases_4wk for prompt 59, 144... sampling isolation probabilities
+day 42, number of isolating agents 25615.0
+day 43, number of isolating agents 25433.0
+day 44, number of isolating agents 25417.0
+day 45, number of isolating agents 25486.0
+day 46, number of isolating agents 25519.0
+day 47, number of isolating agents 25701.0
+day 48, number of isolating agents 25410.0
+
+starting week 7... incoming #cases 120.0... #cases, #cases_4wk for prompt 120, 153... sampling isolation probabilities
+day 49, number of isolating agents 16025.0
+day 50, number of isolating agents 16200.0
+day 51, number of isolating agents 16065.0
+day 52, number of isolating agents 16094.0
+day 53, number of isolating agents 16141.0
+day 54, number of isolating agents 16081.0
+day 55, number of isolating agents 16121.0
+
+starting week 8... incoming #cases 243.0... #cases, #cases_4wk for prompt 243, 150... sampling isolation probabilities
+day 56, number of isolating agents 25009.0
+day 57, number of isolating agents 24934.0
+day 58, number of isolating agents 25159.0
+day 59, number of isolating agents 24935.0
+day 60, number of isolating agents 24926.0
+day 61, number of isolating agents 24856.0
+day 62, number of isolating agents 24903.0
+
+starting week 9... incoming #cases 231.0... #cases, #cases_4wk for prompt 231, 154... sampling isolation probabilities
+day 63, number of isolating agents 32907.0
+day 64, number of isolating agents 32918.0
+day 65, number of isolating agents 32971.0
+day 66, number of isolating agents 32923.0
+day 67, number of isolating agents 32932.0
+day 68, number of isolating agents 32924.0
+day 69, number of isolating agents 32959.0
+predicted number of cases: tensor([ 29.,  44.,  88., 195., 221.,  59., 120., 243., 231.,  63.],
+       device='cuda:0', grad_fn=<ToCopyBackward0>), actual number of cases: tensor([101., 138., 114., 129., 130., 201., 151., 120., 142., 111.],
+       device='cuda:0'), loss: 7381.2001953125
+
+running episode 3...
+Skipping:  objects
+r0 values: tensor([1.4290, 1.4269, 1.4262, 1.4259, 1.4259, 1.4259, 1.4258, 1.4259, 1.4259,
+        1.4259], device='cuda:0', grad_fn=<SelectBackward0>)
+
+starting week 0... #cases, #cases_4wk for prompt 66, 53... sampling isolation probabilities
+day 0, number of isolating agents 23713.0
+day 1, number of isolating agents 23539.0
+day 2, number of isolating agents 23571.0
+day 3, number of isolating agents 23717.0
+day 4, number of isolating agents 23484.0
+day 5, number of isolating agents 23499.0
+day 6, number of isolating agents 23661.0
+
+starting week 1... incoming #cases 22.0... #cases, #cases_4wk for prompt 22, 69... sampling isolation probabilities
+day 7, number of isolating agents 25580.0
+day 8, number of isolating agents 25625.0
+day 9, number of isolating agents 25686.0
+day 10, number of isolating agents 25621.0
+day 11, number of isolating agents 25532.0
+day 12, number of isolating agents 25691.0
+day 13, number of isolating agents 25584.0
+
+starting week 2... incoming #cases 45.0... #cases, #cases_4wk for prompt 45, 88... sampling isolation probabilities
+day 14, number of isolating agents 19880.0
+day 15, number of isolating agents 19847.0
+day 16, number of isolating agents 19709.0
+day 17, number of isolating agents 19713.0
+day 18, number of isolating agents 19922.0
+day 19, number of isolating agents 19848.0
+day 20, number of isolating agents 19699.0
+
+starting week 3... incoming #cases 101.0... #cases, #cases_4wk for prompt 101, 105... sampling isolation probabilities
+day 21, number of isolating agents 11779.0
+day 22, number of isolating agents 11659.0
+day 23, number of isolating agents 11577.0
+day 24, number of isolating agents 11688.0
+day 25, number of isolating agents 11820.0
+day 26, number of isolating agents 11614.0
+day 27, number of isolating agents 11654.0
+
+starting week 4... incoming #cases 284.0... #cases, #cases_4wk for prompt 284, 120... sampling isolation probabilities
+day 28, number of isolating agents 18689.0
+day 29, number of isolating agents 18550.0
+day 30, number of isolating agents 18658.0
+day 31, number of isolating agents 18543.0
+day 32, number of isolating agents 18458.0
+day 33, number of isolating agents 18509.0
+day 34, number of isolating agents 18538.0
+
+starting week 5... incoming #cases 415.0... #cases, #cases_4wk for prompt 415, 128... sampling isolation probabilities
+day 35, number of isolating agents 32764.0
+day 36, number of isolating agents 32813.0
+day 37, number of isolating agents 32806.0
+day 38, number of isolating agents 32781.0
+day 39, number of isolating agents 32788.0
+day 40, number of isolating agents 32770.0
+day 41, number of isolating agents 32792.0
+
+starting week 6... incoming #cases 147.0... #cases, #cases_4wk for prompt 147, 144... sampling isolation probabilities
+day 42, number of isolating agents 32438.0
+day 43, number of isolating agents 32405.0
+day 44, number of isolating agents 32250.0
+day 45, number of isolating agents 32330.0
+day 46, number of isolating agents 32435.0
+day 47, number of isolating agents 32374.0
+day 48, number of isolating agents 32362.0
+
+starting week 7... incoming #cases 91.0... #cases, #cases_4wk for prompt 91, 153... sampling isolation probabilities
+day 49, number of isolating agents 25216.0
+day 50, number of isolating agents 25189.0
+day 51, number of isolating agents 25070.0
+day 52, number of isolating agents 25214.0
+day 53, number of isolating agents 25305.0
+day 54, number of isolating agents 25117.0
+day 55, number of isolating agents 24975.0
+
+starting week 8... incoming #cases 105.0... #cases, #cases_4wk for prompt 105, 150... sampling isolation probabilities
+day 56, number of isolating agents 18333.0
+day 57, number of isolating agents 18289.0
+day 58, number of isolating agents 18429.0
+day 59, number of isolating agents 18504.0
+day 60, number of isolating agents 18366.0
+day 61, number of isolating agents 18326.0
+day 62, number of isolating agents 18230.0
+
+starting week 9... incoming #cases 170.0... #cases, #cases_4wk for prompt 170, 154... sampling isolation probabilities
+day 63, number of isolating agents 22302.0
+day 64, number of isolating agents 21926.0
+day 65, number of isolating agents 22287.0
+day 66, number of isolating agents 22053.0
+day 67, number of isolating agents 22352.0
+day 68, number of isolating agents 22254.0
+day 69, number of isolating agents 22062.0
+predicted number of cases: tensor([ 22.,  45., 101., 284., 415., 147.,  91., 105., 170., 198.],
+       device='cuda:0', grad_fn=<ToCopyBackward0>), actual number of cases: tensor([101., 138., 114., 129., 130., 201., 151., 120., 142., 111.],
+       device='cuda:0'), loss: 13540.2998046875
+
+running episode 4...
+Skipping:  objects
+r0 values: tensor([1.4170, 1.4163, 1.4159, 1.4158, 1.4157, 1.4157, 1.4157, 1.4157, 1.4158,
+        1.4157], device='cuda:0', grad_fn=<SelectBackward0>)
+
+starting week 0... #cases, #cases_4wk for prompt 66, 53... sampling isolation probabilities
+day 0, number of isolating agents 24728.0
+day 1, number of isolating agents 24586.0
+day 2, number of isolating agents 24453.0
+day 3, number of isolating agents 24509.0
+day 4, number of isolating agents 24483.0
+day 5, number of isolating agents 24579.0
+day 6, number of isolating agents 24550.0
+
+starting week 1... incoming #cases 33.0... #cases, #cases_4wk for prompt 33, 69... sampling isolation probabilities
+day 7, number of isolating agents 23967.0
+day 8, number of isolating agents 24052.0
+day 9, number of isolating agents 24000.0
+day 10, number of isolating agents 24043.0
+day 11, number of isolating agents 24026.0
+day 12, number of isolating agents 23987.0
+day 13, number of isolating agents 23880.0
+
+starting week 2... incoming #cases 49.0... #cases, #cases_4wk for prompt 49, 88... sampling isolation probabilities
+day 14, number of isolating agents 16389.0
+day 15, number of isolating agents 16476.0
+day 16, number of isolating agents 16565.0
+day 17, number of isolating agents 16341.0
+day 18, number of isolating agents 16478.0
+day 19, number of isolating agents 16492.0
+day 20, number of isolating agents 16267.0
+
+starting week 3... incoming #cases 115.0... #cases, #cases_4wk for prompt 115, 105... sampling isolation probabilities
+day 21, number of isolating agents 20310.0
+day 22, number of isolating agents 20349.0
+day 23, number of isolating agents 20385.0
+day 24, number of isolating agents 20360.0
+day 25, number of isolating agents 20393.0
+day 26, number of isolating agents 20226.0
+day 27, number of isolating agents 20486.0
+
+starting week 4... incoming #cases 153.0... #cases, #cases_4wk for prompt 153, 120... sampling isolation probabilities
+day 28, number of isolating agents 27321.0
+day 29, number of isolating agents 27383.0
+day 30, number of isolating agents 27497.0
+day 31, number of isolating agents 27455.0
+day 32, number of isolating agents 27509.0
+day 33, number of isolating agents 27492.0
+day 34, number of isolating agents 27580.0
+
+starting week 5... incoming #cases 145.0... #cases, #cases_4wk for prompt 145, 128... sampling isolation probabilities
+day 35, number of isolating agents 30411.0
+day 36, number of isolating agents 30467.0
+day 37, number of isolating agents 30511.0
+day 38, number of isolating agents 30392.0
+day 39, number of isolating agents 30530.0
+day 40, number of isolating agents 30380.0
+day 41, number of isolating agents 30394.0
+
+starting week 6... incoming #cases 100.0... #cases, #cases_4wk for prompt 100, 144... sampling isolation probabilities
+day 42, number of isolating agents 24897.0
+day 43, number of isolating agents 25025.0
+day 44, number of isolating agents 24985.0
+day 45, number of isolating agents 24993.0
+day 46, number of isolating agents 24957.0
+day 47, number of isolating agents 24867.0
+day 48, number of isolating agents 24988.0
+
+starting week 7... incoming #cases 113.0... #cases, #cases_4wk for prompt 113, 153... sampling isolation probabilities
+day 49, number of isolating agents 16324.0
+day 50, number of isolating agents 16399.0
+day 51, number of isolating agents 16198.0
+day 52, number of isolating agents 16342.0
+day 53, number of isolating agents 16319.0
+day 54, number of isolating agents 16179.0
+day 55, number of isolating agents 16189.0
+
+starting week 8... incoming #cases 234.0... #cases, #cases_4wk for prompt 234, 150... sampling isolation probabilities
+day 56, number of isolating agents 25425.0
+day 57, number of isolating agents 25435.0
+day 58, number of isolating agents 25442.0
+day 59, number of isolating agents 25369.0
+day 60, number of isolating agents 25358.0
+day 61, number of isolating agents 25452.0
+day 62, number of isolating agents 25341.0
+
+starting week 9... incoming #cases 190.0... #cases, #cases_4wk for prompt 190, 154... sampling isolation probabilities
+day 63, number of isolating agents 35736.0
+day 64, number of isolating agents 35800.0
+day 65, number of isolating agents 35874.0
+day 66, number of isolating agents 35826.0
+day 67, number of isolating agents 35765.0
+day 68, number of isolating agents 35746.0
+day 69, number of isolating agents 35799.0
+predicted number of cases: tensor([ 33.,  49., 115., 153., 145., 100., 113., 234., 190.,  31.],
+       device='cuda:0', grad_fn=<ToCopyBackward0>), actual number of cases: tensor([101., 138., 114., 129., 130., 201., 151., 120., 142., 111.],
+       device='cuda:0'), loss: 4669.2001953125
+
+running episode 5...
+Skipping:  objects
+r0 values: tensor([1.4124, 1.4119, 1.4117, 1.4116, 1.4116, 1.4116, 1.4115, 1.4115, 1.4116,
+        1.4116], device='cuda:0', grad_fn=<SelectBackward0>)
+
+starting week 0... #cases, #cases_4wk for prompt 66, 53... sampling isolation probabilities
+day 0, number of isolating agents 26702.0
+day 1, number of isolating agents 26870.0
+day 2, number of isolating agents 26809.0
+day 3, number of isolating agents 26883.0
+day 4, number of isolating agents 26845.0
+day 5, number of isolating agents 27046.0
+day 6, number of isolating agents 26811.0
+
+starting week 1... incoming #cases 25.0... #cases, #cases_4wk for prompt 25, 69... sampling isolation probabilities
+day 7, number of isolating agents 24979.0
+day 8, number of isolating agents 24939.0
+day 9, number of isolating agents 24767.0
+day 10, number of isolating agents 24915.0
+day 11, number of isolating agents 24887.0
+day 12, number of isolating agents 24885.0
+day 13, number of isolating agents 24977.0
+
+starting week 2... incoming #cases 31.0... #cases, #cases_4wk for prompt 31, 88... sampling isolation probabilities
+day 14, number of isolating agents 14600.0
+day 15, number of isolating agents 14365.0
+day 16, number of isolating agents 14506.0
+day 17, number of isolating agents 14459.0
+day 18, number of isolating agents 14604.0
+day 19, number of isolating agents 14610.0
+day 20, number of isolating agents 14626.0
+
+starting week 3... incoming #cases 82.0... #cases, #cases_4wk for prompt 82, 105... sampling isolation probabilities
+day 21, number of isolating agents 13934.0
+day 22, number of isolating agents 13943.0
+day 23, number of isolating agents 13947.0
+day 24, number of isolating agents 13662.0
+day 25, number of isolating agents 14031.0
+day 26, number of isolating agents 14048.0
+day 27, number of isolating agents 13830.0
+
+starting week 4... incoming #cases 149.0... #cases, #cases_4wk for prompt 149, 120... sampling isolation probabilities
+day 28, number of isolating agents 22074.0
+day 29, number of isolating agents 21914.0
+day 30, number of isolating agents 22150.0
+day 31, number of isolating agents 21966.0
+day 32, number of isolating agents 22239.0
+day 33, number of isolating agents 22093.0
+day 34, number of isolating agents 22088.0
+
+starting week 5... incoming #cases 225.0... #cases, #cases_4wk for prompt 225, 128... sampling isolation probabilities
+day 35, number of isolating agents 32240.0
+day 36, number of isolating agents 32226.0
+day 37, number of isolating agents 32135.0
+day 38, number of isolating agents 32210.0
+day 39, number of isolating agents 32156.0
+day 40, number of isolating agents 32208.0
+day 41, number of isolating agents 32163.0
+
+starting week 6... incoming #cases 82.0... #cases, #cases_4wk for prompt 82, 144... sampling isolation probabilities
+day 42, number of isolating agents 26963.0
+day 43, number of isolating agents 26692.0
+day 44, number of isolating agents 26751.0
+day 45, number of isolating agents 27001.0
+day 46, number of isolating agents 26888.0
+day 47, number of isolating agents 26896.0
+day 48, number of isolating agents 26903.0
+
+starting week 7... incoming #cases 125.0... #cases, #cases_4wk for prompt 125, 153... sampling isolation probabilities
+day 49, number of isolating agents 17657.0
+day 50, number of isolating agents 17524.0
+day 51, number of isolating agents 17603.0
+day 52, number of isolating agents 17803.0
+day 53, number of isolating agents 17629.0
+day 54, number of isolating agents 17709.0
+day 55, number of isolating agents 17740.0
+
+starting week 8... incoming #cases 242.0... #cases, #cases_4wk for prompt 242, 150... sampling isolation probabilities
+day 56, number of isolating agents 25463.0
+day 57, number of isolating agents 25475.0
+day 58, number of isolating agents 25431.0
+day 59, number of isolating agents 25449.0
+day 60, number of isolating agents 25347.0
+day 61, number of isolating agents 25329.0
+day 62, number of isolating agents 25363.0
+
+starting week 9... incoming #cases 227.0... #cases, #cases_4wk for prompt 227, 154... sampling isolation probabilities
+day 63, number of isolating agents 35569.0
+day 64, number of isolating agents 35620.0
+day 65, number of isolating agents 35592.0
+day 66, number of isolating agents 35581.0
+day 67, number of isolating agents 35527.0
+day 68, number of isolating agents 35597.0
+day 69, number of isolating agents 35582.0
+predicted number of cases: tensor([ 25.,  31.,  82., 149., 225.,  82., 125., 242., 227.,  41.],
+       device='cuda:0', grad_fn=<ToCopyBackward0>), actual number of cases: tensor([101., 138., 114., 129., 130., 201., 151., 120., 142., 111.],
+       device='cuda:0'), loss: 6952.0
+
+running episode 6...
+Skipping:  objects
+r0 values: tensor([1.4097, 1.4093, 1.4091, 1.4090, 1.4090, 1.4090, 1.4090, 1.4090, 1.4091,
+        1.4090], device='cuda:0', grad_fn=<SelectBackward0>)
+
+starting week 0... #cases, #cases_4wk for prompt 66, 53... sampling isolation probabilities
+day 0, number of isolating agents 23243.0
+day 1, number of isolating agents 23134.0
+day 2, number of isolating agents 23163.0
+day 3, number of isolating agents 23090.0
+day 4, number of isolating agents 23173.0
+day 5, number of isolating agents 23111.0
+day 6, number of isolating agents 23196.0
+
+starting week 1... incoming #cases 38.0... #cases, #cases_4wk for prompt 38, 69... sampling isolation probabilities
+day 7, number of isolating agents 22525.0
+day 8, number of isolating agents 22453.0
+day 9, number of isolating agents 22312.0
+day 10, number of isolating agents 22493.0
+day 11, number of isolating agents 22426.0
+day 12, number of isolating agents 22458.0
+day 13, number of isolating agents 22523.0
+
+starting week 2... incoming #cases 66.0... #cases, #cases_4wk for prompt 66, 88... sampling isolation probabilities
+day 14, number of isolating agents 16726.0
+day 15, number of isolating agents 16821.0
+day 16, number of isolating agents 16695.0
+day 17, number of isolating agents 16608.0
+day 18, number of isolating agents 16737.0
+day 19, number of isolating agents 16800.0
+day 20, number of isolating agents 16593.0
+
+starting week 3... incoming #cases 164.0... #cases, #cases_4wk for prompt 164, 105... sampling isolation probabilities
+day 21, number of isolating agents 25184.0
+day 22, number of isolating agents 25200.0
+day 23, number of isolating agents 25460.0
+day 24, number of isolating agents 25358.0
+day 25, number of isolating agents 25349.0
+day 26, number of isolating agents 25336.0
+day 27, number of isolating agents 25142.0
+
+starting week 4... incoming #cases 169.0... #cases, #cases_4wk for prompt 169, 120... sampling isolation probabilities
+day 28, number of isolating agents 33370.0
+day 29, number of isolating agents 33349.0
+day 30, number of isolating agents 33297.0
+day 31, number of isolating agents 33348.0
+day 32, number of isolating agents 33252.0
+day 33, number of isolating agents 33221.0
+day 34, number of isolating agents 33381.0
+
+starting week 5... incoming #cases 69.0... #cases, #cases_4wk for prompt 69, 128... sampling isolation probabilities
+day 35, number of isolating agents 23657.0
+day 36, number of isolating agents 23877.0
+day 37, number of isolating agents 23750.0
+day 38, number of isolating agents 23827.0
+day 39, number of isolating agents 24012.0
+day 40, number of isolating agents 23719.0
+day 41, number of isolating agents 23907.0
+
+starting week 6... incoming #cases 109.0... #cases, #cases_4wk for prompt 109, 144... sampling isolation probabilities
+day 42, number of isolating agents 16695.0
+day 43, number of isolating agents 16738.0
+day 44, number of isolating agents 16747.0
+day 45, number of isolating agents 16722.0
+day 46, number of isolating agents 16674.0
+day 47, number of isolating agents 16782.0
+day 48, number of isolating agents 16797.0
+
+starting week 7... incoming #cases 211.0... #cases, #cases_4wk for prompt 211, 153... sampling isolation probabilities
+day 49, number of isolating agents 25887.0
+day 50, number of isolating agents 26025.0
+day 51, number of isolating agents 26089.0
+day 52, number of isolating agents 25917.0
+day 53, number of isolating agents 26017.0
+day 54, number of isolating agents 25980.0
+day 55, number of isolating agents 26028.0
+
+starting week 8... incoming #cases 183.0... #cases, #cases_4wk for prompt 183, 150... sampling isolation probabilities
+day 56, number of isolating agents 31399.0
+day 57, number of isolating agents 31528.0
+day 58, number of isolating agents 31376.0
+day 59, number of isolating agents 31354.0
+day 60, number of isolating agents 31462.0
+day 61, number of isolating agents 31427.0
+day 62, number of isolating agents 31349.0
+
+starting week 9... incoming #cases 89.0... #cases, #cases_4wk for prompt 89, 154... sampling isolation probabilities
+day 63, number of isolating agents 21508.0
+day 64, number of isolating agents 21702.0
+day 65, number of isolating agents 21766.0
+day 66, number of isolating agents 21762.0
+day 67, number of isolating agents 21774.0
+day 68, number of isolating agents 21775.0
+day 69, number of isolating agents 21834.0
+predicted number of cases: tensor([ 38.,  66., 164., 169.,  69., 109., 211., 183.,  89., 167.],
+       device='cuda:0', grad_fn=<ToCopyBackward0>), actual number of cases: tensor([101., 138., 114., 129., 130., 201., 151., 120., 142., 111.],
+       device='cuda:0'), loss: 3895.199951171875
+
+running episode 7...
+Skipping:  objects
+r0 values: tensor([1.4079, 1.4076, 1.4074, 1.4073, 1.4073, 1.4072, 1.4072, 1.4072, 1.4073,
+        1.4072], device='cuda:0', grad_fn=<SelectBackward0>)
+
+starting week 0... #cases, #cases_4wk for prompt 66, 53... sampling isolation probabilities
+day 0, number of isolating agents 25418.0
+day 1, number of isolating agents 25285.0
+day 2, number of isolating agents 25461.0
+day 3, number of isolating agents 25409.0
+day 4, number of isolating agents 25376.0
+day 5, number of isolating agents 25358.0
+day 6, number of isolating agents 25534.0
+
+starting week 1... incoming #cases 35.0... #cases, #cases_4wk for prompt 35, 69... sampling isolation probabilities
+day 7, number of isolating agents 23501.0
+day 8, number of isolating agents 23449.0
+day 9, number of isolating agents 23171.0
+day 10, number of isolating agents 23382.0
+day 11, number of isolating agents 23387.0
+day 12, number of isolating agents 23537.0
+day 13, number of isolating agents 23313.0
+
+starting week 2... incoming #cases 51.0... #cases, #cases_4wk for prompt 51, 88... sampling isolation probabilities
+day 14, number of isolating agents 15793.0
+day 15, number of isolating agents 15609.0
+day 16, number of isolating agents 15777.0
+day 17, number of isolating agents 15613.0
+day 18, number of isolating agents 15702.0
+day 19, number of isolating agents 15722.0
+day 20, number of isolating agents 15528.0
+
+starting week 3... incoming #cases 123.0... #cases, #cases_4wk for prompt 123, 105... sampling isolation probabilities
+day 21, number of isolating agents 21816.0
+day 22, number of isolating agents 21767.0
+day 23, number of isolating agents 22069.0
+day 24, number of isolating agents 22045.0
+day 25, number of isolating agents 21792.0
+day 26, number of isolating agents 21811.0
+day 27, number of isolating agents 22010.0
+
+starting week 4... incoming #cases 152.0... #cases, #cases_4wk for prompt 152, 120... sampling isolation probabilities
+day 28, number of isolating agents 29314.0
+day 29, number of isolating agents 29301.0
+day 30, number of isolating agents 29417.0
+day 31, number of isolating agents 29519.0
+day 32, number of isolating agents 29375.0
+day 33, number of isolating agents 29396.0
+day 34, number of isolating agents 29300.0
+
+starting week 5... incoming #cases 101.0... #cases, #cases_4wk for prompt 101, 128... sampling isolation probabilities
+day 35, number of isolating agents 23419.0
+day 36, number of isolating agents 23313.0
+day 37, number of isolating agents 23304.0
+day 38, number of isolating agents 23372.0
+day 39, number of isolating agents 23335.0
+day 40, number of isolating agents 23344.0
+day 41, number of isolating agents 23408.0
+
+starting week 6... incoming #cases 197.0... #cases, #cases_4wk for prompt 197, 144... sampling isolation probabilities
+day 42, number of isolating agents 25151.0
+day 43, number of isolating agents 25113.0
+day 44, number of isolating agents 25025.0
+day 45, number of isolating agents 25178.0
+day 46, number of isolating agents 25092.0
+day 47, number of isolating agents 25036.0
+day 48, number of isolating agents 25108.0
+
+starting week 7... incoming #cases 209.0... #cases, #cases_4wk for prompt 209, 153... sampling isolation probabilities
+day 49, number of isolating agents 33190.0
+day 50, number of isolating agents 32977.0
+day 51, number of isolating agents 33060.0
+day 52, number of isolating agents 32970.0
+day 53, number of isolating agents 33029.0
+day 54, number of isolating agents 33093.0
+day 55, number of isolating agents 33076.0
+
+starting week 8... incoming #cases 68.0... #cases, #cases_4wk for prompt 68, 150... sampling isolation probabilities
+day 56, number of isolating agents 22574.0
+day 57, number of isolating agents 22676.0
+day 58, number of isolating agents 22560.0
+day 59, number of isolating agents 22526.0
+day 60, number of isolating agents 22713.0
+day 61, number of isolating agents 22541.0
+day 62, number of isolating agents 22567.0
+
+starting week 9... incoming #cases 128.0... #cases, #cases_4wk for prompt 128, 154... sampling isolation probabilities
+day 63, number of isolating agents 12660.0
+day 64, number of isolating agents 12654.0
+day 65, number of isolating agents 12672.0
+day 66, number of isolating agents 12715.0
+day 67, number of isolating agents 12668.0
+day 68, number of isolating agents 12701.0
+day 69, number of isolating agents 12872.0
+predicted number of cases: tensor([ 35.,  51., 123., 152., 101., 197., 209.,  68., 128., 257.],
+       device='cuda:0', grad_fn=<ToCopyBackward0>), actual number of cases: tensor([101., 138., 114., 129., 130., 201., 151., 120., 142., 111.],
+       device='cuda:0'), loss: 4097.2001953125
+
+running episode 8...
+Skipping:  objects
+r0 values: tensor([1.4064, 1.4061, 1.4059, 1.4058, 1.4058, 1.4058, 1.4058, 1.4058, 1.4058,
+        1.4058], device='cuda:0', grad_fn=<SelectBackward0>)
+
+starting week 0... #cases, #cases_4wk for prompt 66, 53... sampling isolation probabilities
+day 0, number of isolating agents 24186.0
+day 1, number of isolating agents 24440.0
+day 2, number of isolating agents 24554.0
+day 3, number of isolating agents 24225.0
+day 4, number of isolating agents 24499.0
+day 5, number of isolating agents 24249.0
+day 6, number of isolating agents 24314.0
+
+starting week 1... incoming #cases 24.0... #cases, #cases_4wk for prompt 24, 69... sampling isolation probabilities
+day 7, number of isolating agents 23758.0
+day 8, number of isolating agents 23742.0
+day 9, number of isolating agents 23704.0
+day 10, number of isolating agents 23715.0
+day 11, number of isolating agents 23580.0
+day 12, number of isolating agents 23765.0
+day 13, number of isolating agents 23721.0
+
+starting week 2... incoming #cases 49.0... #cases, #cases_4wk for prompt 49, 88... sampling isolation probabilities
+day 14, number of isolating agents 16386.0
+day 15, number of isolating agents 16576.0
+day 16, number of isolating agents 16471.0
+day 17, number of isolating agents 16324.0
+day 18, number of isolating agents 16318.0
+day 19, number of isolating agents 16494.0
+day 20, number of isolating agents 16450.0
+
+starting week 3... incoming #cases 111.0... #cases, #cases_4wk for prompt 111, 105... sampling isolation probabilities
+day 21, number of isolating agents 21701.0
+day 22, number of isolating agents 21866.0
+day 23, number of isolating agents 21798.0
+day 24, number of isolating agents 21833.0
+day 25, number of isolating agents 21957.0
+day 26, number of isolating agents 21858.0
+day 27, number of isolating agents 21767.0
+
+starting week 4... incoming #cases 185.0... #cases, #cases_4wk for prompt 185, 120... sampling isolation probabilities
+day 28, number of isolating agents 32863.0
+day 29, number of isolating agents 32700.0
+day 30, number of isolating agents 32778.0
+day 31, number of isolating agents 32752.0
+day 32, number of isolating agents 32671.0
+day 33, number of isolating agents 32774.0
+day 34, number of isolating agents 32804.0
+
+starting week 5... incoming #cases 80.0... #cases, #cases_4wk for prompt 80, 128... sampling isolation probabilities
+day 35, number of isolating agents 23293.0
+day 36, number of isolating agents 23548.0
+day 37, number of isolating agents 23459.0
+day 38, number of isolating agents 23373.0
+day 39, number of isolating agents 23263.0
+day 40, number of isolating agents 23314.0
+day 41, number of isolating agents 23448.0
+
+starting week 6... incoming #cases 151.0... #cases, #cases_4wk for prompt 151, 144... sampling isolation probabilities
+day 42, number of isolating agents 15643.0
+day 43, number of isolating agents 15644.0
+day 44, number of isolating agents 15645.0
+day 45, number of isolating agents 15504.0
+day 46, number of isolating agents 15680.0
+day 47, number of isolating agents 15681.0
+day 48, number of isolating agents 15700.0
+
+starting week 7... incoming #cases 298.0... #cases, #cases_4wk for prompt 298, 153... sampling isolation probabilities
+day 49, number of isolating agents 29028.0
+day 50, number of isolating agents 28954.0
+day 51, number of isolating agents 29077.0
+day 52, number of isolating agents 28916.0
+day 53, number of isolating agents 28962.0
+day 54, number of isolating agents 29054.0
+day 55, number of isolating agents 28994.0
+
+starting week 8... incoming #cases 226.0... #cases, #cases_4wk for prompt 226, 150... sampling isolation probabilities
+day 56, number of isolating agents 34769.0
+day 57, number of isolating agents 34656.0
+day 58, number of isolating agents 34663.0
+day 59, number of isolating agents 34699.0
+day 60, number of isolating agents 34719.0
+day 61, number of isolating agents 34648.0
+day 62, number of isolating agents 34683.0
+
+starting week 9... incoming #cases 47.0... #cases, #cases_4wk for prompt 47, 154... sampling isolation probabilities
+day 63, number of isolating agents 24506.0
+day 64, number of isolating agents 24500.0
+day 65, number of isolating agents 24540.0
+day 66, number of isolating agents 24476.0
+day 67, number of isolating agents 24523.0
+day 68, number of isolating agents 24619.0
+day 69, number of isolating agents 24604.0
+predicted number of cases: tensor([ 24.,  49., 111., 185.,  80., 151., 298., 226.,  47.,  89.],
+       device='cuda:0', grad_fn=<ToCopyBackward0>), actual number of cases: tensor([101., 138., 114., 129., 130., 201., 151., 120., 142., 111.],
+       device='cuda:0'), loss: 6434.89990234375
+
+running episode 9...
+Skipping:  objects
+r0 values: tensor([1.4051, 1.4048, 1.4047, 1.4046, 1.4046, 1.4046, 1.4046, 1.4046, 1.4046,
+        1.4046], device='cuda:0', grad_fn=<SelectBackward0>)
+
+starting week 0... #cases, #cases_4wk for prompt 66, 53... sampling isolation probabilities
+day 0, number of isolating agents 25853.0
+day 1, number of isolating agents 25880.0
+day 2, number of isolating agents 25783.0
+day 3, number of isolating agents 25902.0
+day 4, number of isolating agents 25827.0
+day 5, number of isolating agents 25829.0
+day 6, number of isolating agents 25725.0
+
+starting week 1... incoming #cases 34.0... #cases, #cases_4wk for prompt 34, 69... sampling isolation probabilities
+day 7, number of isolating agents 29210.0
+day 8, number of isolating agents 29166.0
+day 9, number of isolating agents 29194.0
+day 10, number of isolating agents 29267.0
+day 11, number of isolating agents 29053.0
+day 12, number of isolating agents 29219.0
+day 13, number of isolating agents 29314.0
+
+starting week 2... incoming #cases 23.0... #cases, #cases_4wk for prompt 23, 88... sampling isolation probabilities
+day 14, number of isolating agents 20100.0
+day 15, number of isolating agents 20268.0
+day 16, number of isolating agents 20266.0
+day 17, number of isolating agents 20170.0
+day 18, number of isolating agents 20141.0
+day 19, number of isolating agents 20241.0
+day 20, number of isolating agents 20129.0
+
+starting week 3... incoming #cases 50.0... #cases, #cases_4wk for prompt 50, 105... sampling isolation probabilities
+day 21, number of isolating agents 15106.0
+day 22, number of isolating agents 15076.0
+day 23, number of isolating agents 15048.0
+day 24, number of isolating agents 15292.0
+day 25, number of isolating agents 15075.0
+day 26, number of isolating agents 14913.0
+day 27, number of isolating agents 15187.0
+
+starting week 4... incoming #cases 83.0... #cases, #cases_4wk for prompt 83, 120... sampling isolation probabilities
+day 28, number of isolating agents 19811.0
+day 29, number of isolating agents 19676.0
+day 30, number of isolating agents 19830.0
+day 31, number of isolating agents 19810.0
+day 32, number of isolating agents 19699.0
+day 33, number of isolating agents 19848.0
+day 34, number of isolating agents 19716.0
+
+starting week 5... incoming #cases 124.0... #cases, #cases_4wk for prompt 124, 128... sampling isolation probabilities
+day 35, number of isolating agents 16501.0
+day 36, number of isolating agents 16488.0
+day 37, number of isolating agents 16503.0
+day 38, number of isolating agents 16499.0
+day 39, number of isolating agents 16421.0
+day 40, number of isolating agents 16459.0
+day 41, number of isolating agents 16522.0
+
+starting week 6... incoming #cases 253.0... #cases, #cases_4wk for prompt 253, 144... sampling isolation probabilities
+day 42, number of isolating agents 21028.0
+day 43, number of isolating agents 20788.0
+day 44, number of isolating agents 20780.0
+day 45, number of isolating agents 20667.0
+day 46, number of isolating agents 20746.0
+day 47, number of isolating agents 20809.0
+day 48, number of isolating agents 20880.0
+
+starting week 7... incoming #cases 356.0... #cases, #cases_4wk for prompt 356, 153... sampling isolation probabilities
+day 49, number of isolating agents 34083.0
+day 50, number of isolating agents 34128.0
+day 51, number of isolating agents 34095.0
+day 52, number of isolating agents 34096.0
+day 53, number of isolating agents 34177.0
+day 54, number of isolating agents 34233.0
+day 55, number of isolating agents 34160.0
+
+starting week 8... incoming #cases 106.0... #cases, #cases_4wk for prompt 106, 150... sampling isolation probabilities
+day 56, number of isolating agents 26568.0
+day 57, number of isolating agents 26443.0
+day 58, number of isolating agents 26546.0
+day 59, number of isolating agents 26571.0
+day 60, number of isolating agents 26371.0
+day 61, number of isolating agents 26569.0
+day 62, number of isolating agents 26476.0
+
+starting week 9... incoming #cases 166.0... #cases, #cases_4wk for prompt 166, 154... sampling isolation probabilities
+day 63, number of isolating agents 23153.0
+day 64, number of isolating agents 23097.0
+day 65, number of isolating agents 23117.0
+day 66, number of isolating agents 23094.0
+day 67, number of isolating agents 23032.0
+day 68, number of isolating agents 23044.0
+day 69, number of isolating agents 23145.0
+predicted number of cases: tensor([ 34.,  23.,  50.,  83., 124., 253., 356., 106., 166., 179.],
+       device='cuda:0', grad_fn=<ToCopyBackward0>), actual number of cases: tensor([101., 138., 114., 129., 130., 201., 151., 120., 142., 111.],
+       device='cuda:0'), loss: 7408.7001953125
