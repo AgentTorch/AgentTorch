@@ -49,6 +49,7 @@ CALIB_MODE = 'calibNN' # i -> internal_param; external_param -> nn.Parameter; le
 config = read_config(config_file)
 registry = get_registry()
 runner = get_runner(config, registry)
+# runner = torch.compile(runner)
 
 device = torch.device(runner.config["simulation_metadata"]["device"])
 num_episodes = runner.config["simulation_metadata"]["num_episodes"]
@@ -100,8 +101,10 @@ elif CALIB_MODE == "calibNN":
         scale_output="abm-covid",
     ).to(device)
 
+    # learn_model = torch.compile(learn_model)
     # set up loss function and optimizer
     loss_function = torch.nn.MSELoss().to(device)
+    # loss_function = torch.compile(loss_function)
     opt = optim.Adam(learn_model.parameters(), lr=learning_rate, betas=betas)
 
 def _get_parameters(CALIB_MODE):

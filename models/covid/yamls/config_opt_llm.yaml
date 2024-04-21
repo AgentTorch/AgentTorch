@@ -8,6 +8,8 @@ simulation_metadata:
     NUM_WEEKS: 1
     NEIGHBORHOOD: "Astoria"
     INCLUDE_WEEK_COUNT: True
+    USE_GROUND_TRUTH_CASE_NUMBERS: False
+    USE_GROUND_TRUTH_4WK_AVG: False
     EXECUTION_MODE: debug #llm
     num_agents: 37518
     initial_infection_ratio: 0.04 # BE CAREFUL: NOT USED IN SIMULATION HERE
