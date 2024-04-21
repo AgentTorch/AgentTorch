@@ -1,5 +1,5 @@
-MODEL_PATH = '/Users/shashankkumar/Documents/GitHub/MacroEcon/models'
-AGENT_TORCH_PATH = '/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch'
+MODEL_PATH = '/u/ayushc/projects/GradABM/MacroEcon/models'
+AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -11,11 +11,11 @@ from epiweeks import Week
 import torch
 import torch.optim as optim
 import torch.nn as nn
-import numpy as np
+import pandas as pd
 
 from torch.utils.data import DataLoader
-from utils.misc import week_num_to_epiweek
 
+from AgentTorch import Runner
 from AgentTorch.helpers import read_config
 from simulator import SimulationRunner, simulation_registry
 
@@ -25,8 +25,8 @@ from utils.data import NN_INPUT_WEEKS, get_dataloader, get_labels
 from utils.feature import Feature
 from utils.misc import name_to_neighborhood
 from utils.neighborhood import Neighborhood
+from utils.misc import week_num_to_epiweek
 
-from AgentTorch.helpers import memory_checkpoint
 '''Command: python trainer.py --c config.yaml'''
 
 # *************************************************************************
@@ -38,19 +38,13 @@ parser.add_argument(
     "-c", "--config", help="Name of the yaml config file with the parameters."
 )
 # *************************************************************************
-# args = parser.parse_args()
-# if args:
-#     config_file = args.config
-# else:
-#     # config_file = "/Users/shashankkumar/Documents/GitHub/MacroEcon/models/macro_economics/config.yaml"
-#     config_file = os.path.join("/Users/shashankkumar/Documents/GitHub/MacroEcon/models/macro_economics", 'config.yaml')
-#     print("Config file path: ", config_file)
 
-config_file = "/Users/shashankkumar/Documents/GitHub/MacroEcon/models/macro_economics/config.yaml"
+config_file = '/u/ayushc/projects/GradABM/MacroEcon/models/macro_economics/yamls/config_macroecon.yaml'
 config = read_config(config_file)
 registry = simulation_registry()
 
-runner = SimulationRunner(config, registry)
+runner = Runner(config, registry)
+
 device = torch.device(runner.config['simulation_metadata']['device'])
 CALIB_MODE = 'calibNN' # i -> internal_param; external_param -> nn.Parameter; learnable_param -> learnable_parameters; nn -> CalibNN
 num_episodes = runner.config["simulation_metadata"]["num_episodes"]
@@ -78,7 +72,7 @@ elif CALIB_MODE == 'learnable_param':
 elif CALIB_MODE == "calibNN":
     # set the epiweeks to simulate
     EPIWEEK_START: Week = week_num_to_epiweek(runner.config["simulation_metadata"]["START_WEEK"])
-    NUM_WEEKS: int = runner.config["simulation_metadata"]["num_steps_per_episode"] // 7
+    NUM_WEEKS: int = runner.config["simulation_metadata"]["num_steps_per_episode"]*4
 
     # set up variables
     FEATURE_LIST = [
@@ -122,16 +116,24 @@ def _get_parameters(CALIB_MODE):
             FEATURE_LIST,
         )
         for metadata, features in dataloader:
-            r0_values = learn_model(features, metadata)[:, 0, 0]
+            calib_values = learn_model(features, metadata)[:, 0, 0]
 
-        return r0_values
+        return calib_values
 
-def _set_parameters(new_R):
-    # print("SET PARAMETERS ONLY WORKS FOR R0 for now!")
-    '''Only sets R value for now..'''
-    runner.initializer.transition_function['0']['new_transmission'].external_R = new_R
+def _set_parameters(new_values):
+    # print("SET PARAMETERS ONLY WORKS FOR UAC in labor-market for now!")
+    '''Only sets UAC value for now..'''
+    runner.initializer.transition_function['2']['update_macro_rates'].external_UAC = new_values
 
+def _get_unemployment_labels():
+    data_path = '/u/ayushc/projects/GradABM/MacroEcon/simulator_data/NYC/brooklyn_unemp.csv'
+    df = pd.read_csv(data_path)
+    df.sort_values(by=['year','month'],ascending=True,inplace=True)
+    arr = df['unemployment_rate'].values
+    tensor = torch.from_numpy(arr)
+    unemployment_test_dataset = tensor.view(5,-1)
 
+    return unemployment_test_dataset
 
 for episode in range(num_episodes):    
     # reset gradients from previous iteration
@@ -141,34 +143,22 @@ for episode in range(num_episodes):
         runner.reset()
 
     # get the r0 predictions for the episode
-    r0_values = _get_parameters(CALIB_MODE)
-    _set_parameters(r0_values)
-    print(f"r0 values: {r0_values}")
+    calib_values = _get_parameters(CALIB_MODE)
+    avg_month_value = calib_values.reshape(-1, 4).mean(dim=1)
+    _set_parameters(avg_month_value)
+    print(f"calib values: {calib_values}")
 
-    # allocated1, reserved1 = memory_checkpoint(name="1")
     runner.step(NUM_STEPS_PER_EPISODE)
-    # allocated2, reserved2 = memory_checkpoint(name="2")
 
-    # get daily number of infections
-    traj = runner.state_trajectory[-1][-1]
-    daily_infections_arr = traj["environment"]["daily_infected"].to(device)
+    breakpoint()
 
-    # get weekly number of infections from daily number of infections
-    predicted_weekly_cases = (
-        daily_infections_arr.reshape(-1, 7).sum(axis=1).to(dtype=torch.float32)
-    )
-    target_weekly_cases = get_labels(NEIGHBORHOOD, EPIWEEK_START, NUM_WEEKS, LABEL_FEATURE)
-    target_weekly_cases = target_weekly_cases.to(device)
+    predicted_month_unemployment_rate = runner.state_trajectory[-1][-1]['environment']['U'].squeeze()
+    target_month_unemployment_rate = _get_unemployment_labels()
 
     # calculate the loss from the target cases
-    loss_val = loss_function(predicted_weekly_cases, target_weekly_cases)
+    loss_val = loss_function(predicted_month_unemployment_rate, target_month_unemployment_rate)
     loss_val.backward()
-    print(f"predicted number of cases: {predicted_weekly_cases}, actual number of cases: {target_weekly_cases}, loss: {loss_val}")
+    print(f"predicted rate: {predicted_month_unemployment_rate}, actual rate: {target_month_unemployment_rate}, loss: {loss_val}")
 
-
-    # run the optimization step, and clear simulation
-    # allocated3, reserved3 = memory_checkpoint(name="3")
     opt.step()
-    # print(torch.cuda.memory_summary())
-    # print("---------------------------------")
     torch.cuda.empty_cache()

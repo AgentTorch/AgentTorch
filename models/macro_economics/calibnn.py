@@ -24,7 +24,7 @@ MAX_VAL_PARAMS = {
 WEEKS_AHEAD = 4
 
 class CalibNN(nn.Module):
-
+    '''CalibNN for Unemployment rate modeling'''
     def __init__(self,
                  metas_train_dim,
                  X_train_dim,
@@ -101,8 +101,10 @@ class CalibNN(nn.Module):
         emb = self.decoder(Hi_data, encoder_hidden, x_embeds)
         emb = self.hidden_layers(emb)
         out = self.param_out_layer(emb)
-        out = self.min_values + (self.max_values -
-                                 self.min_values) * self.sigmoid(out)
+
+        out = self.sigmoid(out)
+        # out = self.min_values + (self.max_values -
+        #                          self.min_values) * self.sigmoid(out)
         return out
     
 class LearnableParams(nn.Module):
