@@ -96,7 +96,7 @@ class SimulationRunner(Runner):
             self.reset()
             #self.controller.learn_after_episode(jax.tree_map(lambda x: x[-1], self.trajectory), self.initializer, self.optimizer)
     def get_runner(config, registry):
-        return SimulationRunner(config, registry)
+        return Runner(config, registry)
     
     def execute(self):
         self.forward()

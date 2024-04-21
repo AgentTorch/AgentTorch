@@ -12,17 +12,38 @@ simulation_metadata:
     lr: 0.002
     lr_gamma: 0.9999
     model_path: saved_model.pth
-  mapping_path: ${simulation_metadata.population_dir}/population_mapping.json
+  mapping_path: ${simulation_metadata.population_dir}/mapping.json
   maximum_rate_of_change_of_price: 0.05
   maximum_rate_of_change_of_wage: 0.05
   natural_interest_rate: 0.05
   natural_unemployment_rate: 0.05
-  num_agents: 37518
+  num_agents: 541516
   num_episodes: 2
   num_steps_per_episode: 2
   num_substeps_per_step: 4
-  population_dir: /u/ayushc/projects/GradABM/MacroEcon/simulator_data/census_populations/NYC/simulation_input #change this path to be just till NYC
+  population_dir: /Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/census_populations/NYC/simulation_input #change this path to be just till NYC
   target_inflation_rate: 0.02
+  month_mapping : {
+    1: "January",
+    2: "February",
+    3: "March",
+    4: "April",
+    5: "May",
+    6: "June",
+    7: "July",
+    8: "August",
+    9: "September",
+    10: "October",
+    11: "November",
+    12: "December"
+  }
+  year_mapping : {
+    1: 2019,
+    2: 2020,
+    3: 2021,
+    4: 2022,
+    5: 2023
+  }
   tax_brackets:
   - 0
   - 50
@@ -99,6 +120,50 @@ state:
             generator: load_population_attribute
           learnable: false
           name: Area
+          shape:
+          - ${state.agents.consumers.number}
+          - 1
+        county: 
+          dtype: float
+          initialization_function:
+            arguments:
+              attribute:
+                initialization_function: null
+                learnable: false
+                name: County
+                shape: null
+                value: county
+              file_path:
+                initialization_function: null
+                learnable: false
+                name: Filepath for age group stage
+                shape: null
+                value: ${simulation_metadata.population_dir}/county.pickle
+            generator: load_population_attribute
+          learnable: false
+          name: County
+          shape:
+          - ${state.agents.consumers.number}
+          - 1
+        household_id:
+          dtype: float
+          initialization_function:
+            arguments:
+              attribute:
+                initialization_function: null
+                learnable: false
+                name: Household ID
+                shape: null
+                value: household
+              file_path:
+                initialization_function: null
+                learnable: false
+                name: Filepath for age group stage
+                shape: null
+                value: ${simulation_metadata.population_dir}/household.pickle
+            generator: load_population_attribute
+          learnable: false
+          name: Household ID
           shape:
           - ${state.agents.consumers.number}
           - 1
@@ -383,6 +448,11 @@ substeps:
             consumption_propensity: agents/consumers/consumption_propensity
             gender: agents/consumers/gender
             work_propensity: agents/consumers/work_propensity
+            county: agents/consumers/county
+            price_of_goods: environment/P
+            inflation_rate: environment/P_i
+            interest_rate: environment/R
+            unemployment_rate: environment/U
           output_variables:
           - will_work
           - consumption_propensity

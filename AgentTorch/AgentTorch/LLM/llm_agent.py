@@ -37,19 +37,14 @@ class LLMAgent():
             self.agent_memory = memory
         else:
             self.agent_memory = [ConversationBufferMemory(memory_key="chat_history", return_messages=True) for _ in range(num_agents)]
-        # self.llm_chain = [LLMChain(
-        #     llm=llm,
-        #     prompt=self.prompt,
-        #     verbose=False,
-        #     memory=self.agent_memory[id],
-        # ) for id in range(num_agents)]
+
         self.llm_chain = LLMChain(
             llm=llm,
             prompt=self.prompt,
             verbose=False,
         )
     
-    async def __call__(self,prompt_list,last_k = 12,agent_id = 0):
+    async def __call__(self,prompt_list,last_k = 12):
         last_k = 2*last_k + 8 # get last 24 messages 12 for each AI and Human and 8 for reflection prompts
         prompt_inputs = [{'agent_query': prompt, 'chat_history': self.get_memory(last_k,agent_id=agent_id)['chat_history']} for agent_id,prompt in enumerate(prompt_list)]
         agent_outputs = await self.llm_chain.aapply(prompt_inputs)

@@ -31,7 +31,7 @@ class UpdateAssetsGoods(SubstepTransition):
     
     def calculateTotalDemand(self, state, action):
         # Calculate total demand
-        intended_consumption = self.calculateIntendedConsumption(state, action)
+        intended_consumption = self.calculateIntendedConsumption(state)
         total_demand = torch.sum(intended_consumption)
         return total_demand
     
