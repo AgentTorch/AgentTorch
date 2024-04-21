@@ -13,15 +13,12 @@ class UpdateMacroRates(SubstepTransition):
     def __init__(self, config, input_variables, output_variables, arguments):
         super().__init__(config, input_variables, output_variables, arguments)
             
+        self.device = torch.device(self.config['simulation_metadata']['device'])
         self.num_timesteps = self.config['simulation_metadata']['num_steps_per_episode']
         self.max_rate_change = self.config['simulation_metadata']['maximum_rate_of_change_of_wage']
         self.num_agents = self.config['simulation_metadata']['num_agents']
-    # def calculateUnemploymentRate(self, working_status):
-    #     l = working_status
-    #     agg_l = torch.sum(torch.sum((1-l),dim=1),dim=0)
-        
-    #     unemployment_rate = agg_l / (l.size(0) * 12.0)
-    #     return unemployment_rate
+
+        self.external_UAC = torch.tensor(self.learnable_args['unemployment_adaptation_coefficient'], requires_grad=True)
     
     def calculateNumberOfAgentsNotWorking(self, working_status):
         agents_not_working = torch.sum(torch.sum((1-working_status),dim=1),dim=0)
@@ -67,7 +64,7 @@ class UpdateMacroRates(SubstepTransition):
         timestep_tensor = torch.tensor([timestep])
         one_hot_tensor = F.one_hot(timestep_tensor, num_classes=num_timesteps)
 
-        return one_hot_tensor
+        return one_hot_tensor.to(self.device)
 
     def forward(self, state, action):
         print("Executing Substep: Labor Market")
@@ -80,15 +77,10 @@ class UpdateMacroRates(SubstepTransition):
         hourly_wage = get_by_path(state, re.split("/", self.input_variables['hourly_wage']))
         unemployment_rate = get_by_path(state, re.split("/", self.input_variables['unemployment_rate']))
 
-        unemployment_adaptation_coefficient = self.learnable_args['unemployment_adaptation_coefficient']
-
-        # ua_coff_tensor = [num_months,]
-        # current_ua_coff = (time_step_one_hot*ua_coff_tensor).sum()
+        unemployment_adaptation_coefficient = self.external_UAC
 
         # unemployment rate
         agents_not_working = self.calculateNumberOfAgentsNotWorking(working_status)
-        # agent_willing_to_work = working_status.shape[0] - agents_not_working
-        # Labor_Force_Participation_Rate = agent_willing_to_work / working_status.shape[0]
         time_step_one_hot = self._generate_one_hot_tensor(t, self.num_timesteps)
         
         unemployed_agents = agents_not_working * unemployment_adaptation_coefficient
