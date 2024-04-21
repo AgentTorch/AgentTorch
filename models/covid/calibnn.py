@@ -5,7 +5,7 @@ from model_utils import EmbedAttenSeq, DecodeSeq
 MIN_VAL_PARAMS = {
     # 'abm-covid': [2.0, 0.001, 0.1, 0.001, 0.001, 0.001, 0.001, 0.001,
     #               0.001],  # new start date on 202045 + triangular dist params
-    'abm-covid': [2.0, 0.001, 0.1, 0.001, 0.001, 0.001, 0.001, 0.001,
+    'abm-covid': [1.4, 0.001, 0.1, 0.001, 0.001, 0.001, 0.001, 0.001,
                   0.001],  # new start date on 202045 + beta dist params
     'abm-flu': [1.05, 0.1],
     'seirm': [0., 0., 0., 0., 0.01],
@@ -24,6 +24,7 @@ MAX_VAL_PARAMS = {
 WEEKS_AHEAD = 4
 
 class CalibNN(nn.Module):
+
     def __init__(self,
                  metas_train_dim,
                  X_train_dim,
@@ -86,6 +87,7 @@ class CalibNN(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x, meta):
+        x, meta = x.to(self.device), meta.to(self.device)
         x_embeds, encoder_hidden = self.emb_model.forward(
             x.transpose(1, 0), meta)
         

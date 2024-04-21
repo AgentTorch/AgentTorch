@@ -14,13 +14,13 @@ NOISE_LEVELS_FLU = [0.15, 0.25, 0.50, 0.75]
 NOISE_LEVELS_COVID = [0.5, 1.0, 1.5, 2.0]
 # daily
 datapath = './Data/Processed/covid_data.csv'
-county_datapath = f'./data/MN_county_data.csv'
-
 # county_datapath = f'./Data/Processed/county_data.csv'
-# datapath_flu_hhs = './Data/Processed/flu_region_data.csv'
-# datapath_flu_state = './Data/Processed/flu_state_data.csv'
-# population_path = './Data/table_population.csv'
-
+datapath_flu_hhs = './Data/Processed/flu_region_data.csv'
+datapath_flu_state = './Data/Processed/flu_state_data.csv'
+population_path = './Data/table_population.csv'
+county_datapath = f'./data/MN_county_data.csv'
+# EW_START_DATA = '202012'
+# EW_START_DATA = '202022'
 EW_START_DATA = '202045'
 EW_START_DATA_FLU = '201740'  # for convenience
 
@@ -113,6 +113,7 @@ counties = {
 
 def convert_to_epiweek(x):
     return Week.fromstring(str(x))
+
 
 def get_epiweeks_list(start_ew, end_ew):
     """
@@ -248,6 +249,7 @@ def load_county_df(county, ew_start_data, ew_end_data):
     df = df.fillna(0)  # there are zeros at the beginning
     return df
 
+
 def get_county_train_data(county,
                           pred_week,
                           ew_start_data=EW_START_DATA,
@@ -280,6 +282,68 @@ def get_county_test_data(county, pred_week):
     new_cases = df.loc[:, 'cases'].values
     new_deaths = df.loc[:, 'deaths'].values
     return new_cases, new_deaths
+
+
+########################################################
+#           FLU: regional/state/national level data
+########################################################
+
+
+def load_df_flu(region, ew_start_data, ew_end_data, geo):
+    """ load and clean data"""
+    if geo == 'hhs':
+        datapath = datapath_flu_hhs
+    elif geo == 'state':
+        datapath = datapath_flu_state
+    df = pd.read_csv(datapath, low_memory=False)
+
+    df = df[(df["region"] == region)]
+    df['epiweek'] = df.loc[:, 'epiweek'].apply(convert_to_epiweek)
+    # subset data using init parameters
+    df = df[(df["epiweek"] <= ew_end_data) & (df["epiweek"] >= ew_start_data)]
+    df = df.fillna(method="ffill")
+    df = df.fillna(method="backfill")
+    df = df.fillna(0)
+    return df
+
+
+def get_state_train_data_flu(region,
+                             pred_week,
+                             ew_start_data=EW_START_DATA_FLU,
+                             geo='state',
+                             noise_level=0):
+    """ get processed dataframe of data + target as array """
+    # import data
+    region = str.upper(region)
+    pred_week = convert_to_epiweek(pred_week)
+    ew_start_data = convert_to_epiweek(ew_start_data)
+    df = load_df_flu(region, ew_start_data, pred_week, geo)
+    # select targets
+    targets = pd.to_numeric(df['ili']).values.reshape(-1, 1)  # we need this 2d
+    if noise_level > 0:
+        # noise_level is an index for your list
+        noise = NOISE_LEVELS_FLU[noise_level - 1]
+        NOISE_STD = targets.std() * noise
+        noise_dist = np.random.normal(loc=0,
+                                      scale=NOISE_STD,
+                                      size=targets.shape)
+        noisy_targets = targets + noise_dist
+        targets = np.array([max(ix, 0) for ix in noisy_targets])
+    # now subset based on input ew_start_data
+    df = df[["month"] + include_cols]
+    return df, targets
+
+
+def get_state_test_data_flu(region, pred_week, geo='state'):
+    """
+        @ param pred_week: prediction week
+    """
+    pred_week = convert_to_epiweek(pred_week)
+    # import smoothed dataframe
+    df = load_df_flu(region, pred_week + 1, pred_week + 4, geo)
+    ili = df.loc[:, 'ili'].values
+    return ili
+
 
 def get_dir_from_path_list(path):
     outdir = path[0]
