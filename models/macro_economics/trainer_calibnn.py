@@ -39,7 +39,7 @@ parser.add_argument(
 )
 # *************************************************************************
 
-config_file = '/u/ayushc/projects/GradABM/MacroEcon/models/macro_economics/yamls/config_macroecon.yaml'
+config_file = '/u/ayushc/projects/GradABM/MacroEcon/models/macro_economics/config.yaml'
 config = read_config(config_file)
 registry = simulation_registry()
 

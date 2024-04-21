@@ -77,7 +77,7 @@ class UpdateMacroRates(SubstepTransition):
         hourly_wage = get_by_path(state, re.split("/", self.input_variables['hourly_wage']))
         unemployment_rate = get_by_path(state, re.split("/", self.input_variables['unemployment_rate']))
 
-        unemployment_adaptation_coefficient = self.external_UAC
+        unemployment_adaptation_coefficient = (self.external_UAC*time_step_one_hot).sum()
 
         # unemployment rate
         agents_not_working = self.calculateNumberOfAgentsNotWorking(working_status)
