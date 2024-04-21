@@ -52,10 +52,12 @@ registry = simulation_registry()
 
 runner = SimulationRunner(config, registry)
 device = torch.device(runner.config['simulation_metadata']['device'])
+CALIB_MODE = 'calibNN' # i -> internal_param; external_param -> nn.Parameter; learnable_param -> learnable_parameters; nn -> CalibNN
+num_episodes = runner.config["simulation_metadata"]["num_episodes"]
+NUM_STEPS_PER_EPISODE = runner.config["simulation_metadata"]["num_steps_per_episode"]
 
 runner.init()
 loss_log = []
-
 
 named_params_learnable = [(name, param) for (name, param) in runner.named_parameters() if param.requires_grad]
 print("named learnable_params: ", named_params_learnable)
