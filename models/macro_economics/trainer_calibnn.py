@@ -14,17 +14,17 @@ import torch.nn as nn
 import numpy as np
 
 from torch.utils.data import DataLoader
-from models.covid.utils.misc import week_num_to_epiweek
+from utils.misc import week_num_to_epiweek
 
 from AgentTorch.helpers import read_config
 from simulator import SimulationRunner, simulation_registry
 
-from models.covid.calibnn import CalibNN, LearnableParams
+from calibnn import CalibNN, LearnableParams
 
-from models.covid.utils.data import NN_INPUT_WEEKS, get_dataloader, get_labels
-from models.covid.utils.feature import Feature
-from models.covid.utils.misc import name_to_neighborhood
-from models.covid.utils.neighborhood import Neighborhood
+from utils.data import NN_INPUT_WEEKS, get_dataloader, get_labels
+from utils.feature import Feature
+from utils.misc import name_to_neighborhood
+from utils.neighborhood import Neighborhood
 
 from AgentTorch.helpers import memory_checkpoint
 '''Command: python trainer.py --c config.yaml'''
