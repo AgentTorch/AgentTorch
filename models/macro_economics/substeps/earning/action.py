@@ -51,7 +51,7 @@ class WorkConsumptionPropensity(SubstepAction):
         current_month = number_of_months % 12
         current_month = self.month_mapping[current_month]
         
-        current_year = state['current_episode'] + 1
+        current_year = number_of_months // 12
         current_year = self.year_mapping[current_year]
         
         gender = get_by_path(state, re.split("/", self.input_variables['gender']))
