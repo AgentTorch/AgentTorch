@@ -4,7 +4,8 @@
 import torch
 import numpy as np
 import re
-import torch.nn.functional as F
+import time
+import os
 
 # sys.path.append(MODEL_PATH)
 # sys.path.insert(0, AGENT_TORCH_PATH)
@@ -29,7 +30,6 @@ class MakeIsolationDecision(SubstepAction):
         self.device = torch.device(self.config["simulation_metadata"]["device"])
         self.mode = self.config["simulation_metadata"]["EXECUTION_MODE"]
         self.num_agents = self.config["simulation_metadata"]["num_agents"]
-        self.align_llm = self.config['simulation_metadata']['ALIGN_LLM']
         self.epiweek_start = week_num_to_epiweek(
             self.config["simulation_metadata"]["START_WEEK"]
         )
@@ -48,7 +48,9 @@ class MakeIsolationDecision(SubstepAction):
         ]
 
         # set up llm agent
-        self.agent = LLMAgent(agent_profile=SYSTEM_PROMPT, openai_api_key=OPENAI_API_KEY)
+        self.agent = LLMAgent(
+            agent_profile=SYSTEM_PROMPT, openai_api_key=OPENAI_API_KEY
+        )
 
         # retrieve case numbers
         if self.use_ground_truth_case_numbers:
@@ -86,7 +88,6 @@ class MakeIsolationDecision(SubstepAction):
             )
         
         self.external_align_vector = torch.tensor(self.learnable_args['align_vector'], requires_grad=True)
-        self.st_bernoulli = StraightThroughBernoulli.apply
 
     def string_to_number(self, string):
         if string.lower() == "yes":
@@ -102,12 +103,6 @@ class MakeIsolationDecision(SubstepAction):
             return f"a {abs(change_amount)}% decrease from last week"
         else:
             return "the same as last week"
-    
-    def _generate_one_hot_tensor(self, timestep, num_timesteps):
-        timestep_tensor = torch.tensor([timestep])
-        one_hot_tensor = F.one_hot(timestep_tensor, num_classes=num_timesteps)
-
-        return one_hot_tensor.to(self.device)
 
     async def forward(self, state, observation):
         """
@@ -120,22 +115,7 @@ class MakeIsolationDecision(SubstepAction):
 
         # figure out time step
         time_step = int(state["current_step"])
-        week_index = time_step // 7
-        current_align_vector = self.external_align_vector[week_index]
 
-        # prompts are segregated based on agent age
-        masks = []
-        agent_age = get_by_path(state, re.split("/", self.input_variables["age"]))
-        for age_group in AgeGroup:
-            # agent subgroups for each prompt
-            age_mask = agent_age == age_group.value
-            masks.append(age_mask.float())
-        
-        if self.align_llm:
-            all_align_mask = torch.zeros((self.num_agents, 1)).to(self.device)
-            for en in range(len(masks)):
-                all_align_mask = all_align_mask + current_align_vector[en]*masks[en]
-        
         # if beginning of the week, recalculate isolation probabilities
         if time_step % 7 == 0:
             # figure out week index
@@ -158,13 +138,13 @@ class MakeIsolationDecision(SubstepAction):
                 + f"{int(self.cases_4_week_avg[week_index])}... sampling isolation probabilities"
             )
 
-            # # prompts are segregated based on agent age
-            # masks = []
-            # agent_age = get_by_path(state, re.split("/", self.input_variables["age"]))
-            # for age_group in AgeGroup:
-            #     # agent subgroups for each prompt
-            #     age_mask = agent_age == age_group.value
-            #     masks.append(age_mask.float())
+            # prompts are segregated based on agent age
+            masks = []
+            agent_age = get_by_path(state, re.split("/", self.input_variables["age"]))
+            for age_group in AgeGroup:
+                # agent subgroups for each prompt
+                age_mask = agent_age == age_group.value
+                masks.append(age_mask.float())
 
             # generate the prompt list, prompt 7 times for each age group for each week to get
             # probabilities
@@ -184,6 +164,11 @@ class MakeIsolationDecision(SubstepAction):
                 }
                 for age_group in AgeGroup
             ] * 7
+
+            # use this as additional context to the prompt
+            episode_history_file = "/tmp/history_predicted_weekly_cases.npy"
+            if os.path.exists(episode_history_file):
+                cases_past_episode = np.load(episode_history_file)
 
             # time.sleep(1)
             # execute prompts from LLMAgent and compile response
@@ -213,19 +198,17 @@ class MakeIsolationDecision(SubstepAction):
                 self.isolation_probabilities = self.isolation_probabilities + (
                     masks[en % len(AgeGroup)] * isolation_response * 1 / 7
                 )
-        
-        # aligned_isolation_probs = all_align_mask*((self.last_isolation_probabilities + self.isolation_probabilities) / 2)
-        isolation_probs = (self.last_isolation_probabilities/2 + self.isolation_probabilities/2)
-        if self.align_llm:
-            isolation_probs = isolation_probs*all_align_mask
-        will_isolate = self.st_bernoulli(isolation_probs)
 
-        # print("aligned_isolation_probs: ", isolation_probs.shape, "will_isolate: ", will_isolate.shape)
+        breakpoint()
+        
+        self.aligned_isolation_probs = self.external_align_vector*((self.last_isolation_probabilities + self.isolation_probabilities) / 2)
+        will_isolate = StraightThroughBernoulli.apply(self.aligned_isolation_probs)
 
         # # sample isolation decision from probabilities
         # will_isolate = StraightThroughBernoulli.apply(
         #     self.last_isolation_probabilities * 1 / 2
-        #     + self.isolation_probabilities * 1 / 2 )
+        #     + self.isolation_probabilities * 1 / 2
+        # )
 
         print(f"day {time_step}, number of isolating agents {sum(will_isolate).item()}")
         
