@@ -1,5 +1,5 @@
-MODEL_PATH = '/u/ayushc/projects/GradABM/MacroEcon/models'
-AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
+MODEL_PATH = '/Users/shashankkumar/Documents/GitHub/MacroEcon/models'
+AGENT_TORCH_PATH = '/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch'
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -19,13 +19,13 @@ from AgentTorch import Runner
 from AgentTorch.helpers import read_config
 from simulator import SimulationRunner, simulation_registry
 
-from calibnn import CalibNN, LearnableParams
+from macro_economics.calibnn import CalibNN, LearnableParams
 
-from utils.data import NN_INPUT_WEEKS, get_dataloader, get_labels
-from utils.feature import Feature
-from utils.misc import name_to_neighborhood
-from utils.neighborhood import Neighborhood
-from utils.misc import week_num_to_epiweek
+from macro_economics.utils.data import NN_INPUT_WEEKS, get_dataloader, get_labels
+from macro_economics.utils.feature import Feature
+from macro_economics.utils.misc import name_to_neighborhood
+from macro_economics.utils.neighborhood import Neighborhood
+from macro_economics.utils.misc import week_num_to_epiweek
 
 '''Command: python trainer.py --c config.yaml'''
 
@@ -39,7 +39,7 @@ parser.add_argument(
 )
 # *************************************************************************
 
-config_file = '/u/ayushc/projects/GradABM/MacroEcon/models/macro_economics/config.yaml'
+config_file = '/Users/shashankkumar/Documents/GitHub/MacroEcon/models/macro_economics/yamls/config.yaml'
 config = read_config(config_file)
 registry = simulation_registry()
 
@@ -98,6 +98,7 @@ elif CALIB_MODE == "calibNN":
     ).to(device)
 
     # set up loss function and optimizer
+    # loss_function = torch.nn.MSELoss().to(device)
     loss_function = torch.nn.MSELoss().to(device)
     opt = optim.Adam(learn_model.parameters(), lr=learning_rate, betas=betas)
 
@@ -125,13 +126,14 @@ def _set_parameters(new_values):
     '''Only sets UAC value for now..'''
     runner.initializer.transition_function['2']['update_macro_rates'].external_UAC = new_values
 
-def _get_unemployment_labels():
-    data_path = '/u/ayushc/projects/GradABM/MacroEcon/simulator_data/NYC/brooklyn_unemp.csv'
+def _get_unemployment_labels(num_steps_per_episode=1):
+    data_path = '/Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/NYC/brooklyn_unemp.csv'
     df = pd.read_csv(data_path)
     df.sort_values(by=['year','month'],ascending=True,inplace=True)
     arr = df['unemployment_rate'].values
-    tensor = torch.from_numpy(arr)
-    unemployment_test_dataset = tensor.view(5,-1)
+    unemployment_test_dataset = torch.from_numpy(arr).to(device)
+    unemployment_test_dataset = unemployment_test_dataset * (0.01) # scale the values to 0-1
+    unemployment_test_dataset = unemployment_test_dataset[:num_steps_per_episode].float().squeeze()
 
     return unemployment_test_dataset
 
@@ -150,10 +152,10 @@ for episode in range(num_episodes):
 
     runner.step(NUM_STEPS_PER_EPISODE)
 
-    breakpoint()
+    # breakpoint()
 
     predicted_month_unemployment_rate = runner.state_trajectory[-1][-1]['environment']['U'].squeeze()
-    target_month_unemployment_rate = _get_unemployment_labels()
+    target_month_unemployment_rate = _get_unemployment_labels(NUM_STEPS_PER_EPISODE)
 
     # calculate the loss from the target cases
     loss_val = loss_function(predicted_month_unemployment_rate, target_month_unemployment_rate)

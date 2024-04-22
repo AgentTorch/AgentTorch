@@ -51,7 +51,7 @@ class WorkConsumptionPropensity(SubstepAction):
         current_month = number_of_months % 12
         current_month = self.month_mapping[current_month]
         
-        current_year = number_of_months // 12
+        current_year = number_of_months // 12 + 1 # 1 indexed
         current_year = self.year_mapping[current_year]
         
         gender = get_by_path(state, re.split("/", self.input_variables['gender']))
@@ -66,9 +66,7 @@ class WorkConsumptionPropensity(SubstepAction):
         prompt_interest_rate = interest_rate[-1][-1].item()
         prompt_unemployment_rate = unemployment_rate[-1][-1].item()
         prompt_price_of_goods = price_of_goods[-1][-1].item()
-        
-        print(inflation_rate.requires_grad)
-        
+    
         consumption_propensity = get_by_path(state,re.split("/", self.input_variables['consumption_propensity']))
         work_propensity = get_by_path(state,re.split("/", self.input_variables['work_propensity']))
         
@@ -98,12 +96,13 @@ class WorkConsumptionPropensity(SubstepAction):
         prompt_list = []
         for en,_ in enumerate(self.combinations_of_prompt_variables_with_index):
             age = self.combinations_of_prompt_variables[en]['age']
-            gender = self.combinations_of_prompt_variables[en]['gender']
-            county = self.combinations_of_prompt_variables[en]['county']
-            prompt = prompt_template_var.format(age = age,gender = gender,county = county,month=current_month,year=current_year,price_of_goods=prompt_price_of_goods,unemployment_rate=prompt_unemployment_rate,interest_rate=prompt_interest_rate,inflation_rate=prompt_inflation_rate)
+            # gender = self.combinations_of_prompt_variables[en]['gender']
+            # county = self.combinations_of_prompt_variables[en]['county']
+            # prompt = prompt_template_var.format(age = age,gender = gender,county = county,month=current_month,year=current_year,price_of_goods=prompt_price_of_goods,unemployment_rate=prompt_unemployment_rate,interest_rate=prompt_interest_rate,inflation_rate=prompt_inflation_rate)
+            prompt = prompt_template_var.format(age = age)
             prompt_list.append(prompt)
         
-        await asyncio.sleep(10)
+        # await asyncio.sleep(10)
         agent_output = await self.agent(prompt_list,last_k=3)
         
         for en,output_value in enumerate(agent_output):

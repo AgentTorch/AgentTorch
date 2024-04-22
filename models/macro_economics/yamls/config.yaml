@@ -2,6 +2,15 @@ simulation_metadata:
   OPENAI_API_KEY: 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
   device: cpu
   execution_mode: llm
+  num_agents: 541516
+  num_episodes: 10
+  num_steps_per_episode: 6
+  num_substeps_per_step: 4
+  START_WEEK: 202212
+  NUM_WEEKS: 24
+  NEIGHBORHOOD: "Astoria"
+  INCLUDE_WEEK_COUNT: True
+  EXECUTION_MODE: debug #llm
   hourly_wage: 1.0
   hours_worked: 168.0
   inflation_adaptation_coefficient: 0.05
@@ -17,10 +26,7 @@ simulation_metadata:
   maximum_rate_of_change_of_wage: 0.05
   natural_interest_rate: 0.05
   natural_unemployment_rate: 0.05
-  num_agents: 541516
-  num_episodes: 2
-  num_steps_per_episode: 2
-  num_substeps_per_step: 4
+  
   population_dir: /Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/census_populations/NYC/simulation_input #change this path to be just till NYC
   target_inflation_rate: 0.02
   month_mapping : {

@@ -9,7 +9,7 @@ from utils.feature import Feature
 from utils.misc import epiweek_to_week_num, week_num_to_epiweek
 from utils.neighborhood import Neighborhood
 
-DATAPATH = "./data/county_data.csv"
+DATAPATH = "/Users/shashankkumar/Documents/GitHub/MacroEcon/models/macro_economics/data/county_data.csv"
 TABLE = pd.read_csv(DATAPATH)
 DATA_START_WEEK = week_num_to_epiweek(TABLE["epiweek"].iloc[0])
 DATA_END_WEEK = week_num_to_epiweek(TABLE["epiweek"].iloc[-1])
