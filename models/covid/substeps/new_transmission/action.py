@@ -121,7 +121,7 @@ class MakeIsolationDecision(SubstepAction):
         # figure out time step
         time_step = int(state["current_step"])
         week_index = time_step // 7
-        current_align_vector = self.external_align_vector[week_index]
+        align_vector = self.external_align_vector
 
         # prompts are segregated based on agent age
         masks = []
@@ -134,7 +134,7 @@ class MakeIsolationDecision(SubstepAction):
         if self.align_llm:
             all_align_mask = torch.zeros((self.num_agents, 1)).to(self.device)
             for en in range(len(masks)):
-                all_align_mask = all_align_mask + current_align_vector[en]*masks[en]
+                all_align_mask = all_align_mask + align_vector[en]*masks[en]
         
         # if beginning of the week, recalculate isolation probabilities
         if time_step % 7 == 0:

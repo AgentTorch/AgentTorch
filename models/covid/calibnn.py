@@ -5,7 +5,7 @@ from model_utils import EmbedAttenSeq, DecodeSeq
 MIN_VAL_PARAMS = {
     # 'abm-covid': [2.0, 0.001, 0.1, 0.001, 0.001, 0.001, 0.001, 0.001,
     #               0.001],  # new start date on 202045 + triangular dist params
-    'abm-covid': [1.4, 0.001, 0.1, 0.001, 0.001, 0.001, 0.001, 0.001,
+    'abm-covid': [1.5, 0.001, 0.1, 0.001, 0.001, 0.001, 0.001, 0.001,
                   0.001],  # new start date on 202045 + beta dist params
     'abm-flu': [1.05, 0.1],
     'seirm': [0., 0., 0., 0., 0.01],
@@ -112,7 +112,7 @@ class CalibAlignNN(nn.Module):
                  training_weeks,
                  hidden_dim=32,
                  out_dim=1,
-                 out_dim_align=6,
+                 out_dim_align=6, # number of masks for tensor
                  n_layers=2,
                  scale_output='abm-covid',
                  bidirectional=True):
@@ -187,17 +187,17 @@ class CalibAlignNN(nn.Module):
         Hi_data = ((time_seq - time_seq.min()) /
                    (time_seq.max() - time_seq.min())).to(self.device)
         emb = self.decoder(Hi_data, encoder_hidden, x_embeds)
-        emb = self.hidden_layers(emb)
+        emb = self.hidden_layers(emb) # [2, 3, 7]
 
-        emb = self.flatten(emb)
+        emb = self.flatten(emb) # [2, 21]
 
         # calibration output
         out = self.param_out_layer(emb)
-        calib_out = self.min_values[0] + (self.max_values[0] - self.min_values[0]) * self.sigmoid(out)
-        
-        align_out = self.align_out_layer(emb)
-        align_out = self.sigmoid(align_out)
+        calib_out = self.min_values[0] + (self.max_values[0] - self.min_values[0]) * self.sigmoid(out) # [2]
 
+        align_out = self.align_out_layer(emb) # (num_weeks, num_age_groups)
+        align_out = self.sigmoid(align_out) 
+ 
         return calib_out, align_out
     
 class LearnableParams(nn.Module):

@@ -9,6 +9,7 @@ import torch
 import torch.optim as optim
 import torch.nn as nn
 import numpy as np
+from torch.optim.lr_scheduler import StepLR
 
 from torch.utils.data import DataLoader
 from utils.misc import week_num_to_epiweek
@@ -45,6 +46,7 @@ config_file = args.config
 print("Running experiment with config file: ", config_file)
 
 CALIB_MODE = 'calibNN' # i -> internal_param; external_param -> nn.Parameter; learnable_param -> learnable_parameters; nn -> CalibNN
+ALIGN_MASK = 6 # number of prompt dimensions
 
 config = read_config(config_file)
 registry = get_registry()
@@ -98,6 +100,7 @@ elif CALIB_MODE == "calibNN":
         device=device,
         training_weeks=NN_INPUT_WEEKS,
         out_dim=1,
+        out_dim_align=ALIGN_MASK,
         scale_output="abm-covid",
     ).to(device)
 
@@ -106,6 +109,7 @@ elif CALIB_MODE == "calibNN":
     loss_function = torch.nn.MSELoss().to(device)
     # loss_function = torch.compile(loss_function)
     opt = optim.Adam(learn_model.parameters(), lr=learning_rate, betas=betas)
+    scheduler = StepLR(opt, step_size=5, gamma=0.1)
 
 def _get_parameters(CALIB_MODE):
     if CALIB_MODE == "learnable_param":
@@ -124,8 +128,8 @@ def _get_parameters(CALIB_MODE):
 
         for metadata, features in dataloader:
             r0_values, align_values = learn_model(features, metadata) #[:, 0, 0]
-            r0_values = r0_values.squeeze()
-            align_values = align_values #[:, 0, :].squeeze() # (week_id, num_groups)
+            r0_values = r0_values.squeeze() # [2,1]
+            align_values = align_values.mean(axis=0) # [2,6] #[:, 0, :].squeeze() # (week_id, num_groups)
 
         return r0_values, align_values
 
@@ -174,3 +178,6 @@ for episode in range(num_episodes):
     # print(torch.cuda.memory_summary())
     # print("---------------------------------")
     torch.cuda.empty_cache()
+
+    scheduler.step()
+
