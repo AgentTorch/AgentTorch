@@ -1,14 +1,17 @@
 simulation_metadata:
     num_episodes: 3
-    num_steps_per_episode: 7
+    num_steps_per_episode: 14
     num_substeps_per_step: 2
     OPENAI_API_KEY: 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
     device: "cuda" #"cpu"
     START_WEEK: 202212
-    NUM_WEEKS: 1
+    NUM_WEEKS: 2
+    ALIGN_LLM: True
     NEIGHBORHOOD: "Astoria"
     INCLUDE_WEEK_COUNT: True
-    EXECUTION_MODE: debug #llm
+    USE_GROUND_TRUTH_CASE_NUMBERS: False
+    USE_GROUND_TRUTH_4WK_AVG: False
+    EXECUTION_MODE: llm #llm
     num_agents: 37518
     initial_infection_ratio: 0.04 # BE CAREFUL: NOT USED IN SIMULATION HERE
     population_dir: "/u/ayushc/projects/GradABM/MacroEcon/simulator_data/census_populations/NYC/BK0101_simulation_input"
@@ -396,7 +399,15 @@ substeps:
             citizens:
                 make_isolation_decision:
                     generator: "MakeIsolationDecision"
-                    arguments: null
+                    arguments:
+                        align_vector:
+                            name: "align LLM agents to the populations"
+                            learnable: true
+                            shape:
+                                - 6 # number of age groups - action masks
+                            value: 0.3
+                            initialization_function: null
+                            dtype: "float"
                     input_variables:
                         age: 'agents/citizens/age'
                     output_variables:

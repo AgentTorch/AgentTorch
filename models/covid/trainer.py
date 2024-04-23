@@ -21,7 +21,7 @@ sys.path.insert(0, AGENT_TORCH_PATH)
 
 from simulator import get_registry, get_runner
 from AgentTorch.helpers import read_config
-from calibnn import CalibNN, LearnableParams
+from calibnn import CalibNN, LearnableParams, CalibAlignNN
 
 from utils.data import NN_INPUT_WEEKS, get_dataloader, get_labels
 from utils.feature import Feature
@@ -49,6 +49,7 @@ CALIB_MODE = 'calibNN' # i -> internal_param; external_param -> nn.Parameter; le
 config = read_config(config_file)
 registry = get_registry()
 runner = get_runner(config, registry)
+# runner = torch.compile(runner)
 
 device = torch.device(runner.config["simulation_metadata"]["device"])
 num_episodes = runner.config["simulation_metadata"]["num_episodes"]
@@ -91,7 +92,7 @@ elif CALIB_MODE == "calibNN":
     NEIGHBORHOOD = name_to_neighborhood(config["simulation_metadata"]["NEIGHBORHOOD"])
 
     # set up model
-    learn_model = CalibNN(
+    learn_model = CalibAlignNN(
         metas_train_dim=len(Neighborhood),
         X_train_dim=len(FEATURE_LIST),
         device=device,
@@ -100,8 +101,10 @@ elif CALIB_MODE == "calibNN":
         scale_output="abm-covid",
     ).to(device)
 
+    # learn_model = torch.compile(learn_model)
     # set up loss function and optimizer
     loss_function = torch.nn.MSELoss().to(device)
+    # loss_function = torch.compile(loss_function)
     opt = optim.Adam(learn_model.parameters(), lr=learning_rate, betas=betas)
 
 def _get_parameters(CALIB_MODE):
@@ -118,31 +121,36 @@ def _get_parameters(CALIB_MODE):
             NUM_WEEKS,
             FEATURE_LIST,
         )
+
         for metadata, features in dataloader:
-            r0_values = learn_model(features, metadata)[:, 0, 0]
+            r0_values, align_values = learn_model(features, metadata) #[:, 0, 0]
+            r0_values = r0_values.squeeze()
+            align_values = align_values #[:, 0, :].squeeze() # (week_id, num_groups)
 
-        return r0_values
+        return r0_values, align_values
 
-def _set_parameters(new_R):
+def _set_parameters(new_R, new_align):
     # print("SET PARAMETERS ONLY WORKS FOR R0 for now!")
     '''Only sets R value for now..'''
+    print(f"r0 values: {new_R}")
+    print(f"align values: {new_align}")
+
     runner.initializer.transition_function['0']['new_transmission'].external_R = new_R
+    runner.initializer.policy_function['0']['citizens'].make_isolation_decision.external_align_vector = new_align
 
 for episode in range(num_episodes):    
     # reset gradients from previous iteration
     print(f"\nrunning episode {episode}...")
     opt.zero_grad()
+    
     if episode >=1:
         runner.reset()
 
     # get the r0 predictions for the episode
-    r0_values = _get_parameters(CALIB_MODE)
-    _set_parameters(r0_values)
-    print(f"r0 values: {r0_values}")
+    r0_values, align_values = _get_parameters(CALIB_MODE)
+    _set_parameters(r0_values, align_values)
 
-    # allocated1, reserved1 = memory_checkpoint(name="1")
     runner.step(NUM_STEPS_PER_EPISODE)
-    # allocated2, reserved2 = memory_checkpoint(name="2")
 
     # get daily number of infections
     traj = runner.state_trajectory[-1][-1]
@@ -159,7 +167,6 @@ for episode in range(num_episodes):
     loss_val = loss_function(predicted_weekly_cases, target_weekly_cases)
     loss_val.backward()
     print(f"predicted number of cases: {predicted_weekly_cases}, actual number of cases: {target_weekly_cases}, loss: {loss_val}")
-
 
     # run the optimization step, and clear simulation
     # allocated3, reserved3 = memory_checkpoint(name="3")

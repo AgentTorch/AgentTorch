@@ -89,7 +89,6 @@ class NewTransmission(SubstepTransitionMessagePassing):
         week_id = int(t/7)
         week_one_hot = self._generate_one_hot_tensor(week_id, self.num_weeks)
         
-        # R = self.learnable_args['R2']
         R_tensor = self.external_R # tensor of size NUM_WEEK
         R = (R_tensor*week_one_hot).sum()
                 
