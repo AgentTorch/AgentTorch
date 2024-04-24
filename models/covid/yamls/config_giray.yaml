@@ -1,11 +1,12 @@
 simulation_metadata:
     num_episodes: 10
-    num_steps_per_episode: 70
+    num_steps_per_episode: 28
     num_substeps_per_step: 2
     OPENAI_API_KEY: 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
     device: "cuda"
-    START_WEEK: 202049
-    NUM_WEEKS: 10
+    START_WEEK: 202050
+    NUM_WEEKS: 4
+    ALIGN_LLM: True
     NEIGHBORHOOD: "Astoria"
     INCLUDE_WEEK_COUNT: True
     USE_GROUND_TRUTH_CASE_NUMBERS: False
@@ -398,7 +399,23 @@ substeps:
             citizens:
                 make_isolation_decision:
                     generator: "MakeIsolationDecision"
-                    arguments: null
+                    arguments:
+                        align_vector:
+                            name: "align LLM agents to the populations by scaling"
+                            learnable: true
+                            shape:
+                                - 6 # number of age groups - action masks
+                            value: 0.3
+                            initialization_function: null
+                            dtype: "float"
+                        align_adjustment_vector:
+                            name: "align LLM agents to the populations by shifting"
+                            learnable: true
+                            shape:
+                                - 6 # number of age groups - action masks
+                            value: 0.3
+                            initialization_function: null
+                            dtype: "float"
                     input_variables:
                         age: 'agents/citizens/age'
                     output_variables:

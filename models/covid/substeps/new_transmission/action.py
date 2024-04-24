@@ -84,8 +84,9 @@ class MakeIsolationDecision(SubstepAction):
                     Feature.CASES_4WK_AVG,
                 )
             )
-        
+
         self.external_align_vector = torch.tensor(self.learnable_args['align_vector'], requires_grad=True)
+        self.external_align_adjustment_vector = torch.tensor(self.learnable_args['align_adjustment_vector'], requires_grad=True)
         self.st_bernoulli = StraightThroughBernoulli.apply
 
     def string_to_number(self, string):
@@ -102,7 +103,7 @@ class MakeIsolationDecision(SubstepAction):
             return f"a {abs(change_amount)}% decrease from last week"
         else:
             return "the same as last week"
-    
+
     def _generate_one_hot_tensor(self, timestep, num_timesteps):
         timestep_tensor = torch.tensor([timestep])
         one_hot_tensor = F.one_hot(timestep_tensor, num_classes=num_timesteps)
@@ -130,12 +131,18 @@ class MakeIsolationDecision(SubstepAction):
             # agent subgroups for each prompt
             age_mask = agent_age == age_group.value
             masks.append(age_mask.float())
-        
+
         if self.align_llm:
             all_align_mask = torch.zeros((self.num_agents, 1)).to(self.device)
             for en in range(len(masks)):
                 all_align_mask = all_align_mask + align_vector[en]*masks[en]
-        
+            all_adjust_mask = torch.zeros((self.num_agents, 1)).to(self.device)
+            for en in range(len(masks)):
+                all_adjust_mask = (
+                    all_adjust_mask
+                    + self.external_align_adjustment_vector[en] * masks[en]
+                )
+
         # if beginning of the week, recalculate isolation probabilities
         if time_step % 7 == 0:
             # figure out week index
@@ -213,11 +220,12 @@ class MakeIsolationDecision(SubstepAction):
                 self.isolation_probabilities = self.isolation_probabilities + (
                     masks[en % len(AgeGroup)] * isolation_response * 1 / 7
                 )
-        
+
         # aligned_isolation_probs = all_align_mask*((self.last_isolation_probabilities + self.isolation_probabilities) / 2)
         isolation_probs = (self.last_isolation_probabilities/2 + self.isolation_probabilities/2)
         if self.align_llm:
-            isolation_probs = isolation_probs*all_align_mask
+            isolation_probs = isolation_probs*all_align_mask + all_adjust_mask
+        isolation_probs = torch.clamp(isolation_probs, 0, 1)
         will_isolate = self.st_bernoulli(isolation_probs)
 
         # print("aligned_isolation_probs: ", isolation_probs.shape, "will_isolate: ", will_isolate.shape)
@@ -228,5 +236,5 @@ class MakeIsolationDecision(SubstepAction):
         #     + self.isolation_probabilities * 1 / 2 )
 
         print(f"day {time_step}, number of isolating agents {sum(will_isolate).item()}")
-        
+
         return {self.output_variables[0]: will_isolate}

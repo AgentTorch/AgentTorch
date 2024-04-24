@@ -127,20 +127,22 @@ def _get_parameters(CALIB_MODE):
         )
 
         for metadata, features in dataloader:
-            r0_values, align_values = learn_model(features, metadata) #[:, 0, 0]
+            r0_values, align_values, align_adjust = learn_model(features, metadata) #[:, 0, 0]
             r0_values = r0_values.squeeze() # [2,1]
             align_values = align_values.mean(axis=0) # [2,6] #[:, 0, :].squeeze() # (week_id, num_groups)
+            align_adjust = align_adjust.mean(axis=0)
 
-        return r0_values, align_values
+        return r0_values, align_values, align_adjust
 
-def _set_parameters(new_R, new_align):
-    # print("SET PARAMETERS ONLY WORKS FOR R0 for now!")
-    '''Only sets R value for now..'''
+def _set_parameters(new_R, new_align, new_align_adjust):
     print(f"r0 values: {new_R}")
     print(f"align values: {new_align}")
+    print(f"adjustment values:{align_adjust}")
 
     runner.initializer.transition_function['0']['new_transmission'].external_R = new_R
     runner.initializer.policy_function['0']['citizens'].make_isolation_decision.external_align_vector = new_align
+    runner.initializer.policy_function['0']['citizens'].make_isolation_decision.external_align_adjustment_vector = new_align_adjust
+
 
 for episode in range(num_episodes):    
     # reset gradients from previous iteration
@@ -151,8 +153,8 @@ for episode in range(num_episodes):
         runner.reset()
 
     # get the r0 predictions for the episode
-    r0_values, align_values = _get_parameters(CALIB_MODE)
-    _set_parameters(r0_values, align_values)
+    r0_values, align_values, align_adjust = _get_parameters(CALIB_MODE)
+    _set_parameters(r0_values, align_values, align_adjust)
 
     runner.step(NUM_STEPS_PER_EPISODE)
 
@@ -178,6 +180,5 @@ for episode in range(num_episodes):
     # print(torch.cuda.memory_summary())
     # print("---------------------------------")
     torch.cuda.empty_cache()
-
     scheduler.step()
 

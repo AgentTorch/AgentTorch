@@ -156,6 +156,7 @@ class CalibAlignNN(nn.Module):
                                          out_features=out_dim)
         
         self.align_out_layer = nn.Linear(in_features=7*out_layer_width//2, out_features=out_dim_align)
+        self.align_adjust_layer = nn.Linear(in_features=7*out_layer_width//2, out_features=out_dim_align)
 
         def init_weights(m):
             if isinstance(m, nn.Linear):
@@ -196,9 +197,13 @@ class CalibAlignNN(nn.Module):
         calib_out = self.min_values[0] + (self.max_values[0] - self.min_values[0]) * self.sigmoid(out) # [2]
 
         align_out = self.align_out_layer(emb) # (num_weeks, num_age_groups)
-        align_out = self.sigmoid(align_out) 
+        align_out = self.sigmoid(align_out) * 1/5 + 0.6
+
+        # get the additional part of the alignment
+        align_adjust = self.align_adjust_layer(emb)
+        align_adjust = self.sigmoid(align_adjust) * 1/5
  
-        return calib_out, align_out
+        return calib_out, align_out, align_adjust
     
 class LearnableParams(nn.Module):
     ''' doesn't use data signals '''
