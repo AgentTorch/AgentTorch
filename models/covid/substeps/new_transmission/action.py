@@ -225,7 +225,7 @@ class MakeIsolationDecision(SubstepAction):
         isolation_probs = (self.last_isolation_probabilities/2 + self.isolation_probabilities/2)
         if self.align_llm:
             isolation_probs = isolation_probs*all_align_mask + all_adjust_mask
-        isolation_probs = torch.clamp(isolation_probs, 0, 1)
+        isolation_probs = torch.clamp(isolation_probs, 0, 0.95)
         will_isolate = self.st_bernoulli(isolation_probs)
 
         # print("aligned_isolation_probs: ", isolation_probs.shape, "will_isolate: ", will_isolate.shape)

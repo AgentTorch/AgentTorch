@@ -8,14 +8,14 @@ from epiweeks import Week
 import torch
 import torch.optim as optim
 import torch.nn as nn
-import numpy as np
+from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import StepLR
 
-from torch.utils.data import DataLoader
+from utils.llm import AgeGroup
 from utils.misc import week_num_to_epiweek
 
-# AGENT_TORCH_PATH = '/u/ngkuru/ship/MacroEcon/AgentTorch'
-AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
+AGENT_TORCH_PATH = '/u/ngkuru/ship/MacroEcon/AgentTorch'
+# AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
 
 import sys
 sys.path.insert(0, AGENT_TORCH_PATH)
@@ -46,7 +46,7 @@ config_file = args.config
 print("Running experiment with config file: ", config_file)
 
 CALIB_MODE = 'calibNN' # i -> internal_param; external_param -> nn.Parameter; learnable_param -> learnable_parameters; nn -> CalibNN
-ALIGN_MASK = 6 # number of prompt dimensions
+ALIGN_MASK = len(AgeGroup) # number of prompt dimensions
 
 config = read_config(config_file)
 registry = get_registry()
@@ -56,6 +56,8 @@ runner = get_runner(config, registry)
 device = torch.device(runner.config["simulation_metadata"]["device"])
 num_episodes = runner.config["simulation_metadata"]["num_episodes"]
 NUM_STEPS_PER_EPISODE = runner.config["simulation_metadata"]["num_steps_per_episode"]
+ALIGN_LLM = runner.config['simulation_metadata']['ALIGN_LLM']
+RESCALE_CONFIG = runner.config['simulation_metadata']['RESCALE_CONFIG']
 
 runner.init()
 
@@ -106,7 +108,7 @@ elif CALIB_MODE == "calibNN":
 
     # learn_model = torch.compile(learn_model)
     # set up loss function and optimizer
-    loss_function = torch.nn.MSELoss().to(device)
+    loss_function = torch.nn.L1Loss().to(device)
     # loss_function = torch.compile(loss_function)
     opt = optim.Adam(learn_model.parameters(), lr=learning_rate, betas=betas)
     scheduler = StepLR(opt, step_size=5, gamma=0.1)
@@ -131,6 +133,20 @@ def _get_parameters(CALIB_MODE):
             r0_values = r0_values.squeeze() # [2,1]
             align_values = align_values.mean(axis=0) # [2,6] #[:, 0, :].squeeze() # (week_id, num_groups)
             align_adjust = align_adjust.mean(axis=0)
+
+            # rescale the align values
+            if ALIGN_LLM:
+                if RESCALE_CONFIG == 0:
+                    align_adjust *= 0
+                elif RESCALE_CONFIG == 1:
+                    align_values *= 2
+                    align_adjust -= 1/2
+                elif RESCALE_CONFIG == 2:
+                    align_values *= 2
+                    align_adjust *= 0
+                elif RESCALE_CONFIG == 3:
+                    align_values = align_values * 1/5 + 0.6
+                    align_adjust = align_adjust * 1/5
 
         return r0_values, align_values, align_adjust
 

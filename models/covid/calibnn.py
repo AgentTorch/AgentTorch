@@ -197,11 +197,11 @@ class CalibAlignNN(nn.Module):
         calib_out = self.min_values[0] + (self.max_values[0] - self.min_values[0]) * self.sigmoid(out) # [2]
 
         align_out = self.align_out_layer(emb) # (num_weeks, num_age_groups)
-        align_out = self.sigmoid(align_out) * 1/5 + 0.6
+        align_out = self.sigmoid(align_out)
 
         # get the additional part of the alignment
         align_adjust = self.align_adjust_layer(emb)
-        align_adjust = self.sigmoid(align_adjust) * 1/5
+        align_adjust = self.sigmoid(align_adjust)
  
         return calib_out, align_out, align_adjust
     
