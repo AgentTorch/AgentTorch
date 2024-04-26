@@ -5,7 +5,7 @@ from model_utils import EmbedAttenSeq, DecodeSeq
 MIN_VAL_PARAMS = {
     # 'abm-covid': [2.0, 0.001, 0.1, 0.001, 0.001, 0.001, 0.001, 0.001,
     #               0.001],  # new start date on 202045 + triangular dist params
-    'abm-covid': [1.5, 0.001, 0.1, 0.001, 0.001, 0.001, 0.001, 0.001,
+    'abm-covid': [1.0, 0.001, 0.1, 0.001, 0.001, 0.001, 0.001, 0.001,
                   0.001],  # new start date on 202045 + beta dist params
     'abm-flu': [1.05, 0.1],
     'seirm': [0., 0., 0., 0., 0.01],

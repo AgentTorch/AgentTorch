@@ -111,7 +111,7 @@ elif CALIB_MODE == "calibNN":
     loss_function = torch.nn.L1Loss().to(device)
     # loss_function = torch.compile(loss_function)
     opt = optim.Adam(learn_model.parameters(), lr=learning_rate, betas=betas)
-    scheduler = StepLR(opt, step_size=5, gamma=0.1)
+    # scheduler = StepLR(opt, step_size=5, gamma=0.1)
 
 def _get_parameters(CALIB_MODE):
     if CALIB_MODE == "learnable_param":
@@ -196,5 +196,5 @@ for episode in range(num_episodes):
     # print(torch.cuda.memory_summary())
     # print("---------------------------------")
     torch.cuda.empty_cache()
-    scheduler.step()
+    # scheduler.step()
 
