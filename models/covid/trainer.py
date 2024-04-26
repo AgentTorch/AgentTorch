@@ -81,6 +81,7 @@ elif CALIB_MODE == "calibNN":
     # set the epiweeks to simulate
     EPIWEEK_START: Week = week_num_to_epiweek(runner.config["simulation_metadata"]["START_WEEK"])
     NUM_WEEKS: int = runner.config["simulation_metadata"]["num_steps_per_episode"] // 7
+    NUM_TRAIN_WEEKS: int = runner.config["simulation_metadata"]["NUM_TRAIN_WEEKS"]
 
     # set up variables
     FEATURE_LIST = [
@@ -111,7 +112,6 @@ elif CALIB_MODE == "calibNN":
     loss_function = torch.nn.L1Loss().to(device)
     # loss_function = torch.compile(loss_function)
     opt = optim.Adam(learn_model.parameters(), lr=learning_rate, betas=betas)
-    # scheduler = StepLR(opt, step_size=5, gamma=0.1)
 
 def _get_parameters(CALIB_MODE):
     if CALIB_MODE == "learnable_param":
@@ -186,15 +186,12 @@ for episode in range(num_episodes):
     target_weekly_cases = target_weekly_cases.to(device)
 
     # calculate the loss from the target cases
-    loss_val = loss_function(predicted_weekly_cases, target_weekly_cases)
-    loss_val.backward()
-    print(f"predicted number of cases: {predicted_weekly_cases}, actual number of cases: {target_weekly_cases}, loss: {loss_val}")
+    train_loss = loss_function(predicted_weekly_cases[:NUM_TRAIN_WEEKS], target_weekly_cases[:NUM_TRAIN_WEEKS])
+    train_loss.backward()
+    val_loss = loss_function(predicted_weekly_cases[NUM_TRAIN_WEEKS:], target_weekly_cases[NUM_TRAIN_WEEKS:])
+    print(f"predicted number of cases: {predicted_weekly_cases}, actual number of cases: {target_weekly_cases}, train loss: {train_loss}, val loss: {val_loss}")
 
     # run the optimization step, and clear simulation
-    # allocated3, reserved3 = memory_checkpoint(name="3")
     opt.step()
-    # print(torch.cuda.memory_summary())
-    # print("---------------------------------")
     torch.cuda.empty_cache()
-    # scheduler.step()
 
