@@ -1,3 +1,4 @@
+import pickle
 from langchain.document_loaders import PyPDFLoader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -12,12 +13,129 @@ from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from typing import List, Union, Optional
 import dspy
 from dsp.utils import deduplicate
+from pandasai import Agent
+import openai
+from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain.tools import Tool
+from langchain.llms import OpenAI
+from langchain.tools.retriever import create_retriever_tool
+from langchain import hub
+
+class SimulationAnalysisAgent:
+    def __init__(
+        self,
+        openai_api_key,
+        state_trace_path,
+        model_name="gpt-4",
+        temperature=0,
+        document_retriever=None,
+        prompt=None,
+    ):
+        self.openai_chat_model = OpenAI(
+            api_key=openai_api_key, model_name=model_name, temperature=temperature
+        )
+        self.state_trace = load_state_trace(state_trace_path)
+        self.pandas_agent = get_pandas_agent(
+            agent_prop_df_list=self.state_trace, llm=self.openai_chat_model
+        )
+        self.setup_tools(document_retriever, prompt)
+
+    @Tool
+    def run_analysis_on_simulation_state(self, query: str) -> str:
+        """
+        Run the analysis on the simulation state.
+
+        Use this tool to generate Pandas code for data retrieval.
+
+        :param query: The query to run
+        :return: The data analysis result
+        """
+        return self.pandas_agent.chat(query)
+
+    def setup_tools(self, document_retriever, prompt):
+        self.retriever_tool = create_retriever_tool(
+            document_retriever.retriever,
+            "simulation_memory_retriever",
+            "You must use this tool to retrieve context for each user query!",
+        )
+        self.tools = [self.run_analysis_on_simulation_state, self.retriever_tool]
+        self.llm_agent = create_tool_calling_agent(
+            self.openai_chat_model, self.tools, prompt
+        )
+        self.agent_executor = AgentExecutor(
+            agent=self.llm_agent, tools=self.tools, verbose=True
+        )
+
+    def run(self, query):
+        return self.agent_executor.run(query)
 
 class DotDict(dict):
     """dot.notation access to dictionary attributes"""
     __getattr__ = dict.get
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
+
+
+def load_state_trace(sim_data_path = '/Users/shashankkumar/Documents/GitHub/MacroEcon/state_data_dict.pkl'):
+    with open(sim_data_path, 'rb') as handle:
+        sim_data_dict = pickle.load(handle)
+    agent_prop_df_list = []
+    # Loop through each episode in the simulation data dictionary
+    for episode in sim_data_dict.keys():
+        agent_prop_dict = sim_data_dict[episode]['agents']
+
+        # Loop through each step and agent properties in the episode
+        for step, agent_prop in agent_prop_dict.items():
+            processed_data = {'consumers': {}}
+
+            # Extract consumer data from the agent properties
+            for key, value in agent_prop['consumers'].items():
+                value = value.flatten().squeeze()
+                processed_data['consumers'][key] = value.numpy()
+
+            # Limit the 'assets' column to the first 541516 entries
+            processed_data['consumers']['assets'] = processed_data['consumers']['assets'][:541516]
+
+            # Create a DataFrame from the processed consumer data
+            consumer_df = pd.DataFrame(processed_data['consumers'])
+
+            # Explode (flatten) the nested columns
+            consumer_df = consumer_df.explode(['assets', 'consumption_propensity', 'monthly_income', 'post_tax_income', 'will_work'])
+
+            # Ensure consistent data types for the DataFrame columns
+            consumer_df = consumer_df.astype({'ID': int, 'age': float, 'area': float, 'assets': float, 'consumption_propensity': float,
+                                                'ethnicity': float, 'gender': float, 'monthly_income': float, 'post_tax_income': float,
+                                                'will_work': float, 'household_id': int})
+
+            # Remove unnecessary columns
+            consumer_df = consumer_df.drop(['work_propensity', 'monthly_consumption'], axis=1)
+
+            # Add month and year columns based on the current step and episode
+            consumer_df['month'] = step
+            consumer_df['year'] = episode
+
+            # Mapping for categorical variables
+            mapping = {
+                "age": ["20t29", "30t39", "40t49", "50t64", "65A", "U19"],
+                "gender": ["male", "female"],
+                "ethnicity": ["hispanic", "asian", "black", "white", "other", "native"],
+                "county": ["BK", "BX", "MN", "QN", "SI"]
+            }
+
+            # Reverse the mapping for replacement
+            reverse_mapping = {col: {i: val for i, val in enumerate(vals)} for col, vals in mapping.items()}
+
+            # Replace numerical values with categorical labels in the DataFrame
+            consumer_df.replace(reverse_mapping, inplace=True)
+
+            # Append the current consumer DataFrame to the list
+            agent_prop_df_list.append(consumer_df)
+
+    return agent_prop_df_list
+
+def get_pandas_agent(agent_prop_df_list, llm):
+    # Create and return the PandasAI Agent instance
+    return Agent(agent_prop_df_list, config={"llm": llm})
 
 class DocumentRetriever:
     def __init__(self, model_name, model_kwargs, encode_kwargs, directory,search_kwargs):

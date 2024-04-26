@@ -17,6 +17,7 @@ from langchain_core.messages import SystemMessage
 import dspy
 import concurrent.futures
 from dspy.primitives.assertions import assert_transform_module, backtrack_handler
+
 class BasicQA(dspy.Signature):
     """
     You are an individual living in New York City (NYC) during the COVID-19 pandemic. You need to decide your willingness to work each month and portion of your assests you are willing to spend to meet your consumption demands, based on the current situation of NYC.
@@ -24,6 +25,7 @@ class BasicQA(dspy.Signature):
     history = dspy.InputField(desc="may contain your decision in the previous months",format = list)
     question = dspy.InputField(desc="will contain the number of COVID cases in NYC, your age and other information about the economy and your identity, to help you decide your willingness to work and consumption demands")
     answer = dspy.OutputField(desc="will contain a list only two int values between 0 and 1 representing realistic probability of your willingness to work and consumption demands. No reasoning or any other information is required")
+
 class COT(dspy.Module):
     def __init__(self):
         super().__init__()
