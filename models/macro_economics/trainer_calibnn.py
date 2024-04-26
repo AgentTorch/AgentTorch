@@ -63,6 +63,18 @@ print("named learnable_params: ", named_params_learnable)
 learning_rate = runner.config['simulation_metadata']['learning_params']['lr']
 betas = runner.config['simulation_metadata']['learning_params']['betas']
 
+def get_calibnn(device, FEATURE_LIST,NN_INPUT_WEEKS):
+    learn_model = CalibNN(
+        metas_train_dim=len(Neighborhood),
+        X_train_dim=len(FEATURE_LIST),
+        device=device,
+        training_weeks=NN_INPUT_WEEKS,
+        out_dim=1,
+        scale_output="abm-covid",
+    ).to(device)
+    
+    return learn_model
+
 if CALIB_MODE == 'internal_param':
     learnable_params = [param for param in runner.parameters() if param.requires_grad]
     opt = optim.Adam(learnable_params, lr=learning_rate,betas=betas)
@@ -92,21 +104,14 @@ elif CALIB_MODE == "calibNN":
     NEIGHBORHOOD = name_to_neighborhood(config["simulation_metadata"]["NEIGHBORHOOD"])
 
     # set up model
-    learn_model = CalibNN(
-        metas_train_dim=len(Neighborhood),
-        X_train_dim=len(FEATURE_LIST),
-        device=device,
-        training_weeks=NN_INPUT_WEEKS,
-        out_dim=1,
-        scale_output="abm-covid",
-    ).to(device)
+    learn_model = get_calibnn(device, FEATURE_LIST,NN_INPUT_WEEKS)
 
     # set up loss function and optimizer
     # loss_function = torch.nn.MSELoss().to(device)
     loss_function = torch.nn.MSELoss().to(device)
     opt = optim.Adam(learn_model.parameters(), lr=learning_rate, betas=betas)
 
-def _get_parameters(CALIB_MODE):
+def _get_parameters(CALIB_MODE,NUM_WEEKS):
     if CALIB_MODE == "learnable_param":
         new_R = learn_model()
         print("R shape: ", new_R.shape)
@@ -130,19 +135,19 @@ def _set_parameters(new_values):
     '''Only sets UAC value for now..'''
     runner.initializer.transition_function['2']['update_macro_rates'].external_UAC = new_values
 
-def _get_unemployment_labels(num_train_steps=1,num_test_steps=3):
+def _get_unemployment_labels(num_months):
     data_path = '/Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/NYC/brooklyn_unemp.csv'
     df = pd.read_csv(data_path)
     df.sort_values(by=['year','month'],ascending=True,inplace=True)
     arr = df['unemployment_rate'].values
     unemployment_dataset = torch.from_numpy(arr).to(device)
     unemployment_dataset = unemployment_dataset * (0.01) # scale the values to 0-1
-    unemployment_val_dataset = unemployment_dataset[:num_train_steps].float().squeeze()
-    try:
-        unemployment_test_dataset = unemployment_dataset[num_train_steps:num_test_steps].float().squeeze()
-    except Exception as e:
-        print(e)
-    return unemployment_val_dataset,unemployment_test_dataset
+    unemployment_val_dataset = unemployment_dataset[:num_months].float().squeeze()
+    # try:
+    #     unemployment_test_dataset = unemployment_dataset[num_train_steps:num_test_steps].float().squeeze()
+    # except Exception as e:
+    #     print(e)
+    return unemployment_val_dataset
 
 state_data_dict = {}
 for episode in range(num_episodes):    
@@ -153,7 +158,7 @@ for episode in range(num_episodes):
         runner.reset()
 
     # get the r0 predictions for the episode
-    calib_values = _get_parameters(CALIB_MODE)
+    calib_values = _get_parameters(CALIB_MODE,NUM_WEEKS)
     avg_month_value = calib_values.reshape(-1, 4).mean(dim=1)[:NUM_TRAIN_STEPS]
     _set_parameters(avg_month_value)
     print(f"calib values: {calib_values}")
