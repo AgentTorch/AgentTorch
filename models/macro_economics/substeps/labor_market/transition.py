@@ -14,6 +14,8 @@ class UpdateMacroRates(SubstepTransition):
         super().__init__(config, input_variables, output_variables, arguments)
             
         self.device = torch.device(self.config['simulation_metadata']['device'])
+        self.num_total_steps = self.config['simulation_metadata']['num_steps_per_episode']
+        self.num_test_steps = self.config['simulation_metadata']['num_test_steps']
         self.num_timesteps = self.config['simulation_metadata']['num_steps_per_episode']
         self.max_rate_change = self.config['simulation_metadata']['maximum_rate_of_change_of_wage']
         self.num_agents = self.config['simulation_metadata']['num_agents']

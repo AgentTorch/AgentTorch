@@ -3,9 +3,10 @@ simulation_metadata:
   device: cpu
   execution_mode: llm
   num_agents: 541516
-  num_episodes: 5
-  num_steps_per_episode: 6
+  num_episodes: 1
+  num_steps_per_episode: 4
   num_substeps_per_step: 4
+  num_test_steps: 2
   START_WEEK: 202212
   NUM_WEEKS: 24
   NEIGHBORHOOD: "Astoria"
