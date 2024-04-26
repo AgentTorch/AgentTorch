@@ -87,7 +87,7 @@ class DSPythonicRMClient(dspy.Retrieve):
         documents = self.retriever.get_documents(query_or_queries, k=k)
         # Convert each document to a DotDict
         passages = [DotDict(long_text=doc.page_content) for doc in documents]
-        print(psg.long_text for psg in passages)
+        # print(psg.long_text for psg in passages)
         return passages
         # List of top k passages
         # return dspy.Prediction(

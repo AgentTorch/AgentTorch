@@ -100,16 +100,6 @@ class SimulationRunner(Runner):
     
     def execute(self):
         self.forward()
-        # Save the state data
-        # state_data_dict = {
-        #     "environment": [state_traj['environment'] for state_traj in self.state_trajectory[-1][::self.config['simulation_metadata']['num_substeps_per_step']]],
-        #     "agents": [state_traj['agents'] for state_traj in self.state_trajectory[-1][::self.config['simulation_metadata']['num_substeps_per_step']]]
-        # }
-        # environment_obj = self.state_trajectory[-1][::steps_required_over_state_trajectory]['environment']
-        # steps_required_over_state_trajectory = int(self.config['simulation_metadata']['num_substeps_per_step']) # to get accumulated state data after each step of an episode
-        # agent_obj = [self.state_trajectory[-1][-1]['agents']]
-        # # Create a dictionary
-        # state_data_dict = {'environment': environment_obj, 'agents': agent_obj}
         with open('state_data_dict.pkl', 'wb') as f:
             pickle.dump(self.state_data_dict, f)
             

@@ -1,10 +1,3 @@
-# AGENT_TORCH_PATH = '/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch'
-# MODEL_PATH = '/Users/shashankkumar/Documents/GitHub/MacroEcon/models'
-AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
-MODEL_PATH = '/u/ayushc/projects/GradABM/MacroEcon/models'
-
-# OPENAI_API_KEY = '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'
-
 import asyncio
 import json
 import os
@@ -12,7 +5,6 @@ import torch
 import re
 import sys
 import pdb
-sys.path.append(MODEL_PATH)
 from AgentTorch.helpers.distributions import StraightThroughBernoulli
 
 # sys.path.insert(0, AGENT_TORCH_PATH)
@@ -20,7 +12,6 @@ from AgentTorch.LLM.llm_agent import LLMAgent
 from AgentTorch.substep import SubstepAction
 from AgentTorch.helpers import get_by_path
 
-sys.path.append(MODEL_PATH)
 from macro_economics.prompt import prompt_template_var,agent_profile
 import itertools
 
@@ -33,6 +24,7 @@ class WorkConsumptionPropensity(SubstepAction):
         self.mode = self.config['simulation_metadata']['execution_mode']        
         self.save_memory_dir = self.config['simulation_metadata']['memory_dir']
         self.num_steps_per_episode = self.config['simulation_metadata']['num_steps_per_episode']
+        self.num_agents = self.config['simulation_metadata']['num_agents']
         
         self.mapping = self.load_mapping(self.config['simulation_metadata']['mapping_path'])
         self.variables = self.get_variables(prompt_template_var)
@@ -46,83 +38,82 @@ class WorkConsumptionPropensity(SubstepAction):
     
     async def forward(self, state, observation):        
         print("Substep Action: Earning decision")
-        num_agents = self.config['simulation_metadata']['num_agents']
         number_of_months = state['current_step'] + 1
-        current_month = number_of_months % 12
-        current_month = self.month_mapping[current_month]
-        
         current_year = number_of_months // 12 + 1 # 1 indexed
-        current_year = self.year_mapping[current_year]
-        
-        gender = get_by_path(state, re.split("/", self.input_variables['gender']))
-        age = get_by_path(state,re.split("/", self.input_variables['age']))
-        county = get_by_path(state,re.split("/", self.input_variables['county']))
-        price_of_goods = get_by_path(state,re.split("/", self.input_variables['price_of_goods']))
-        unemployment_rate = get_by_path(state,re.split("/", self.input_variables['unemployment_rate']))
-        interest_rate = get_by_path(state,re.split("/", self.input_variables['interest_rate']))
-        inflation_rate = get_by_path(state,re.split("/", self.input_variables['inflation_rate']))
-        
-        prompt_inflation_rate = inflation_rate[-1].item()
-        prompt_interest_rate = interest_rate[-1][-1].item()
-        prompt_unemployment_rate = unemployment_rate[-1][-1].item()
-        prompt_price_of_goods = price_of_goods[-1][-1].item()
-    
+        year = self.year_mapping[current_year]
         consumption_propensity = get_by_path(state,re.split("/", self.input_variables['consumption_propensity']))
         work_propensity = get_by_path(state,re.split("/", self.input_variables['work_propensity']))
         
-        if self.mode == 'simple':
-            print("Simple mode expts")
-            work_propensity = torch.rand(num_agents,1)
-            whether_to_work = torch.bernoulli(work_propensity)
-            
-            return {self.output_variables[0] : whether_to_work, 
-                    self.output_variables[1] : work_propensity, 
-                    self.output_variables[2] : consumption_propensity}
-        
-        print("LLM benchmark expts")
-        masks = []
-        output_values = []
-        
-        for target_values in self.combinations_of_prompt_variables_with_index:
-            mask = torch.tensor([True]*len(gender))  # Initialize mask as tensor of True values
-            for key, value in target_values.items():
-                if key in locals():  # Check if variable with this name exists
-                    mask = torch.logical_and(mask, locals()[key] == value)
-            mask = mask.unsqueeze(1)  # Ensure consistent adding later
-            float_mask = mask.float()
-            masks.append(float_mask)
-
-        
-        prompt_list = []
-        for en,_ in enumerate(self.combinations_of_prompt_variables_with_index):
-            age = self.combinations_of_prompt_variables[en]['age']
-            # gender = self.combinations_of_prompt_variables[en]['gender']
-            # county = self.combinations_of_prompt_variables[en]['county']
-            # prompt = prompt_template_var.format(age = age,gender = gender,county = county,month=current_month,year=current_year,price_of_goods=prompt_price_of_goods,unemployment_rate=prompt_unemployment_rate,interest_rate=prompt_interest_rate,inflation_rate=prompt_inflation_rate)
-            prompt = prompt_template_var.format(age = age)
-            prompt_list.append(prompt)
-        
+        prompt_variables_dict = self.get_prompt_variables_dict(state)
+        masks = self.get_masks_for_each_group(prompt_variables_dict)
+        prompt_list = self.get_prompt_list(prompt_variables_dict)
         # await asyncio.sleep(10)
-        agent_output = await self.agent(prompt_list,last_k=3)
-        
-        for en,output_value in enumerate(agent_output):
-            output_value = json.loads(output_value['text'])
-            group_work_propensity = output_value['work']
-            group_consumption_propensity = output_value['consumption']
-            consumption_propensity_for_group = masks[en]*group_consumption_propensity
-            consumption_propensity = torch.add(consumption_propensity,consumption_propensity_for_group)
-            work_propensity_for_group = masks[en]*group_work_propensity
-            work_propensity = torch.add(work_propensity,work_propensity_for_group)
-
+        agent_output = self.agent(prompt_list,last_k=1)
+        consumption_propensity, work_propensity = self.get_propensity_values(consumption_propensity, work_propensity, masks, agent_output)
         will_work = self.st_bernoulli(work_propensity) #torch.bernoulli(work_propensity)
         
         if number_of_months == self.num_steps_per_episode:
             current_memory_dir = os.path.join(self.save_memory_dir ,str(current_year), str(number_of_months))
             self.agent.export_memory_to_file(current_memory_dir)
             
-        
         return {self.output_variables[0] : will_work, 
                 self.output_variables[1] : consumption_propensity}
+
+    def get_propensity_values(self, consumption_propensity, work_propensity, masks, agent_output):
+        for en,output_value in enumerate(agent_output):
+            output_value = json.loads(output_value)
+            # group_work_propensity = output_value['work']
+            # group_consumption_propensity = output_value['consumption']
+            group_work_propensity = output_value[0] # changed for dspy compatibility
+            group_consumption_propensity = output_value[1] # changed for dspy compatibility
+            consumption_propensity_for_group = masks[en]*group_consumption_propensity
+            consumption_propensity = torch.add(consumption_propensity,consumption_propensity_for_group)
+            work_propensity_for_group = masks[en]*group_work_propensity
+            work_propensity = torch.add(work_propensity,work_propensity_for_group)
+        return consumption_propensity,work_propensity
+
+    def get_prompt_list(self, variables):
+        prompt_list = []
+        for en,_ in enumerate(self.combinations_of_prompt_variables_with_index):
+            prompt_values = self.combinations_of_prompt_variables[en]
+            for key, value in variables.items():
+                if isinstance(value, (int, str, float, bool)):
+                    prompt_values[key] = value
+            prompt = prompt_template_var.format(**prompt_values)
+            prompt_list.append(prompt)
+        return prompt_list
+
+    def get_masks_for_each_group(self, variables):
+        print("LLM benchmark expts")
+        masks = []
+        output_values = []
+        
+        for target_values in self.combinations_of_prompt_variables_with_index:
+            mask = torch.tensor([True]*self.num_agents)  # Initialize mask as tensor of True values
+            for key, value in target_values.items():
+                if key in variables:  # Check if variable with this name exists
+                    mask = torch.logical_and(mask, variables[key] == value)
+            mask = mask.unsqueeze(1)  # Ensure consistent adding later
+            float_mask = mask.float()
+            masks.append(float_mask)
+        return masks
+
+    def get_prompt_variables_dict(self, state):      
+        number_of_months = state['current_step'] + 1
+        current_month = number_of_months % 12
+        month = self.month_mapping[current_month]
+        
+        current_year = number_of_months // 12 + 1 # 1 indexed
+        year = self.year_mapping[current_year]
+        variables = {}
+        for key in self.variables:
+            variables[key] = get_by_path(state, re.split("/", self.input_variables[key])) if key in self.input_variables else locals()[key]
+
+        variables['inflation_rate'] = variables['inflation_rate'][-1].item()
+        variables['interest_rate'] = variables['interest_rate'][-1][-1].item()
+        variables['unemployment_rate'] = variables['unemployment_rate'][-1][-1].item()
+        variables['price_of_goods'] = variables['price_of_goods'][-1][-1].item()
+        return variables
     
     def augment_mapping_with_index(self,mapping):
         return {k: {v: i for i, v in enumerate(values)} for k, values in mapping.items()}

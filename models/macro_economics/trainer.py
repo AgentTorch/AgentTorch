@@ -1,5 +1,5 @@
-MODEL_PATH = '/u/ayushc/projects/GradABM/MacroEcon/models'
-AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
+MODEL_PATH = '/Users/shashankkumar/Documents/GitHub/MacroEcon/models'
+AGENT_TORCH_PATH = '/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch'
 
 import argparse
 import torch
@@ -30,7 +30,7 @@ parser.add_argument(
 #     config_file = os.path.join("/Users/shashankkumar/Documents/GitHub/MacroEcon/models/macro_economics", 'config.yaml')
 #     print("Config file path: ", config_file)
 
-config_file = "/u/ayushc/projects/GradABM/MacroEcon/models/macro_economics/config.yaml"
+config_file = "/Users/shashankkumar/Documents/GitHub/MacroEcon/models/macro_economics/config.yaml"
 config = read_config(config_file)
 registry = simulation_registry()
 

@@ -3,7 +3,7 @@ simulation_metadata:
   device: cpu
   execution_mode: llm
   num_agents: 541516
-  num_episodes: 10
+  num_episodes: 5
   num_steps_per_episode: 6
   num_substeps_per_step: 4
   START_WEEK: 202212
@@ -505,6 +505,7 @@ substeps:
           price_of_goods: environment/P
           total_demand: environment/D
           work_propensity: agents/consumers/work_propensity
+          unemployment_rate: environment/U
         output_variables:
         - goods_inventory
         - assets
