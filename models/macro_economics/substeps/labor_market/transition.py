@@ -14,8 +14,6 @@ class UpdateMacroRates(SubstepTransition):
         super().__init__(config, input_variables, output_variables, arguments)
             
         self.device = torch.device(self.config['simulation_metadata']['device'])
-        self.num_total_steps = self.config['simulation_metadata']['num_steps_per_episode']
-        self.num_test_steps = self.config['simulation_metadata']['num_test_steps']
         self.num_timesteps = self.config['simulation_metadata']['num_steps_per_episode']
         self.max_rate_change = self.config['simulation_metadata']['maximum_rate_of_change_of_wage']
         self.num_agents = self.config['simulation_metadata']['num_agents']
@@ -23,7 +21,7 @@ class UpdateMacroRates(SubstepTransition):
         self.external_UAC = torch.tensor(self.learnable_args['unemployment_adaptation_coefficient'], requires_grad=True)
     
     def calculateNumberOfAgentsNotWorking(self, working_status):
-        agents_not_working = torch.sum(torch.sum((1-working_status),dim=1),dim=0)
+        agents_not_working = torch.sum((1-working_status))
         return agents_not_working
     
     def updateHourlyWage(self, hourly_wage, imbalance):
@@ -67,7 +65,16 @@ class UpdateMacroRates(SubstepTransition):
         one_hot_tensor = F.one_hot(timestep_tensor, num_classes=num_timesteps)
 
         return one_hot_tensor.to(self.device)
-
+    
+    def create_county_masks(self, county):
+        county_masks = []
+        for i in range(5):
+            mask = torch.tensor([True]*self.num_agents)
+            mask = torch.logical_and(mask, county == i)
+            mask = mask.unsqueeze(1)
+            county_masks.append(mask)
+        return county_masks
+    
     def forward(self, state, action):
         print("Executing Substep: Labor Market")
         month_id = state['current_step']
@@ -78,15 +85,33 @@ class UpdateMacroRates(SubstepTransition):
         imbalance = get_by_path(state, re.split("/", self.input_variables['imbalance']))
         hourly_wage = get_by_path(state, re.split("/", self.input_variables['hourly_wage']))
         unemployment_rate = get_by_path(state, re.split("/", self.input_variables['unemployment_rate']))
-
-        unemployment_adaptation_coefficient = (self.external_UAC*time_step_one_hot).sum()
+        county = get_by_path(state, re.split("/", self.input_variables['county']))
+        county_masks = self.create_county_masks(county)
+        
+        working_status_county_0 = working_status * county_masks[0]
+        working_status_county_1 = working_status * county_masks[1]
+        working_status_county_2 = working_status * county_masks[2]
+        working_status_county_3 = working_status * county_masks[3]
+        working_status_county_4 = working_status * county_masks[4]
+        
+        agents_not_working_county_0 = self.calculateNumberOfAgentsNotWorking(working_status_county_0)
+        agents_not_working_county_1 = self.calculateNumberOfAgentsNotWorking(working_status_county_1)
+        agents_not_working_county_2 = self.calculateNumberOfAgentsNotWorking(working_status_county_2)
+        agents_not_working_county_3 = self.calculateNumberOfAgentsNotWorking(working_status_county_3)
+        agents_not_working_county_4 = self.calculateNumberOfAgentsNotWorking(working_status_county_4)
+        
+        unemployment_adaptation_coefficient_county_0 = (self.external_UAC*time_step_one_hot).sum()
+        unemployment_adaptation_coefficient_county_1 = (self.external_UAC*time_step_one_hot).sum()
+        unemployment_adaptation_coefficient_county_2 = (self.external_UAC*time_step_one_hot).sum()
+        unemployment_adaptation_coefficient_county_3 = (self.external_UAC*time_step_one_hot).sum()
+        unemployment_adaptation_coefficient_county_4 = (self.external_UAC*time_step_one_hot).sum()
 
         # unemployment rate
-        agents_not_working = self.calculateNumberOfAgentsNotWorking(working_status)
-        time_step_one_hot = self._generate_one_hot_tensor(t, self.num_timesteps)
+        # agents_not_working = self.calculateNumberOfAgentsNotWorking(working_status)
         
-        unemployed_agents = agents_not_working * unemployment_adaptation_coefficient
-        current_unemployment_rate = unemployed_agents / self.num_agents
+        # unemployed_agents = agents_not_working * unemployment_adaptation_coefficient
+        unemployed_agents = (agents_not_working_county_0 * unemployment_adaptation_coefficient_county_0) + (agents_not_working_county_1 * unemployment_adaptation_coefficient_county_1) + (agents_not_working_county_2 * unemployment_adaptation_coefficient_county_2) + (agents_not_working_county_3 * unemployment_adaptation_coefficient_county_3) + (agents_not_working_county_4 * unemployment_adaptation_coefficient_county_4)
+        current_unemployment_rate = unemployed_agents / self.num_agents #fix this logic
         unemployment_rate = unemployment_rate + (current_unemployment_rate*time_step_one_hot)
 
         # hourly wages

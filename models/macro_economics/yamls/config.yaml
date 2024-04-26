@@ -3,12 +3,11 @@ simulation_metadata:
   device: cpu
   execution_mode: llm
   num_agents: 541516
-  num_episodes: 1
-  num_steps_per_episode: 4
+  num_episodes: 5
+  num_steps_per_episode: 7
   num_substeps_per_step: 4
-  num_test_steps: 2
   START_WEEK: 202212
-  NUM_WEEKS: 24
+  NUM_WEEKS: 28
   NEIGHBORHOOD: "Astoria"
   INCLUDE_WEEK_COUNT: True
   EXECUTION_MODE: debug #llm
@@ -539,6 +538,7 @@ substeps:
           imbalance: environment/Im
           unemployment_rate: environment/U
           will_work: agents/consumers/will_work
+          county: agents/consumers/county
           # unemployment_adaptation_coefficient: environment/unemployment_adaptation_coefficient
         output_variables:
         - hourly_wage

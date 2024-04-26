@@ -49,10 +49,7 @@ runner = Runner(config, registry)
 device = torch.device(runner.config['simulation_metadata']['device'])
 CALIB_MODE = 'calibNN' # i -> internal_param; external_param -> nn.Parameter; learnable_param -> learnable_parameters; nn -> CalibNN
 num_episodes = runner.config["simulation_metadata"]["num_episodes"]
-NUM_TRAIN_STEPS = runner.config["simulation_metadata"]["num_steps_per_episode"]
-NUM_TEST_STEPS = runner.config["simulation_metadata"]["num_test_steps"]
-# NUM_TRAIN_STEPS = NUM_STEPS_PER_EPISODE - NUM_TEST_STEPS
-TOTAL_MONTHS = NUM_TEST_STEPS + NUM_TRAIN_STEPS
+NUM_STEPS_PER_EPISODE = runner.config["simulation_metadata"]["num_steps_per_episode"]
 
 runner.init()
 loss_log = []
@@ -62,18 +59,6 @@ print("named learnable_params: ", named_params_learnable)
 
 learning_rate = runner.config['simulation_metadata']['learning_params']['lr']
 betas = runner.config['simulation_metadata']['learning_params']['betas']
-
-def get_calibnn(device, FEATURE_LIST,NN_INPUT_WEEKS):
-    learn_model = CalibNN(
-        metas_train_dim=len(Neighborhood),
-        X_train_dim=len(FEATURE_LIST),
-        device=device,
-        training_weeks=NN_INPUT_WEEKS,
-        out_dim=1,
-        scale_output="abm-covid",
-    ).to(device)
-    
-    return learn_model
 
 if CALIB_MODE == 'internal_param':
     learnable_params = [param for param in runner.parameters() if param.requires_grad]
@@ -88,7 +73,7 @@ elif CALIB_MODE == 'learnable_param':
 elif CALIB_MODE == "calibNN":
     # set the epiweeks to simulate
     EPIWEEK_START: Week = week_num_to_epiweek(runner.config["simulation_metadata"]["START_WEEK"])
-    NUM_WEEKS: int = TOTAL_MONTHS*4
+    NUM_WEEKS: int = runner.config["simulation_metadata"]["num_steps_per_episode"]*4
 
     # set up variables
     FEATURE_LIST = [
@@ -104,14 +89,21 @@ elif CALIB_MODE == "calibNN":
     NEIGHBORHOOD = name_to_neighborhood(config["simulation_metadata"]["NEIGHBORHOOD"])
 
     # set up model
-    learn_model = get_calibnn(device, FEATURE_LIST,NN_INPUT_WEEKS)
+    learn_model = CalibNN(
+        metas_train_dim=len(Neighborhood),
+        X_train_dim=len(FEATURE_LIST),
+        device=device,
+        training_weeks=NN_INPUT_WEEKS,
+        out_dim=5,
+        scale_output="abm-covid",
+    ).to(device)
 
     # set up loss function and optimizer
     # loss_function = torch.nn.MSELoss().to(device)
     loss_function = torch.nn.MSELoss().to(device)
     opt = optim.Adam(learn_model.parameters(), lr=learning_rate, betas=betas)
 
-def _get_parameters(CALIB_MODE,NUM_WEEKS):
+def _get_parameters(CALIB_MODE):
     if CALIB_MODE == "learnable_param":
         new_R = learn_model()
         print("R shape: ", new_R.shape)
@@ -135,21 +127,18 @@ def _set_parameters(new_values):
     '''Only sets UAC value for now..'''
     runner.initializer.transition_function['2']['update_macro_rates'].external_UAC = new_values
 
-def _get_unemployment_labels(num_months):
+def _get_unemployment_labels(num_steps_per_episode=1):
     data_path = '/Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/NYC/brooklyn_unemp.csv'
     df = pd.read_csv(data_path)
     df.sort_values(by=['year','month'],ascending=True,inplace=True)
     arr = df['unemployment_rate'].values
-    unemployment_dataset = torch.from_numpy(arr).to(device)
-    unemployment_dataset = unemployment_dataset * (0.01) # scale the values to 0-1
-    unemployment_val_dataset = unemployment_dataset[:num_months].float().squeeze()
-    # try:
-    #     unemployment_test_dataset = unemployment_dataset[num_train_steps:num_test_steps].float().squeeze()
-    # except Exception as e:
-    #     print(e)
-    return unemployment_val_dataset
+    unemployment_test_dataset = torch.from_numpy(arr).to(device)
+    unemployment_test_dataset = unemployment_test_dataset * (0.01) # scale the values to 0-1
+    unemployment_test_dataset = unemployment_test_dataset[:num_steps_per_episode].float().squeeze()
 
+    return unemployment_test_dataset
 state_data_dict = {}
+NUM_TEST_STEPS = 3
 for episode in range(num_episodes):    
     # reset gradients from previous iteration
     print(f"\nrunning episode {episode}...")
@@ -158,46 +147,37 @@ for episode in range(num_episodes):
         runner.reset()
 
     # get the r0 predictions for the episode
-    calib_values = _get_parameters(CALIB_MODE,NUM_WEEKS)
-    avg_month_value = calib_values.reshape(-1, 4).mean(dim=1)[:NUM_TRAIN_STEPS]
+    calib_values = _get_parameters(CALIB_MODE)
+    avg_month_value = calib_values.reshape(-1, 4).mean(dim=1)
     _set_parameters(avg_month_value)
     print(f"calib values: {calib_values}")
 
-    runner.step(NUM_TRAIN_STEPS)
-
-    # breakpoint()
+    runner.step(NUM_STEPS_PER_EPISODE)
 
     predicted_month_unemployment_rate = runner.state_trajectory[-1][-1]['environment']['U'].squeeze()
-    unemployment_val_data,_ = _get_unemployment_labels(NUM_TRAIN_STEPS,NUM_TEST_STEPS)
+    predicted_month_unemployment_rate_train = predicted_month_unemployment_rate[:-NUM_TEST_STEPS]
+    target_month_unemployment_rate = _get_unemployment_labels(NUM_STEPS_PER_EPISODE)
+    target_month_unemployment_rate_train = target_month_unemployment_rate[:-NUM_TEST_STEPS]
 
     # calculate the loss from the target cases
-    loss_val = loss_function(predicted_month_unemployment_rate, unemployment_val_data)
+    loss_val = loss_function(predicted_month_unemployment_rate, target_month_unemployment_rate)
     loss_val.backward()
-    print(f"predicted rate: {predicted_month_unemployment_rate}, actual rate: {unemployment_val_data}, loss: {loss_val}")
+    print(f"predicted rate: {predicted_month_unemployment_rate_train}, actual rate: {target_month_unemployment_rate_train}, loss: {loss_val}")
 
     opt.step()
-    # current_episode_state_data_dict = {
-    #         "environment": {id : state_traj['environment'] for id,state_traj in enumerate(runner.state_trajectory[-1][::NUM_STEPS_PER_EPISODE])},
-    #         "agents": {id : state_traj['agents'] for id,state_traj in enumerate(runner.state_trajectory[-1][::NUM_STEPS_PER_EPISODE])}
-    #         }
-    # state_data_dict[episode] = current_episode_state_data_dict
-    torch.cuda.empty_cache()
-
-def test_simulation():
-    _,unemployment_test_data = _get_unemployment_labels(NUM_TRAIN_STEPS,NUM_TEST_STEPS)
+    
+    #testing
     with torch.no_grad():
-         # get the r0 predictions for the episode
-        calib_values = _get_parameters(CALIB_MODE)
-        avg_month_value = calib_values.reshape(-1, 4).mean(dim=1)
-        _set_parameters(avg_month_value)
-        print(f"calib values: {calib_values}")
-        runner.step(TOTAL_MONTHS)
-        predicted_month_unemployment_rate = runner.state_trajectory[-1][-1]['environment']['U'].squeeze()
-        loss_test = loss_function(predicted_month_unemployment_rate, unemployment_test_data)
-        print(f"predicted rate: {predicted_month_unemployment_rate}, actual rate: {unemployment_test_data}, loss: {loss_test}")
-
-test_simulation()
-#test
+        predicted_month_unemployment_rate_test = predicted_month_unemployment_rate[-NUM_TEST_STEPS:]
+        target_month_unemployment_rate_test = target_month_unemployment_rate[-NUM_TEST_STEPS:]
+        loss_test = loss_function(predicted_month_unemployment_rate_test, target_month_unemployment_rate_test)
+        print(f"predicted rate test: {predicted_month_unemployment_rate_test}, actual rate test: {target_month_unemployment_rate_test}, loss_test: {loss_test}")
+        current_episode_state_data_dict = {
+                "environment": {id : state_traj['environment'] for id,state_traj in enumerate(runner.state_trajectory[-1][::NUM_STEPS_PER_EPISODE])},
+                "agents": {id : state_traj['agents'] for id,state_traj in enumerate(runner.state_trajectory[-1][::NUM_STEPS_PER_EPISODE])}
+                }
+        state_data_dict[episode] = current_episode_state_data_dict
+    torch.cuda.empty_cache()
 
 # save the state trace
 with open('state_data_dict.pkl', 'wb') as f:
