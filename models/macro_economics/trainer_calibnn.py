@@ -118,7 +118,7 @@ def _get_parameters(CALIB_MODE):
             FEATURE_LIST,
         )
         for metadata, features in dataloader:
-            calib_values = learn_model(features, metadata)[:, 0, 0]
+            calib_values = learn_model(features, metadata)
 
         return calib_values
 
@@ -133,7 +133,7 @@ def _get_unemployment_labels(num_steps_per_episode=1):
     df.sort_values(by=['year','month'],ascending=True,inplace=True)
     arr = df['unemployment_rate'].values
     unemployment_test_dataset = torch.from_numpy(arr).to(device)
-    unemployment_test_dataset = unemployment_test_dataset * (0.01) # scale the values to 0-1
+    unemployment_test_dataset = unemployment_test_dataset
     unemployment_test_dataset = unemployment_test_dataset[:num_steps_per_episode].float().squeeze()
 
     return unemployment_test_dataset
@@ -148,7 +148,7 @@ for episode in range(num_episodes):
 
     # get the r0 predictions for the episode
     calib_values = _get_parameters(CALIB_MODE)
-    avg_month_value = calib_values.reshape(-1, 4).mean(dim=1)
+    avg_month_value = calib_values.reshape(-1, 4,5).mean(dim=1)
     _set_parameters(avg_month_value)
     print(f"calib values: {calib_values}")
 

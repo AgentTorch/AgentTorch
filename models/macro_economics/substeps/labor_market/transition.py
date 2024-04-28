@@ -23,6 +23,13 @@ class UpdateMacroRates(SubstepTransition):
     def calculateNumberOfAgentsNotWorking(self, working_status):
         agents_not_working = torch.sum((1-working_status))
         return agents_not_working
+
+    def calculateNumberOfAgentsNotWorkingForCounty(self, working_status, county_mask):
+        total_population = torch.sum(county_mask)
+        agents_working = torch.sum(working_status)
+        agents_not_working = total_population - agents_working
+        
+        return agents_not_working
     
     def updateHourlyWage(self, hourly_wage, imbalance):
         omega = imbalance.float()
@@ -85,37 +92,69 @@ class UpdateMacroRates(SubstepTransition):
         imbalance = get_by_path(state, re.split("/", self.input_variables['imbalance']))
         hourly_wage = get_by_path(state, re.split("/", self.input_variables['hourly_wage']))
         unemployment_rate = get_by_path(state, re.split("/", self.input_variables['unemployment_rate']))
+        unemployment_rate_bronx = get_by_path(state, re.split("/", self.input_variables['unemployment_rate_bronx']))
+        unemployment_rate_brooklyn = get_by_path(state, re.split("/", self.input_variables['unemployment_rate_brooklyn']))
+        unemployment_rate_manhattan = get_by_path(state, re.split("/", self.input_variables['unemployment_rate_manhattan']))
+        unemployment_rate_queens = get_by_path(state, re.split("/", self.input_variables['unemployment_rate_queens']))
+        unemployment_rate_staten_island = get_by_path(state, re.split("/", self.input_variables['unemployment_rate_staten_island']))
         county = get_by_path(state, re.split("/", self.input_variables['county']))
         county_masks = self.create_county_masks(county)
         
-        working_status_county_0 = working_status * county_masks[0]
-        working_status_county_1 = working_status * county_masks[1]
-        working_status_county_2 = working_status * county_masks[2]
-        working_status_county_3 = working_status * county_masks[3]
-        working_status_county_4 = working_status * county_masks[4]
+        population_county_bronx = torch.sum(county_masks[0])
+        population_county_brooklyn = torch.sum(county_masks[1])
+        population_county_manhattan = torch.sum(county_masks[2])
+        population_county_queens = torch.sum(county_masks[3])
+        population_county_staten_island = torch.sum(county_masks[4])
         
-        agents_not_working_county_0 = self.calculateNumberOfAgentsNotWorking(working_status_county_0)
-        agents_not_working_county_1 = self.calculateNumberOfAgentsNotWorking(working_status_county_1)
-        agents_not_working_county_2 = self.calculateNumberOfAgentsNotWorking(working_status_county_2)
-        agents_not_working_county_3 = self.calculateNumberOfAgentsNotWorking(working_status_county_3)
-        agents_not_working_county_4 = self.calculateNumberOfAgentsNotWorking(working_status_county_4)
+        working_status_county_bronx = working_status * county_masks[0]
+        working_status_county_brooklyn = working_status * county_masks[1]
+        working_status_county_manhattan = working_status * county_masks[2]
+        working_status_county_queens = working_status * county_masks[3]
+        working_status_county_staten_island = working_status * county_masks[4]
         
-        unemployment_adaptation_coefficient_county_0 = (self.external_UAC*time_step_one_hot).sum()
-        unemployment_adaptation_coefficient_county_1 = (self.external_UAC*time_step_one_hot).sum()
-        unemployment_adaptation_coefficient_county_2 = (self.external_UAC*time_step_one_hot).sum()
-        unemployment_adaptation_coefficient_county_3 = (self.external_UAC*time_step_one_hot).sum()
-        unemployment_adaptation_coefficient_county_4 = (self.external_UAC*time_step_one_hot).sum()
+        labor_force_bronx = torch.sum(working_status_county_bronx)
+        labor_force_brooklyn = torch.sum(working_status_county_brooklyn)
+        labor_force_manhattan = torch.sum(working_status_county_manhattan)
+        labor_force_queens = torch.sum(working_status_county_queens)
+        labor_force_staten_island = torch.sum(working_status_county_staten_island)
+        
+        unemployment_adaptation_coefficient_all = torch.matmul(time_step_one_hot.float().unsqueeze(dim=0),self.external_UAC).squeeze([0,1])
+        unemployment_adaptation_coefficient_bronx = unemployment_adaptation_coefficient_all[0]
+        unemployment_adaptation_coefficient_brooklyn = unemployment_adaptation_coefficient_all[1]
+        unemployment_adaptation_coefficient_manhattan = unemployment_adaptation_coefficient_all[2]
+        unemployment_adaptation_coefficient_queens = unemployment_adaptation_coefficient_all[3]
+        unemployment_adaptation_coefficient_staten_island = unemployment_adaptation_coefficient_all[4]
 
-        # unemployment rate
-        # agents_not_working = self.calculateNumberOfAgentsNotWorking(working_status)
+        unemployed_agents_county_bronx = labor_force_bronx * unemployment_adaptation_coefficient_bronx
+        unemployed_agents_county_brooklyn = labor_force_brooklyn * unemployment_adaptation_coefficient_brooklyn
+        unemployed_agents_county_manhattan = labor_force_manhattan * unemployment_adaptation_coefficient_manhattan
+        unemployed_agents_county_queens = labor_force_queens * unemployment_adaptation_coefficient_queens
+        unemployed_agents_county_staten_island = labor_force_staten_island * unemployment_adaptation_coefficient_staten_island
         
-        # unemployed_agents = agents_not_working * unemployment_adaptation_coefficient
-        unemployed_agents = (agents_not_working_county_0 * unemployment_adaptation_coefficient_county_0) + (agents_not_working_county_1 * unemployment_adaptation_coefficient_county_1) + (agents_not_working_county_2 * unemployment_adaptation_coefficient_county_2) + (agents_not_working_county_3 * unemployment_adaptation_coefficient_county_3) + (agents_not_working_county_4 * unemployment_adaptation_coefficient_county_4)
-        current_unemployment_rate = unemployed_agents / self.num_agents #fix this logic
-        unemployment_rate = unemployment_rate + (current_unemployment_rate*time_step_one_hot)
+        total_unemployed_agents = unemployed_agents_county_bronx + unemployed_agents_county_brooklyn + unemployed_agents_county_manhattan + unemployed_agents_county_queens + unemployed_agents_county_staten_island
+        
+        # unemployment rate
+        current_unemployment_rate_county_bronx = unemployed_agents_county_bronx / population_county_bronx * 100
+        current_unemployment_rate_county_brooklyn = unemployed_agents_county_brooklyn / population_county_brooklyn * 100
+        current_unemployment_rate_county_manhattan = unemployed_agents_county_manhattan / population_county_manhattan * 100
+        current_unemployment_rate_county_queens = unemployed_agents_county_queens / population_county_queens * 100
+        current_unemployment_rate_county_staten_island = unemployed_agents_county_staten_island / population_county_staten_island * 100
+        current_total_unemployment_rate = total_unemployed_agents / self.num_agents * 100
+        
+        unemployment_rate_bronx = unemployment_rate_bronx + (current_unemployment_rate_county_bronx*time_step_one_hot)
+        unemployment_rate_brooklyn = unemployment_rate_brooklyn + (current_unemployment_rate_county_brooklyn*time_step_one_hot)
+        unemployment_rate_manhattan = unemployment_rate_manhattan + (current_unemployment_rate_county_manhattan*time_step_one_hot)
+        unemployment_rate_queens = unemployment_rate_queens + (current_unemployment_rate_county_queens*time_step_one_hot)
+        unemployment_rate_staten_island = unemployment_rate_staten_island + (current_unemployment_rate_county_staten_island*time_step_one_hot)
+        unemployment_rate = unemployment_rate + (current_total_unemployment_rate*time_step_one_hot) 
 
         # hourly wages
         new_hourly_wages = self.updateHourlyWage(hourly_wage, imbalance) # self.calculateHourlyWage() to revert
                 
         return {self.output_variables[0]: new_hourly_wages, 
-                self.output_variables[1]: unemployment_rate}
+                self.output_variables[1]: unemployment_rate,
+                self.output_variables[2]: unemployment_rate_bronx,
+                self.output_variables[3]: unemployment_rate_brooklyn,
+                self.output_variables[4]: unemployment_rate_manhattan,
+                self.output_variables[5]: unemployment_rate_queens,
+                self.output_variables[6]: unemployment_rate_staten_island}

@@ -103,6 +103,7 @@ class CalibNN(nn.Module):
         out = self.param_out_layer(emb)
 
         out = self.sigmoid(out)
+        out = torch.mean(out, dim=1)
         # out = self.min_values + (self.max_values -
         #                          self.min_values) * self.sigmoid(out)
         return out

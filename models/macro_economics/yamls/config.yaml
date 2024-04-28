@@ -366,6 +366,51 @@ state:
       - 1
       - ${simulation_metadata.num_steps_per_episode}
       value: 0.0
+    Unemployment_Rate_BRONX:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: Unemployment Rate BRONX
+      shape:
+      - 1
+      - ${simulation_metadata.num_steps_per_episode}
+      value: 0.0
+    Unemployment_Rate_BROOKLYN:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: Unemployment Rate BROOKLYN
+      shape:
+      - 1
+      - ${simulation_metadata.num_steps_per_episode}
+      value: 0.0
+    Unemployment_Rate_Queens:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: Unemployment Rate Queens
+      shape:
+      - 1
+      - ${simulation_metadata.num_steps_per_episode}
+      value: 0.0
+    Unemployment_Rate_Manhattan:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: Unemployment Rate Manhattan
+      shape:
+      - 1
+      - ${simulation_metadata.num_steps_per_episode}
+      value: 0.0
+    Unemployment_Rate_Staten_Island:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: Unemployment Rate Staten Island
+      shape:
+      - 1
+      - ${simulation_metadata.num_steps_per_episode}
+      value: 0.0
     unemployed_agents: 
             dtype: float
             initialization_function: null
@@ -537,12 +582,22 @@ substeps:
           hourly_wage: objects/JobA/wage
           imbalance: environment/Im
           unemployment_rate: environment/U
+          unemployment_rate_bronx: environment/Unemployment_Rate_BRONX
+          unemployment_rate_brooklyn: environment/Unemployment_Rate_BROOKLYN
+          unemployment_rate_queens: environment/Unemployment_Rate_Queens
+          unemployment_rate_manhattan: environment/Unemployment_Rate_Manhattan
+          unemployment_rate_staten_island: environment/Unemployment_Rate_Staten_Island
           will_work: agents/consumers/will_work
           county: agents/consumers/county
           # unemployment_adaptation_coefficient: environment/unemployment_adaptation_coefficient
         output_variables:
         - hourly_wage
         - unemployment_rate
+        - unemployment_rate_bronx
+        - unemployment_rate_brooklyn
+        - unemployment_rate_queens
+        - unemployment_rate_manhattan
+        - unemployment_rate_staten_island
   '3':
     active_agents:
     - consumers

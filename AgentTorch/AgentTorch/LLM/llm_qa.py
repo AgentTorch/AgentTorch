@@ -16,7 +16,7 @@ from dsp.utils import deduplicate
 from pandasai import Agent
 import openai
 from langchain.agents import AgentExecutor, create_tool_calling_agent
-from langchain.tools import Tool
+from langchain.tools import tool
 from langchain.llms import OpenAI
 from langchain.tools.retriever import create_retriever_tool
 from langchain import hub
@@ -40,7 +40,7 @@ class SimulationAnalysisAgent:
         )
         self.setup_tools(document_retriever, prompt)
 
-    @Tool
+    @tool
     def run_analysis_on_simulation_state(self, query: str) -> str:
         """
         Run the analysis on the simulation state.
