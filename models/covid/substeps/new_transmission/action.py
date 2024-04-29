@@ -46,6 +46,10 @@ class MakeIsolationDecision(SubstepAction):
         self.use_ground_truth_4_week_avg = self.config["simulation_metadata"][
             "USE_GROUND_TRUTH_4WK_AVG"
         ]
+        # TODO: make learnable
+        self.initial_isolation_probabilities = (
+            torch.ones((self.num_agents, 1)).to(self.device) / 2
+        )
 
         # set up llm agent
         self.agent = LLMAgent(agent_profile=SYSTEM_PROMPT, openai_api_key=OPENAI_API_KEY)
@@ -74,16 +78,15 @@ class MakeIsolationDecision(SubstepAction):
                 Feature.CASES_4WK_AVG,
             )
         else:
-            # this is a bug. we are using the ground truth data for the first 3 weeks of our
-            # simulation still, and then moving on to the case numbers.
-            self.cases_4_week_avg = list(
-                get_labels(
-                    self.neighborhood,
-                    self.epiweek_start - 1,
-                    3,
-                    Feature.CASES_4WK_AVG,
-                )
-            )
+            self.cases_4_week_avg = list(get_labels(
+                self.neighborhood,
+                self.epiweek_start - 1,
+                1,
+                Feature.CASES_4WK_AVG,
+            ))
+            self.cases_week_into_past = list(get_labels(
+                self.neighborhood, self.epiweek_start - 3, 3, Feature.CASES
+            ))
 
         self.external_align_vector = torch.tensor(self.learnable_args['align_vector'], requires_grad=True)
         self.external_align_adjustment_vector = torch.tensor(self.learnable_args['align_adjustment_vector'], requires_grad=True)
@@ -143,6 +146,44 @@ class MakeIsolationDecision(SubstepAction):
                     + self.external_align_adjustment_vector[en] * masks[en]
                 )
 
+        # # initialize past isolation probabilities if week 0. this part is a bit hacky. to
+        # # understand better, check the below if bracket.
+        # if time_step == 0:
+        #     past_cases_week = get_labels(
+        #         self.neighborhood, self.epiweek_start - 2, 1, Feature.CASES
+        #     )
+        #     past_cases_4_week_avg = get_labels(
+        #         self.neighborhood, self.epiweek_start - 2, 1, Feature.CASES_4WK_AVG
+        #     )
+        #     prompt_list = [
+        #         {
+        #             "age": age_group.text,
+        #             "location": self.neighborhood.text,
+        #             "user_prompt": construct_user_prompt(
+        #                 self.include_week_count,
+        #                 self.epiweek_start-1,
+        #                 0,
+        #                 # this is a bug. case data is in float format in csv. should get it in int
+        #                 # to avoid further confusion.
+        #                 int(past_cases_week),
+        #                 int(past_cases_4_week_avg),
+        #             ),
+        #         }
+        #         for age_group in AgeGroup
+        #     ] * 7
+        #     agent_output = await self.agent(prompt_list)
+        #     self.isolation_probabilities = (
+        #         torch.ones((self.num_agents, 1)).to(self.device) / 2
+        #     )
+        #     self.isolation_probabilities = torch.zeros((self.num_agents, 1)).to(self.device)
+        #     for en, output_value in enumerate(agent_output):
+        #         output_response = output_value["text"]
+        #         decision = output_response.split(".")[0]
+        #         isolation_response = self.string_to_number(decision)
+        #         self.isolation_probabilities = self.isolation_probabilities + (
+        #             masks[en % len(AgeGroup)] * isolation_response * 1 / 7
+        #         )
+
         # if beginning of the week, recalculate isolation probabilities
         if time_step % 7 == 0:
             # figure out week index
@@ -157,21 +198,14 @@ class MakeIsolationDecision(SubstepAction):
                 print(f"incoming #cases {cases}...", end=" ")
                 if not self.use_ground_truth_case_numbers:
                     self.cases_week.append(cases)
-                if not self.use_ground_truth_4_week_avg and week_index > 2:
-                    self.cases_4_week_avg.append(sum(self.cases_week[-4:])/4)
+                if not self.use_ground_truth_4_week_avg:
+                    self.cases_week_into_past.append(cases)
+                    self.cases_4_week_avg.append(sum(self.cases_week_into_past[-4:])//4)
 
             print(
                 f"#cases, #cases_4wk for prompt {int(self.cases_week[week_index])}, "
                 + f"{int(self.cases_4_week_avg[week_index])}... sampling isolation probabilities"
             )
-
-            # # prompts are segregated based on agent age
-            # masks = []
-            # agent_age = get_by_path(state, re.split("/", self.input_variables["age"]))
-            # for age_group in AgeGroup:
-            #     # agent subgroups for each prompt
-            #     age_mask = agent_age == age_group.value
-            #     masks.append(age_mask.float())
 
             # generate the prompt list, prompt 7 times for each age group for each week to get
             # probabilities
@@ -200,9 +234,7 @@ class MakeIsolationDecision(SubstepAction):
             # class gets initialized at each episode. if not, this would cause the week 0 running
             # average to include the last episode's last week.
             if time_step == 0:
-                self.isolation_probabilities = (
-                    torch.ones((self.num_agents, 1)).to(self.device) / 2
-                )
+                self.isolation_probabilities = self.initial_isolation_probabilities
 
             # assign prompt response to agents
             self.last_isolation_probabilities = self.isolation_probabilities
@@ -229,12 +261,5 @@ class MakeIsolationDecision(SubstepAction):
         will_isolate = self.st_bernoulli(isolation_probs)
 
         # print("aligned_isolation_probs: ", isolation_probs.shape, "will_isolate: ", will_isolate.shape)
-
-        # # sample isolation decision from probabilities
-        # will_isolate = StraightThroughBernoulli.apply(
-        #     self.last_isolation_probabilities * 1 / 2
-        #     + self.isolation_probabilities * 1 / 2 )
-
         print(f"day {time_step}, number of isolating agents {sum(will_isolate).item()}")
-
         return {self.output_variables[0]: will_isolate}
