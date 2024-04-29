@@ -47,7 +47,7 @@ class NewTransmission(SubstepTransitionMessagePassing):
         not_isolated = 1 - will_isolate
 
         if self.mode == 'llm':
-            res = not_isolated*R*S_A_s*A_s_i*B_n*integrals/I_bar
+            res = not_isolated*R*S_A_s*A_s_i*B_n*integrals/I_bar * 1/2
         else:
             res = R*S_A_s*A_s_i*B_n*integrals/I_bar
 
