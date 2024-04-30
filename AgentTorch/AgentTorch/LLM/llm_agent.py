@@ -24,7 +24,7 @@ class BasicQA(dspy.Signature):
     """
     history = dspy.InputField(desc="may contain your decision in the previous months",format = list)
     question = dspy.InputField(desc="will contain the number of COVID cases in NYC, your age and other information about the economy and your identity, to help you decide your willingness to work and consumption demands")
-    answer = dspy.OutputField(desc="will contain a list only two int values between 0 and 1 representing realistic probability of your willingness to work and consumption demands. No reasoning or any other information is required")
+    answer = dspy.OutputField(desc="will contain list of only two int values, between 0 and 1, representing realistic probability of your willingness to work and consumption demands. No other information should be there in the answer list")
 
 class COT(dspy.Module):
     def __init__(self):
@@ -46,7 +46,7 @@ class LLMAgent():
     def __init__(self,agent_profile=None, memory = None,llm = None,openai_api_key = None,num_agents = 1) -> None:
         
         
-        self.llm = dspy.OpenAI(model='gpt-3.5-turbo', api_key=openai_api_key,temperature=0.0)
+        self.llm = dspy.OpenAI(model='gpt-4-0125-preview', api_key=openai_api_key,temperature=0.0)
         dspy.settings.configure(lm=self.llm)
         # cot_with_assertions = assert_transform_module(COT(), 
         #                                         functools.partial(backtrack_handler, max_backtracks=1))
@@ -112,7 +112,10 @@ class LLMAgent():
             memory = self.get_memory(agent_id=id)
             with open(file_path, 'w') as f:
                 f.write(str(memory))
-        
+    
+    def inspect_history(self, last_k):
+        return self.llm.inspect_history(last_k)
+
 class LLMAgentLangchain():
     def __init__(self,agent_profile = None, memory = None,llm = None,openai_api_key = None,num_agents = 1) -> None:
         assert agent_profile is not None, "Agent profile is required"

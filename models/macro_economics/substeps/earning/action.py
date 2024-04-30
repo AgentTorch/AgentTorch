@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import pandas as pd
 import torch
 import re
 import sys
@@ -25,21 +26,25 @@ class WorkConsumptionPropensity(SubstepAction):
         self.save_memory_dir = self.config['simulation_metadata']['memory_dir']
         self.num_steps_per_episode = self.config['simulation_metadata']['num_steps_per_episode']
         self.num_agents = self.config['simulation_metadata']['num_agents']
-        
+        self.covid_cases_path = self.config['simulation_metadata']['covid_cases_path']
         self.mapping = self.load_mapping(self.config['simulation_metadata']['mapping_path'])
+        self.device = torch.device(self.config['simulation_metadata']['device'])
+        
         self.variables = self.get_variables(prompt_template_var)
         self.filtered_mapping = self.filter_mapping(self.mapping,self.variables)
         self.combinations_of_prompt_variables, self.combinations_of_prompt_variables_with_index = self.get_combinations_of_prompt_variables(self.filtered_mapping)
         self.num_llm_agents = len(self.combinations_of_prompt_variables)
         self.agent = LLMAgent(agent_profile = agent_profile,openai_api_key = OPENAI_API_KEY,num_agents = self.num_llm_agents)
-
+        
         self.st_bernoulli = StraightThroughBernoulli.apply
+        self.covid_cases = pd.read_pickle(self.covid_cases_path)
+        self.covid_cases = torch.tensor(self.covid_cases.values) # add to device
         
     
     async def forward(self, state, observation):        
         print("Substep Action: Earning decision")
-        number_of_months = state['current_step'] + 1
-        current_year = number_of_months // 12 + 1 # 1 indexed
+        number_of_months = state['current_step'] + 1 + 7 # 1 indexed, also since we are starting from 8th month add 7 here
+        current_year = number_of_months // 12 + 1 + 1 # 1 indexed, also since we are starting from 2020 add 1 here
         year = self.year_mapping[current_year]
         consumption_propensity = get_by_path(state,re.split("/", self.input_variables['consumption_propensity']))
         work_propensity = get_by_path(state,re.split("/", self.input_variables['work_propensity']))
@@ -51,10 +56,12 @@ class WorkConsumptionPropensity(SubstepAction):
         agent_output = self.agent(prompt_list,last_k=1)
         consumption_propensity, work_propensity = self.get_propensity_values(consumption_propensity, work_propensity, masks, agent_output)
         will_work = self.st_bernoulli(work_propensity) #torch.bernoulli(work_propensity)
-        
-        if number_of_months == self.num_steps_per_episode:
+        covid_cases = self.covid_cases[number_of_months-1]
+        # if number_of_months == self.num_steps_per_episode:
+        if number_of_months == 4:
             current_memory_dir = os.path.join(self.save_memory_dir ,str(current_year), str(number_of_months))
             self.agent.export_memory_to_file(current_memory_dir)
+            print(self.agent.inspect_history(4))
             
         return {self.output_variables[0] : will_work, 
                 self.output_variables[1] : consumption_propensity}
@@ -62,8 +69,8 @@ class WorkConsumptionPropensity(SubstepAction):
     def get_propensity_values(self, consumption_propensity, work_propensity, masks, agent_output):
         for en,output_value in enumerate(agent_output):
             output_value = json.loads(output_value)
-            # group_work_propensity = output_value['work']
-            # group_consumption_propensity = output_value['consumption']
+            # group_work_propensity = output_value['work'] # used for langchain querying agent
+            # group_consumption_propensity = output_value['consumption'] # used for langchain querying agent
             group_work_propensity = output_value[0] # changed for dspy compatibility
             group_consumption_propensity = output_value[1] # changed for dspy compatibility
             consumption_propensity_for_group = masks[en]*group_consumption_propensity
@@ -92,6 +99,8 @@ class WorkConsumptionPropensity(SubstepAction):
             mask = torch.tensor([True]*self.num_agents)  # Initialize mask as tensor of True values
             for key, value in target_values.items():
                 if key in variables:  # Check if variable with this name exists
+                    if key == 'age' and value == 0:
+                        mask = torch.zeros_like(mask)
                     mask = torch.logical_and(mask, variables[key] == value)
             mask = mask.unsqueeze(1)  # Ensure consistent adding later
             float_mask = mask.float()
@@ -102,17 +111,18 @@ class WorkConsumptionPropensity(SubstepAction):
         number_of_months = state['current_step'] + 1
         current_month = number_of_months % 12
         month = self.month_mapping[current_month]
-        
+        covid_cases = self.covid_cases[number_of_months-1]
         current_year = number_of_months // 12 + 1 # 1 indexed
         year = self.year_mapping[current_year]
         variables = {}
         for key in self.variables:
             variables[key] = get_by_path(state, re.split("/", self.input_variables[key])) if key in self.input_variables else locals()[key]
 
-        variables['inflation_rate'] = variables['inflation_rate'][-1].item()
-        variables['interest_rate'] = variables['interest_rate'][-1][-1].item()
-        variables['unemployment_rate'] = variables['unemployment_rate'][-1][-1].item()
+        # variables['inflation_rate'] = variables['inflation_rate'][-1].item()
+        # variables['interest_rate'] = variables['interest_rate'][-1][-1].item()
+        # variables['unemployment_rate'] = variables['unemployment_rate'][-1][-1].item()
         variables['price_of_goods'] = variables['price_of_goods'][-1][-1].item()
+        variables['covid_cases'] = covid_cases.item()
         return variables
     
     def augment_mapping_with_index(self,mapping):

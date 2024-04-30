@@ -94,7 +94,7 @@ elif CALIB_MODE == "calibNN":
         X_train_dim=len(FEATURE_LIST),
         device=device,
         training_weeks=NN_INPUT_WEEKS,
-        out_dim=5,
+        out_dim=1,
         scale_output="abm-covid",
     ).to(device)
 
@@ -138,7 +138,7 @@ def _get_unemployment_labels(num_steps_per_episode=1):
 
     return unemployment_test_dataset
 state_data_dict = {}
-NUM_TEST_STEPS = 3
+NUM_TEST_STEPS = 2
 for episode in range(num_episodes):    
     # reset gradients from previous iteration
     print(f"\nrunning episode {episode}...")
@@ -148,7 +148,7 @@ for episode in range(num_episodes):
 
     # get the r0 predictions for the episode
     calib_values = _get_parameters(CALIB_MODE)
-    avg_month_value = calib_values.reshape(-1, 4,5).mean(dim=1)
+    avg_month_value = calib_values.reshape(-1, 4,1).mean(dim=1)
     _set_parameters(avg_month_value)
     print(f"calib values: {calib_values}")
 

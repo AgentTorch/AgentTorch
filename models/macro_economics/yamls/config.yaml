@@ -2,11 +2,11 @@ simulation_metadata:
   OPENAI_API_KEY: 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
   device: cpu
   execution_mode: llm
-  num_agents: 541516
-  num_episodes: 5
+  num_agents: 2712360
+  num_episodes: 30
   num_steps_per_episode: 7
   num_substeps_per_step: 4
-  START_WEEK: 202212
+  START_WEEK: 202009
   NUM_WEEKS: 28
   NEIGHBORHOOD: "Astoria"
   INCLUDE_WEEK_COUNT: True
@@ -26,7 +26,7 @@ simulation_metadata:
   maximum_rate_of_change_of_wage: 0.05
   natural_interest_rate: 0.05
   natural_unemployment_rate: 0.05
-  
+  covid_cases_path: ${simulation_metadata.population_dir}/processed_kings_county_monthly_cases.pkl
   population_dir: /Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/census_populations/NYC/simulation_input #change this path to be just till NYC
   target_inflation_rate: 0.02
   month_mapping : {
@@ -152,28 +152,28 @@ state:
           shape:
           - ${state.agents.consumers.number}
           - 1
-        household_id:
-          dtype: float
-          initialization_function:
-            arguments:
-              attribute:
-                initialization_function: null
-                learnable: false
-                name: Household ID
-                shape: null
-                value: household
-              file_path:
-                initialization_function: null
-                learnable: false
-                name: Filepath for age group stage
-                shape: null
-                value: ${simulation_metadata.population_dir}/household.pickle
-            generator: load_population_attribute
-          learnable: false
-          name: Household ID
-          shape:
-          - ${state.agents.consumers.number}
-          - 1
+        # household_id:
+        #   dtype: float
+        #   initialization_function:
+        #     arguments:
+        #       attribute:
+        #         initialization_function: null
+        #         learnable: false
+        #         name: Household ID
+        #         shape: null
+        #         value: household
+        #       file_path:
+        #         initialization_function: null
+        #         learnable: false
+        #         name: Filepath for age group stage
+        #         shape: null
+        #         value: ${simulation_metadata.population_dir}/household.pickle
+        #     generator: load_population_attribute
+        #   learnable: false
+        #   name: Household ID
+        #   shape:
+        #   - ${state.agents.consumers.number}
+        #   - 1
         assets:
           dtype: float
           initialization_function: null
@@ -427,6 +427,7 @@ state:
       shape:
       - 1
       value: 0.7
+      
   network:
     agent_agent:
       opinion_network:

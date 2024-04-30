@@ -20,6 +20,7 @@ from langchain.tools import tool
 from langchain.llms import OpenAI
 from langchain.tools.retriever import create_retriever_tool
 from langchain import hub
+import pandas as pd
 
 class SimulationAnalysisAgent:
     def __init__(
@@ -28,7 +29,7 @@ class SimulationAnalysisAgent:
         state_trace_path,
         model_name="gpt-4",
         temperature=0,
-        document_retriever=None,
+        document_retriever=None, # this retriever is responsible for getting context from simulation memory
         prompt=None,
     ):
         self.openai_chat_model = OpenAI(
@@ -56,7 +57,7 @@ class SimulationAnalysisAgent:
         self.retriever_tool = create_retriever_tool(
             document_retriever.retriever,
             "simulation_memory_retriever",
-            "You must use this tool to retrieve context for each user query!",
+            "You must always use this tool to retrieve context for each user query!",
         )
         self.tools = [self.run_analysis_on_simulation_state, self.retriever_tool]
         self.llm_agent = create_tool_calling_agent(
@@ -162,7 +163,7 @@ class DocumentRetriever:
         return docs
 
     def split_documents(self, docs):
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=30)
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=30)
         return text_splitter.split_documents(documents=docs)
 
     def create_vectorstore(self, docs):
