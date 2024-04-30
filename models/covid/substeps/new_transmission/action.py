@@ -90,6 +90,8 @@ class MakeIsolationDecision(SubstepAction):
 
         self.external_align_vector = torch.tensor(self.learnable_args['align_vector'], requires_grad=True)
         self.external_align_adjustment_vector = torch.tensor(self.learnable_args['align_adjustment_vector'], requires_grad=True)
+        # self.external_initial_prob = torch.tensor(self.learnable_args['initial_isolation_prob'], requires_grad=True)
+
         self.st_bernoulli = StraightThroughBernoulli.apply
 
     def string_to_number(self, string):
@@ -136,53 +138,23 @@ class MakeIsolationDecision(SubstepAction):
             masks.append(age_mask.float())
 
         if self.align_llm:
+            # align mask
             all_align_mask = torch.zeros((self.num_agents, 1)).to(self.device)
             for en in range(len(masks)):
-                all_align_mask = all_align_mask + align_vector[en]*masks[en]
+                all_align_mask = all_align_mask + (1 - align_vector[en])*masks[en]
+            
+            # adjustment mask
             all_adjust_mask = torch.zeros((self.num_agents, 1)).to(self.device)
             for en in range(len(masks)):
                 all_adjust_mask = (
                     all_adjust_mask
                     + self.external_align_adjustment_vector[en] * masks[en]
                 )
-
-        # # initialize past isolation probabilities if week 0. this part is a bit hacky. to
-        # # understand better, check the below if bracket.
-        # if time_step == 0:
-        #     past_cases_week = get_labels(
-        #         self.neighborhood, self.epiweek_start - 2, 1, Feature.CASES
-        #     )
-        #     past_cases_4_week_avg = get_labels(
-        #         self.neighborhood, self.epiweek_start - 2, 1, Feature.CASES_4WK_AVG
-        #     )
-        #     prompt_list = [
-        #         {
-        #             "age": age_group.text,
-        #             "location": self.neighborhood.text,
-        #             "user_prompt": construct_user_prompt(
-        #                 self.include_week_count,
-        #                 self.epiweek_start-1,
-        #                 0,
-        #                 # this is a bug. case data is in float format in csv. should get it in int
-        #                 # to avoid further confusion.
-        #                 int(past_cases_week),
-        #                 int(past_cases_4_week_avg),
-        #             ),
-        #         }
-        #         for age_group in AgeGroup
-        #     ] * 7
-        #     agent_output = await self.agent(prompt_list)
-        #     self.isolation_probabilities = (
-        #         torch.ones((self.num_agents, 1)).to(self.device) / 2
-        #     )
-        #     self.isolation_probabilities = torch.zeros((self.num_agents, 1)).to(self.device)
-        #     for en, output_value in enumerate(agent_output):
-        #         output_response = output_value["text"]
-        #         decision = output_response.split(".")[0]
-        #         isolation_response = self.string_to_number(decision)
-        #         self.isolation_probabilities = self.isolation_probabilities + (
-        #             masks[en % len(AgeGroup)] * isolation_response * 1 / 7
-        #         )
+                        
+            # initial isolation prob
+            # initial_isolation_prob = torch.zeros((self.num_agents, 1)).to(self.device)
+            # for en in range(len(masks)):
+            #     initial_isolation_prob = initial_isolation_prob + self.external_initial_prob[en]*masks[en]
 
         # if beginning of the week, recalculate isolation probabilities
         if time_step % 7 == 0:
@@ -234,7 +206,7 @@ class MakeIsolationDecision(SubstepAction):
             # class gets initialized at each episode. if not, this would cause the week 0 running
             # average to include the last episode's last week.
             if time_step == 0:
-                self.isolation_probabilities = self.initial_isolation_probabilities
+                self.isolation_probabilities = self.initial_isolation_probabilities #initial_isolation_prob
 
             # assign prompt response to agents
             self.last_isolation_probabilities = self.isolation_probabilities
@@ -256,8 +228,8 @@ class MakeIsolationDecision(SubstepAction):
         # aligned_isolation_probs = all_align_mask*((self.last_isolation_probabilities + self.isolation_probabilities) / 2)
         isolation_probs = (self.last_isolation_probabilities/2 + self.isolation_probabilities/2)
         if self.align_llm:
-            isolation_probs = isolation_probs*all_align_mask + all_adjust_mask
-        isolation_probs = torch.clamp(isolation_probs, 0, 0.95)
+            isolation_probs = isolation_probs*all_align_mask #+ all_adjust_mask
+        # isolation_probs = torch.clamp(isolation_probs, 0, 0.95)
         will_isolate = self.st_bernoulli(isolation_probs)
 
         # print("aligned_isolation_probs: ", isolation_probs.shape, "will_isolate: ", will_isolate.shape)

@@ -47,7 +47,7 @@ class NewTransmission(SubstepTransitionMessagePassing):
         not_isolated = 1 - will_isolate
 
         if self.mode == 'llm':
-            res = not_isolated*R*S_A_s*A_s_i*B_n*integrals/I_bar * 1/2
+            res = R*S_A_s*A_s_i*B_n*integrals/I_bar #not_isolated*R*S_A_s*A_s_i*B_n*integrals/I_bar * 1/2
         else:
             res = R*S_A_s*A_s_i*B_n*integrals/I_bar
 
@@ -124,12 +124,15 @@ class NewTransmission(SubstepTransitionMessagePassing):
         new_transmission = self.propagate(agents_data.edge_index, x=agents_data.x, edge_attr=agents_data.edge_attr, t=agents_data.t, R=R, SFSusceptibility=SFSusceptibility, SFInfector=SFInfector, lam_gamma_integrals=all_lam_gamma.squeeze())
         
         prob_not_infected = torch.exp(-1*new_transmission)
+        # prob_infected = will_isolate*(1 - prob_not_infected)
         probs = torch.hstack((1-prob_not_infected,prob_not_infected))
+        # probs = torch.hstack((prob_infected, 1-prob_infected))
 
         # Gumbel softmax logic
         # cat_logits = torch.log(probs+1e-9)        
         # potentially_exposed_today = F.gumbel_softmax(logits=cat_logits,tau=1,hard=True,dim=1)[:,0]
-        potentially_exposed_today = self.st_bernoulli(probs)[:, 0].to(self.device) # using straight-through bernoulli     
+        potentially_exposed_today = self.st_bernoulli(probs)[:, 0].to(self.device) # using straight-through bernoulli
+        potentially_exposed_today = potentially_exposed_today*(1. - will_isolate.squeeze())     
         
         newly_exposed_today = (current_stages==self.SUSCEPTIBLE_VAR).squeeze()*potentially_exposed_today
         
