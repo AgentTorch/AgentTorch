@@ -6,19 +6,20 @@ import torch.nn as nn
 class StraightThroughBernoulli(torch.autograd.Function):
     generate_vmap_rule = True
 
-    def __init__(self):
+    def __init__(self, device):
         super().__init__()
+        self.device = device
 
     @staticmethod
     def forward(ctx, p):
         result = torch.bernoulli(p)
-        ctx.save_for_backward(result, p)
+        ws = torch.ones_like(result, device=p.device)
+        ctx.save_for_backward(result, ws)
         return result
 
     @staticmethod
     def backward(ctx, grad_output):
-        result, p = ctx.saved_tensors
-        ws = torch.ones(result.shape)
+        result, ws = ctx.saved_tensors
         return grad_output * ws
 
 class Bernoulli(torch.autograd.Function):

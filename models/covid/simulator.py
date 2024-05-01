@@ -1,8 +1,9 @@
-AGENT_TORCH_PATH = '/u/ngkuru/ship/MacroEcon/AgentTorch'
-# AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
+# AGENT_TORCH_PATH = '/u/ngkuru/ship/MacroEcon/AgentTorch'
+AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
 
 import pandas as pd
 import numpy as np 
+# import torch
 # import torch
 
 import sys
@@ -20,6 +21,8 @@ def get_registry():
     reg.register(NewTransmission, "new_transmission", key="transition")
 
     # Substep: Disease Stage Progression
+    from substeps.seirm_progression.transition import SEIRMProgression
+    reg.register(SEIRMProgression, "seirm_progression", key="transition")
     from substeps.seirm_progression.transition import SEIRMProgression
     reg.register(SEIRMProgression, "seirm_progression", key="transition")
 

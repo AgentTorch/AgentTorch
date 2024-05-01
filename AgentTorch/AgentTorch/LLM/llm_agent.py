@@ -11,6 +11,7 @@ from langchain.memory import ConversationBufferMemory
 from langchain.prompts import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate,
+    SystemMessagePromptTemplate,
     MessagesPlaceholder,
 )
 from langchain_core.messages import SystemMessage
@@ -119,24 +120,20 @@ class LLMAgent():
 class LLMAgentLangchain():
     def __init__(self,agent_profile = None, memory = None,llm = None,openai_api_key = None,num_agents = 1) -> None:
         assert agent_profile is not None, "Agent profile is required"
-        
+
         if llm is None:
-            llm = self.llm = ChatOpenAI(model='gpt-3.5-turbo', openai_api_key=openai_api_key, temperature=0)
-        
+            llm = self.llm = ChatOpenAI(
+                model="gpt-3.5-turbo", openai_api_key=openai_api_key, temperature=1
+            )
+
         self.prompt = ChatPromptTemplate.from_messages(
-                    [
-                        SystemMessage(
-                            content=agent_profile
-                        ),  
-                        MessagesPlaceholder(
-                            variable_name="chat_history"
-                        ),  
-                        HumanMessagePromptTemplate.from_template(
-                            "{agent_query}"
-                        ), 
-                    ]
-                )
-        
+            [
+                SystemMessagePromptTemplate.from_template(agent_profile),
+                # MessagesPlaceholder(variable_name="chat_history"),
+                HumanMessagePromptTemplate.from_template("{user_prompt}"),
+            ]
+        )
+
         if memory is not None:
             self.agent_memory = memory
         else:

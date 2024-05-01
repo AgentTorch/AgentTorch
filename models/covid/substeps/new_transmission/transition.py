@@ -7,17 +7,20 @@ from AgentTorch.substep import SubstepTransitionMessagePassing
 from AgentTorch.helpers import get_by_path
 # from substeps.utils import *
 from AgentTorch.helpers.distributions import StraightThroughBernoulli
+from AgentTorch.helpers.distributions import StraightThroughBernoulli
 
 class NewTransmission(SubstepTransitionMessagePassing):
     def __init__(self, config, input_variables, output_variables, arguments):
         super().__init__(config, input_variables, output_variables, arguments)
 
         self.device = torch.device(self.config['simulation_metadata']['device'])
+        self.device = torch.device(self.config['simulation_metadata']['device'])
         self.SUSCEPTIBLE_VAR = self.config['simulation_metadata']['SUSCEPTIBLE_VAR']
         self.EXPOSED_VAR = self.config['simulation_metadata']['EXPOSED_VAR']
         self.RECOVERED_VAR = self.config['simulation_metadata']['RECOVERED_VAR']
         
         self.num_timesteps = self.config['simulation_metadata']['num_steps_per_episode']
+        self.num_weeks = self.config['simulation_metadata']['NUM_WEEKS']
         self.num_weeks = self.config['simulation_metadata']['NUM_WEEKS']
 
         self.STAGE_UPDATE_VAR = 1
@@ -26,7 +29,11 @@ class NewTransmission(SubstepTransitionMessagePassing):
 
         self.mode = self.config['simulation_metadata']['EXECUTION_MODE']
 
+        self.mode = self.config['simulation_metadata']['EXECUTION_MODE']
+
         self.external_R = torch.tensor(self.learnable_args['R2'].data, requires_grad=True)
+
+        self.st_bernoulli = StraightThroughBernoulli.apply
 
         self.st_bernoulli = StraightThroughBernoulli.apply
 
@@ -44,10 +51,11 @@ class NewTransmission(SubstepTransitionMessagePassing):
         I_bar = torch.gather(x_i[:, 4], 0, edge_network_numbers.long()).view(-1)
         
         will_isolate = x_i[:, 6] # is the susceptible agent isolating? check x_i vs x_j
+        will_isolate = x_i[:, 6] # is the susceptible agent isolating? check x_i vs x_j
         not_isolated = 1 - will_isolate
 
         if self.mode == 'llm':
-            res = not_isolated*R*S_A_s*A_s_i*B_n*integrals/I_bar
+            res = R*S_A_s*A_s_i*B_n*integrals/I_bar #not_isolated*R*S_A_s*A_s_i*B_n*integrals/I_bar * 1/2
         else:
             res = R*S_A_s*A_s_i*B_n*integrals/I_bar
 
@@ -72,6 +80,7 @@ class NewTransmission(SubstepTransitionMessagePassing):
         one_hot_tensor = F.one_hot(timestep_tensor, num_classes=num_timesteps)
 
         return one_hot_tensor.to(self.device)
+        return one_hot_tensor.to(self.device)
     
     def update_infected_times(self, t, agents_infected_times, newly_exposed_today):
         '''Note: not differentiable'''
@@ -89,7 +98,6 @@ class NewTransmission(SubstepTransitionMessagePassing):
         week_id = int(t/7)
         week_one_hot = self._generate_one_hot_tensor(week_id, self.num_weeks)
         
-        # R = self.learnable_args['R2']
         R_tensor = self.external_R # tensor of size NUM_WEEK
         R = (R_tensor*week_one_hot).sum()
                 
@@ -125,12 +133,15 @@ class NewTransmission(SubstepTransitionMessagePassing):
         new_transmission = self.propagate(agents_data.edge_index, x=agents_data.x, edge_attr=agents_data.edge_attr, t=agents_data.t, R=R, SFSusceptibility=SFSusceptibility, SFInfector=SFInfector, lam_gamma_integrals=all_lam_gamma.squeeze())
         
         prob_not_infected = torch.exp(-1*new_transmission)
+        # prob_infected = will_isolate*(1 - prob_not_infected)
         probs = torch.hstack((1-prob_not_infected,prob_not_infected))
+        # probs = torch.hstack((prob_infected, 1-prob_infected))
 
         # Gumbel softmax logic
         # cat_logits = torch.log(probs+1e-9)        
         # potentially_exposed_today = F.gumbel_softmax(logits=cat_logits,tau=1,hard=True,dim=1)[:,0]
-        potentially_exposed_today = self.st_bernoulli(probs)[:, 0].to(self.device) # using straight-through bernoulli     
+        potentially_exposed_today = self.st_bernoulli(probs)[:, 0].to(self.device) # using straight-through bernoulli
+        potentially_exposed_today = potentially_exposed_today*(1. - will_isolate.squeeze())     
         
         newly_exposed_today = (current_stages==self.SUSCEPTIBLE_VAR).squeeze()*potentially_exposed_today
         

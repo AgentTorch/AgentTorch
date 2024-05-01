@@ -1,27 +1,31 @@
 from __future__ import annotations
 '''Command: python trainer.py --c yamls/config_opt_llm.yaml'''
+from __future__ import annotations
+'''Command: python trainer.py --c yamls/config_opt_llm.yaml'''
 import warnings
 warnings.filterwarnings("ignore")
 
 import argparse
 from epiweeks import Week
+from epiweeks import Week
 import torch
 import torch.optim as optim
 import torch.nn as nn
-import numpy as np
-
 from torch.utils.data import DataLoader
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+
+from utils.llm import AgeGroup
 from utils.misc import week_num_to_epiweek
 
-# AGENT_TORCH_PATH = '/u/ngkuru/ship/MacroEcon/AgentTorch'
-AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
+AGENT_TORCH_PATH = '/u/ngkuru/ship/MacroEcon/AgentTorch'
+# AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
 
 import sys
 sys.path.insert(0, AGENT_TORCH_PATH)
 
 from simulator import get_registry, get_runner
 from AgentTorch.helpers import read_config
-from calibnn import CalibNN, LearnableParams
+from calibnn import CalibNN, LearnableParams, CalibAlignNN, CalibAlignNN_Smaller
 
 from utils.data import NN_INPUT_WEEKS, get_dataloader, get_labels
 from utils.feature import Feature
@@ -37,22 +41,39 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument(
     "-c", "--config", default="config_opt_llm.yaml", help="Name of the yaml config file with the parameters."
+    "-c", "--config", default="config_opt_llm.yaml", help="Name of the yaml config file with the parameters."
 )
 # *************************************************************************
+
+class SignedL1Loss(nn.Module):
+    def __init__(self):
+        super(SignedL1Loss, self).__init__()
+
+    def forward(self, predictions, targets):
+        diff = predictions - targets
+        sign = torch.sign(diff)
+        abs_diff = torch.abs(diff)
+        signed_l1_loss = torch.mean(sign * abs_diff)
+        return signed_l1_loss
 
 args = parser.parse_args()
 config_file = args.config
 print("Running experiment with config file: ", config_file)
 
+OPT_MODE = 'diff' #'equal' # 'diff' -> we train alpha more slowly than r0 params
 CALIB_MODE = 'calibNN' # i -> internal_param; external_param -> nn.Parameter; learnable_param -> learnable_parameters; nn -> CalibNN
+ALIGN_MASK = len(AgeGroup) # number of prompt dimensions
 
 config = read_config(config_file)
 registry = get_registry()
 runner = get_runner(config, registry)
+# runner = torch.compile(runner)
 
 device = torch.device(runner.config["simulation_metadata"]["device"])
 num_episodes = runner.config["simulation_metadata"]["num_episodes"]
 NUM_STEPS_PER_EPISODE = runner.config["simulation_metadata"]["num_steps_per_episode"]
+ALIGN_LLM = runner.config['simulation_metadata']['ALIGN_LLM']
+RESCALE_CONFIG = runner.config['simulation_metadata']['RESCALE_CONFIG']
 
 runner.init()
 
@@ -76,6 +97,7 @@ elif CALIB_MODE == "calibNN":
     # set the epiweeks to simulate
     EPIWEEK_START: Week = week_num_to_epiweek(runner.config["simulation_metadata"]["START_WEEK"])
     NUM_WEEKS: int = runner.config["simulation_metadata"]["num_steps_per_episode"] // 7
+    NUM_TRAIN_WEEKS: int = runner.config["simulation_metadata"]["NUM_TRAIN_WEEKS"]
 
     # set up variables
     FEATURE_LIST = [
@@ -91,20 +113,44 @@ elif CALIB_MODE == "calibNN":
     NEIGHBORHOOD = name_to_neighborhood(config["simulation_metadata"]["NEIGHBORHOOD"])
 
     # set up model
-    learn_model = CalibNN(
+    learn_model = CalibAlignNN(
         metas_train_dim=len(Neighborhood),
         X_train_dim=len(FEATURE_LIST),
         device=device,
         training_weeks=NN_INPUT_WEEKS,
         out_dim=1,
+        out_dim_align=ALIGN_MASK,
         scale_output="abm-covid",
     ).to(device)
 
     # set up loss function and optimizer
-    loss_function = torch.nn.MSELoss().to(device)
-    opt = optim.Adam(learn_model.parameters(), lr=learning_rate, betas=betas)
+    loss_function = torch.nn.MSELoss().to(device) #torch.nn.MSELoss().to(device)
+
+    signed_loss_function = SignedL1Loss().to(device)
+
+    if OPT_MODE == 'diff':
+        ro_params = learn_model.param_out_layer.parameters()
+        alpha_params = learn_model.align_out_layer.parameters()
+        shared_params = list(set(learn_model.parameters()) - set(ro_params) - set(alpha_params))
+
+        r0_learning_rate = 0.1*learning_rate
+        alpha_learning_rate = 0.01*learning_rate # alpha masks train more slowly than r0 values
+
+        # Create parameter groups with different learning rates
+        param_groups = [
+            {'params': shared_params, 'lr': learning_rate},
+            {'params': ro_params, 'lr': r0_learning_rate},
+            {'params': alpha_params, 'lr': alpha_learning_rate}
+        ]
+        # Create the optimizer with the parameter groups
+        opt = torch.optim.Adam(param_groups)
+    else:
+        opt = optim.Adam(learn_model.parameters(), lr=learning_rate, betas=betas)
+
+    # scheduler = ReduceLROnPlateau(opt, mode='min', factor=0.5, patience=5, verbose=True)
 
 def _get_parameters(CALIB_MODE):
+    if CALIB_MODE == "learnable_param":
     if CALIB_MODE == "learnable_param":
         new_R = learn_model()
         print("R shape: ", new_R.shape)
@@ -118,31 +164,58 @@ def _get_parameters(CALIB_MODE):
             NUM_WEEKS,
             FEATURE_LIST,
         )
+
         for metadata, features in dataloader:
-            r0_values = learn_model(features, metadata)[:, 0, 0]
+            r0_values, align_values, align_adjust, initial_infect_prob = learn_model(features, metadata) #[:, 0, 0]
+            r0_values = r0_values.squeeze() # [2,1]
+            align_values = align_values.mean(axis=0) # [2,6] #[:, 0, :].squeeze() # (week_id, num_groups)
+            align_adjust = align_adjust.mean(axis=0)
+            initial_infect_prob = initial_infect_prob.mean(axis=0)
 
-        return r0_values
+            # rescale the align values
+            if ALIGN_LLM:
+                if RESCALE_CONFIG == 0:
+                    align_adjust *= 0
+                elif RESCALE_CONFIG == 1:
+                    align_values *= 2
+                    align_adjust -= 1/2
+                elif RESCALE_CONFIG == 2:
+                    align_values *= 2
+                    align_adjust *= 0
+                elif RESCALE_CONFIG == 3:
+                    align_values = align_values * 1/5 + 0.6
+                    align_adjust = align_adjust * 1/5
 
-def _set_parameters(new_R):
-    # print("SET PARAMETERS ONLY WORKS FOR R0 for now!")
-    '''Only sets R value for now..'''
+        return r0_values, align_values, align_adjust, initial_infect_prob
+
+def _set_parameters(new_R, new_align, new_align_adjust, initial_isolation_prob=None):
+    print(f"r0 values: {new_R}")
+    print(f"how non compliant is LLM?: {new_align}")
+    # print(f"initial_infect_prob values:{initial_isolation_prob}")
+
     runner.initializer.transition_function['0']['new_transmission'].external_R = new_R
+    runner.initializer.policy_function['0']['citizens'].make_isolation_decision.external_align_vector = new_align
+    # runner.initializer.policy_function['0']['citizens'].make_isolation_decision.external_align_adjustment_vector = new_align_adjust
+
+    # if initial_isolation_prob is not None:
+    #         runner.initializer.policy_function['0']['citizens'].make_isolation_decision.external_initial_prob = initial_isolation_prob
 
 for episode in range(num_episodes):    
     # reset gradients from previous iteration
     print(f"\nrunning episode {episode}...")
+for episode in range(num_episodes):    
+    # reset gradients from previous iteration
+    print(f"\nrunning episode {episode}...")
     opt.zero_grad()
+    
     if episode >=1:
         runner.reset()
 
     # get the r0 predictions for the episode
-    r0_values = _get_parameters(CALIB_MODE)
-    _set_parameters(r0_values)
-    print(f"r0 values: {r0_values}")
+    r0_values, align_values, align_adjust, initial_infect_prob = _get_parameters(CALIB_MODE)
+    _set_parameters(r0_values, align_values, align_adjust, initial_infect_prob)
 
-    # allocated1, reserved1 = memory_checkpoint(name="1")
     runner.step(NUM_STEPS_PER_EPISODE)
-    # allocated2, reserved2 = memory_checkpoint(name="2")
 
     # get daily number of infections
     traj = runner.state_trajectory[-1][-1]
@@ -156,14 +229,20 @@ for episode in range(num_episodes):
     target_weekly_cases = target_weekly_cases.to(device)
 
     # calculate the loss from the target cases
-    loss_val = loss_function(predicted_weekly_cases, target_weekly_cases)
-    loss_val.backward()
-    print(f"predicted number of cases: {predicted_weekly_cases}, actual number of cases: {target_weekly_cases}, loss: {loss_val}")
+    train_loss = loss_function(predicted_weekly_cases[:NUM_TRAIN_WEEKS], target_weekly_cases[:NUM_TRAIN_WEEKS])
 
+    train_loss.backward()
+    val_loss = loss_function(predicted_weekly_cases[NUM_TRAIN_WEEKS:], target_weekly_cases[NUM_TRAIN_WEEKS:])
+    print(f"predicted number of cases: {predicted_weekly_cases}, actual number of cases: {target_weekly_cases}, train loss: {train_loss}, val loss: {val_loss}")
 
     # run the optimization step, and clear simulation
-    # allocated3, reserved3 = memory_checkpoint(name="3")
     opt.step()
     # print(torch.cuda.memory_summary())
     # print("---------------------------------")
     torch.cuda.empty_cache()
+
+    # scheduler.step(train_loss)
+
+    torch.cuda.empty_cache()
+
+# R0 increase -> cases increase; alpha increase -> isolation_rate decrease -> cases increase
