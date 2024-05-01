@@ -1,5 +1,7 @@
 # AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
 # MODEL_PATH = '/u/ayushc/projects/GradABM/MacroEcon/models'
+# AGENT_TORCH_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
+# MODEL_PATH = '/u/ayushc/projects/GradABM/MacroEcon/models'
 
 import torch
 import numpy as np
@@ -8,10 +10,19 @@ import torch.nn.functional as F
 
 # sys.path.append(MODEL_PATH)
 # sys.path.insert(0, AGENT_TORCH_PATH)
+# sys.path.append(MODEL_PATH)
+# sys.path.insert(0, AGENT_TORCH_PATH)
 
 from AgentTorch.helpers import get_by_path
 from AgentTorch.substep import SubstepAction
 from AgentTorch.LLM.llm_agent import LLMAgent
+
+from utils.data import get_data, get_labels
+from utils.feature import Feature
+from utils.llm import AgeGroup, SYSTEM_PROMPT, construct_user_prompt
+from utils.misc import week_num_to_epiweek, name_to_neighborhood
+from AgentTorch.helpers.distributions import StraightThroughBernoulli
+
 
 from utils.data import get_data, get_labels
 from utils.feature import Feature
@@ -98,7 +109,11 @@ class MakeIsolationDecision(SubstepAction):
         if string.lower() == "yes":
             return 1
         else:
+        if string.lower() == "yes":
+            return 1
+        else:
             return 0
+
 
     def change_text(self, change_amount):
         change_amount = int(change_amount)
@@ -116,6 +131,12 @@ class MakeIsolationDecision(SubstepAction):
         return one_hot_tensor.to(self.device)
 
     async def forward(self, state, observation):
+        """
+        LLMAgent class has three functions: a) mask sub-groups, b) format_prompt, c) invoke LLM, d) aggregate response
+        """
+        # if in debug mode, return random values for isolation
+        if self.mode == "debug":
+            will_isolate = torch.rand(self.num_agents, 1).to(self.device)
         """
         LLMAgent class has three functions: a) mask sub-groups, b) format_prompt, c) invoke LLM, d) aggregate response
         """
@@ -235,3 +256,4 @@ class MakeIsolationDecision(SubstepAction):
         # print("aligned_isolation_probs: ", isolation_probs.shape, "will_isolate: ", will_isolate.shape)
         print(f"day {time_step}, number of isolating agents {sum(will_isolate).item()}")
         return {self.output_variables[0]: will_isolate}
+

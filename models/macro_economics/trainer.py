@@ -1,10 +1,13 @@
-import sys
-AT_PATH = '/u/ayushc/projects/GradABM/MacroEcon/AgentTorch'
-sys.path.insert(0, AT_PATH)
+MODEL_PATH = '/Users/shashankkumar/Documents/GitHub/MacroEcon/models'
+AGENT_TORCH_PATH = '/Users/shashankkumar/Documents/GitHub/MacroEcon/AgentTorch'
 
 import argparse
 import torch
 import torch.optim as optim
+import torch.nn.functional as F
+import sys
+sys.path.insert(0, AGENT_TORCH_PATH)
+sys.path.append(MODEL_PATH)
 from AgentTorch.helpers import read_config
 from simulator import SimulationRunner, simulation_registry
 
@@ -19,8 +22,15 @@ parser.add_argument(
     "-c", "--config", help="Name of the yaml config file with the parameters."
 )
 # *************************************************************************
+# args = parser.parse_args()
+# if args:
+#     config_file = args.config
+# else:
+#     # config_file = "/Users/shashankkumar/Documents/GitHub/MacroEcon/models/macro_economics/config.yaml"
+#     config_file = os.path.join("/Users/shashankkumar/Documents/GitHub/MacroEcon/models/macro_economics", 'config.yaml')
+#     print("Config file path: ", config_file)
 
-config_file = "/u/ayushc/projects/GradABM/MacroEcon/models/macro_economics/config.yaml"
+config_file = "/Users/shashankkumar/Documents/GitHub/MacroEcon/models/macro_economics/config.yaml"
 config = read_config(config_file)
 registry = simulation_registry()
 

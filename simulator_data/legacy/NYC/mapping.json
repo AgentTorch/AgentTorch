@@ -1,1 +1,1 @@
-{"area": ["BK0101"], "age": ["20t29", "30t39", "40t49", "50t64", "65A", "U19"], "gender": ["male", "female"], "ethnicity": ["white", "other", "black", "hispanic", "asian", "native"]}
+{"area": ["BK0502", "BX0703", "BX0603", "BX1102", "MN0802", "MN0901", "QN1103", "SI0107", "SI0301"], "age": ["20t29", "30t39", "40t49", "50t64", "65A", "U19"], "gender": ["male", "female"], "ethnicity": ["black", "hispanic", "other", "asian", "white", "native"], "county": ["BK", "BX", "MN", "QN", "SI"]}

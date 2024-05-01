@@ -1,9 +1,12 @@
 from __future__ import annotations
 '''Command: python trainer.py --c yamls/config_opt_llm.yaml'''
+from __future__ import annotations
+'''Command: python trainer.py --c yamls/config_opt_llm.yaml'''
 import warnings
 warnings.filterwarnings("ignore")
 
 import argparse
+from epiweeks import Week
 from epiweeks import Week
 import torch
 import torch.optim as optim
@@ -37,6 +40,7 @@ parser = argparse.ArgumentParser(
     description="AgentTorch: million-scale, differentiable agent-based models"
 )
 parser.add_argument(
+    "-c", "--config", default="config_opt_llm.yaml", help="Name of the yaml config file with the parameters."
     "-c", "--config", default="config_opt_llm.yaml", help="Name of the yaml config file with the parameters."
 )
 # *************************************************************************
@@ -147,6 +151,7 @@ elif CALIB_MODE == "calibNN":
 
 def _get_parameters(CALIB_MODE):
     if CALIB_MODE == "learnable_param":
+    if CALIB_MODE == "learnable_param":
         new_R = learn_model()
         print("R shape: ", new_R.shape)
         return new_R
@@ -198,6 +203,9 @@ def _set_parameters(new_R, new_align, new_align_adjust, initial_isolation_prob=N
 for episode in range(num_episodes):    
     # reset gradients from previous iteration
     print(f"\nrunning episode {episode}...")
+for episode in range(num_episodes):    
+    # reset gradients from previous iteration
+    print(f"\nrunning episode {episode}...")
     opt.zero_grad()
     
     if episode >=1:
@@ -229,6 +237,9 @@ for episode in range(num_episodes):
 
     # run the optimization step, and clear simulation
     opt.step()
+    # print(torch.cuda.memory_summary())
+    # print("---------------------------------")
+    torch.cuda.empty_cache()
 
     # scheduler.step(train_loss)
 

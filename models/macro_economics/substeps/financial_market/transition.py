@@ -23,7 +23,7 @@ class UpdateFinancialMarket(SubstepTransition):
         un = self.config['simulation_metadata']['natural_unemployment_rate']
         pit = self.config['simulation_metadata']['target_inflation_rate']
         a_i = self.config['simulation_metadata']['inflation_adaptation_coefficient']
-        a_u = self.config['simulation_metadata']['unemployment_adaptation_coefficient']
+        a_u = self.config['simulation_metadata']['unemployment_adaptation_macro']
         
         pi = inflation_rate
         u = unemployment_rate

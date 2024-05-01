@@ -7,17 +7,20 @@ from AgentTorch.substep import SubstepTransitionMessagePassing
 from AgentTorch.helpers import get_by_path
 # from substeps.utils import *
 from AgentTorch.helpers.distributions import StraightThroughBernoulli
+from AgentTorch.helpers.distributions import StraightThroughBernoulli
 
 class NewTransmission(SubstepTransitionMessagePassing):
     def __init__(self, config, input_variables, output_variables, arguments):
         super().__init__(config, input_variables, output_variables, arguments)
 
         self.device = torch.device(self.config['simulation_metadata']['device'])
+        self.device = torch.device(self.config['simulation_metadata']['device'])
         self.SUSCEPTIBLE_VAR = self.config['simulation_metadata']['SUSCEPTIBLE_VAR']
         self.EXPOSED_VAR = self.config['simulation_metadata']['EXPOSED_VAR']
         self.RECOVERED_VAR = self.config['simulation_metadata']['RECOVERED_VAR']
         
         self.num_timesteps = self.config['simulation_metadata']['num_steps_per_episode']
+        self.num_weeks = self.config['simulation_metadata']['NUM_WEEKS']
         self.num_weeks = self.config['simulation_metadata']['NUM_WEEKS']
 
         self.STAGE_UPDATE_VAR = 1
@@ -26,7 +29,11 @@ class NewTransmission(SubstepTransitionMessagePassing):
 
         self.mode = self.config['simulation_metadata']['EXECUTION_MODE']
 
+        self.mode = self.config['simulation_metadata']['EXECUTION_MODE']
+
         self.external_R = torch.tensor(self.learnable_args['R2'].data, requires_grad=True)
+
+        self.st_bernoulli = StraightThroughBernoulli.apply
 
         self.st_bernoulli = StraightThroughBernoulli.apply
 
@@ -43,6 +50,7 @@ class NewTransmission(SubstepTransitionMessagePassing):
                 
         I_bar = torch.gather(x_i[:, 4], 0, edge_network_numbers.long()).view(-1)
         
+        will_isolate = x_i[:, 6] # is the susceptible agent isolating? check x_i vs x_j
         will_isolate = x_i[:, 6] # is the susceptible agent isolating? check x_i vs x_j
         not_isolated = 1 - will_isolate
 
@@ -71,6 +79,7 @@ class NewTransmission(SubstepTransitionMessagePassing):
         timestep_tensor = torch.tensor([timestep])
         one_hot_tensor = F.one_hot(timestep_tensor, num_classes=num_timesteps)
 
+        return one_hot_tensor.to(self.device)
         return one_hot_tensor.to(self.device)
     
     def update_infected_times(self, t, agents_infected_times, newly_exposed_today):
