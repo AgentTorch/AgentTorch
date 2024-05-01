@@ -6,7 +6,7 @@ simulation_metadata:
   num_episodes: 30
   num_steps_per_episode: 7
   num_substeps_per_step: 4
-  START_WEEK: 202009
+  START_WEEK: 202212
   NUM_WEEKS: 28
   NEIGHBORHOOD: "Astoria"
   INCLUDE_WEEK_COUNT: True
@@ -27,6 +27,7 @@ simulation_metadata:
   natural_interest_rate: 0.05
   natural_unemployment_rate: 0.05
   covid_cases_path: ${simulation_metadata.population_dir}/processed_kings_county_monthly_cases.pkl
+  initial_claims_path: ${simulation_metadata.population_dir}/kings_county_processed_UI_claims.pkl
   population_dir: /Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/census_populations/NYC/simulation_input #change this path to be just till NYC
   target_inflation_rate: 0.02
   month_mapping : {
@@ -575,6 +576,14 @@ substeps:
                 initialization_function: null
                 learnable: true
                 name: unemployment_adaptation_coefficient
+                shape:
+                - 1
+                value: 0.7
+              initial_claims_weight:
+                dtype: float
+                initialization_function: null
+                learnable: true
+                name: initial_claims_weight
                 shape:
                 - 1
                 value: 0.7

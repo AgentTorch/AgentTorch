@@ -97,13 +97,14 @@ elif CALIB_MODE == "calibNN":
         out_dim=1,
         scale_output="abm-covid",
     ).to(device)
-
+    initial_claims_weight = torch.nn.Parameter(torch.tensor([0.5]))
     # set up loss function and optimizer
     # loss_function = torch.nn.MSELoss().to(device)
     loss_function = torch.nn.MSELoss().to(device)
-    opt = optim.Adam(learn_model.parameters(), lr=learning_rate, betas=betas)
+    opt = optim.Adam(list(learn_model.parameters()) + [initial_claims_weight], lr=learning_rate, betas=betas)
 
 def _get_parameters(CALIB_MODE):
+    global initial_claims_weight
     if CALIB_MODE == "learnable_param":
         new_R = learn_model()
         print("R shape: ", new_R.shape)
@@ -119,13 +120,15 @@ def _get_parameters(CALIB_MODE):
         )
         for metadata, features in dataloader:
             calib_values = learn_model(features, metadata)
+        
 
-        return calib_values
+        return calib_values, initial_claims_weight
 
-def _set_parameters(new_values):
+def _set_parameters(external_UAC,intial_claims_weight):
     # print("SET PARAMETERS ONLY WORKS FOR UAC in labor-market for now!")
     '''Only sets UAC value for now..'''
-    runner.initializer.transition_function['2']['update_macro_rates'].external_UAC = new_values
+    runner.initializer.transition_function['2']['update_macro_rates'].external_UAC = external_UAC
+    runner.initializer.transition_function['2']['update_macro_rates'].initial_claims_weight = intial_claims_weight
 
 def _get_unemployment_labels(num_steps_per_episode=1):
     data_path = '/Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/NYC/brooklyn_unemp.csv'
@@ -147,10 +150,10 @@ for episode in range(num_episodes):
         runner.reset()
 
     # get the r0 predictions for the episode
-    calib_values = _get_parameters(CALIB_MODE)
+    calib_values,initial_claims_weight= _get_parameters(CALIB_MODE)
     avg_month_value = calib_values.reshape(-1, 4,1).mean(dim=1)
-    _set_parameters(avg_month_value)
-    print(f"calib values: {calib_values}")
+    _set_parameters(avg_month_value,initial_claims_weight)
+    print(f"calib values: {calib_values}, initial_claims_weight: {initial_claims_weight}")
 
     runner.step(NUM_STEPS_PER_EPISODE)
 

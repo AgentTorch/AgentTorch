@@ -42,6 +42,7 @@ class WorkConsumptionPropensity(SubstepAction):
         
     
     async def forward(self, state, observation):        
+        # TODO: Improve retry logic when LLM's output doesn't match the expected format
         print("Substep Action: Earning decision")
         number_of_months = state['current_step'] + 1 + 7 # 1 indexed, also since we are starting from 8th month add 7 here
         current_year = number_of_months // 12 + 1 + 1 # 1 indexed, also since we are starting from 2020 add 1 here
@@ -53,10 +54,19 @@ class WorkConsumptionPropensity(SubstepAction):
         masks = self.get_masks_for_each_group(prompt_variables_dict)
         prompt_list = self.get_prompt_list(prompt_variables_dict)
         # await asyncio.sleep(10)
-        agent_output = self.agent(prompt_list,last_k=1)
-        consumption_propensity, work_propensity = self.get_propensity_values(consumption_propensity, work_propensity, masks, agent_output)
+        agent_output = self.agent(prompt_list,last_k=3)
+        for _ in range(3):  # Retry up to 3 times
+            try:
+                agent_output = self.agent(prompt_list,last_k=3)
+                consumption_propensity, work_propensity = self.get_propensity_values(consumption_propensity, work_propensity, masks, agent_output)
+                break  # If successful, break out of the loop
+            except Exception as e:
+                print(f"Error in getting propensity values: {e}")
+                print(prompt_list)
+                print("retrying")
+        else:  # If we've exhausted all retries, re-raise the last exception
+                raise
         will_work = self.st_bernoulli(work_propensity) #torch.bernoulli(work_propensity)
-        covid_cases = self.covid_cases[number_of_months-1]
         # if number_of_months == self.num_steps_per_episode:
         if number_of_months == 4:
             current_memory_dir = os.path.join(self.save_memory_dir ,str(current_year), str(number_of_months))

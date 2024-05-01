@@ -1,3 +1,4 @@
+import pandas as pd
 import torch
 import torch.nn as nn
 from torch.distributions import Normal
@@ -17,9 +18,11 @@ class UpdateMacroRates(SubstepTransition):
         self.num_timesteps = self.config['simulation_metadata']['num_steps_per_episode']
         self.max_rate_change = self.config['simulation_metadata']['maximum_rate_of_change_of_wage']
         self.num_agents = self.config['simulation_metadata']['num_agents']
-
+        initial_claims_path = self.config['simulation_metadata']['initial_claims_path']
+        initial_claims_df = pd.read_pickle(initial_claims_path)
+        self.initial_claims = torch.tensor(initial_claims_df.values) # load initial claims data for each county separately. Current is kings county
         self.external_UAC = torch.tensor(self.learnable_args['unemployment_adaptation_coefficient'], requires_grad=True)
-    
+        self.initial_claims_weight = torch.tensor(self.learnable_args['initial_claims_weight'], requires_grad=True)
     def calculateNumberOfAgentsNotWorking(self, working_status):
         agents_not_working = torch.sum((1-working_status))
         return agents_not_working
@@ -82,7 +85,6 @@ class UpdateMacroRates(SubstepTransition):
         month_id = state['current_step']
         t = int(month_id)
         time_step_one_hot = self._generate_one_hot_tensor(t, self.num_timesteps)
-        
         working_status = get_by_path(state, re.split("/", self.input_variables['will_work']))
         imbalance = get_by_path(state, re.split("/", self.input_variables['imbalance']))
         hourly_wage = get_by_path(state, re.split("/", self.input_variables['hourly_wage']))
@@ -93,6 +95,7 @@ class UpdateMacroRates(SubstepTransition):
         unemployment_rate_queens = get_by_path(state, re.split("/", self.input_variables['unemployment_rate_queens']))
         unemployment_rate_staten_island = get_by_path(state, re.split("/", self.input_variables['unemployment_rate_staten_island']))
         county = get_by_path(state, re.split("/", self.input_variables['county']))
+        current_month_initial_claims = self.initial_claims[t]
         
         total_labor_force = torch.sum(working_status)
         unemployment_adaptation_coefficient_all = torch.matmul(time_step_one_hot.float().unsqueeze(dim=0),self.external_UAC).squeeze([0,1])
@@ -144,7 +147,7 @@ class UpdateMacroRates(SubstepTransition):
         # unemployment_rate_manhattan = unemployment_rate_manhattan + (current_unemployment_rate_county_manhattan*time_step_one_hot)
         # unemployment_rate_queens = unemployment_rate_queens + (current_unemployment_rate_county_queens*time_step_one_hot)
         # unemployment_rate_staten_island = unemployment_rate_staten_island + (current_unemployment_rate_county_staten_island*time_step_one_hot)
-        total_unemployed_agents = total_labor_force * unemployment_adaptation_coefficient_all[0] + B(UI)
+        total_unemployed_agents = total_labor_force * unemployment_adaptation_coefficient_all[0] + + (current_month_initial_claims * self.initial_claims_weight)
         current_total_unemployment_rate = total_unemployed_agents / total_labor_force * 100
         unemployment_rate = unemployment_rate + (current_total_unemployment_rate*time_step_one_hot) 
         # hourly wages
