@@ -10,7 +10,7 @@ class SEIRMSProgression(SubstepTransition):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        self.device = self.config['simulation_metadata']['device']
+        self.device = torch.device(self.config['simulation_metadata']['device'])
         self.num_timesteps = self.config['simulation_metadata']['num_steps_per_episode']
         
         self.SUSCEPTIBLE_VAR = self.config['simulation_metadata']['SUSCEPTIBLE_VAR']
@@ -34,7 +34,7 @@ class SEIRMSProgression(SubstepTransition):
         timestep_tensor = torch.tensor([timestep])
         one_hot_tensor = F.one_hot(timestep_tensor, num_classes=num_timesteps)
 
-        return one_hot_tensor
+        return one_hot_tensor.to(self.device)
 
     def update_daily_deaths(self, t, daily_death_count, current_stages, current_transition_times):
         # recovered or dead agents
@@ -96,7 +96,7 @@ class SEIRMSProgression(SubstepTransition):
         '''Update stage and transition times for already infected agents'''
         input_variables = self.input_variables
         t = state['current_step']
-        print("Substep: SEIRM progression!")
+        # print("Substep: SEIRM progression!")
         
         current_stages = get_by_path(state, re.split("/", input_variables['disease_stage']))
         current_transition_times = get_by_path(state, re.split("/", input_variables['next_stage_time']))

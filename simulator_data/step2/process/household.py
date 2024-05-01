@@ -457,7 +457,7 @@ if __name__ == "__main__":
 
     #load if available
     geo_address_data = None
-    use_parallel = False
+    use_parallel = True
     n_cpu = 8
 
     base_pop, base_address = household_wrapper(

@@ -1,0 +1,92 @@
+/u/ngkuru/envs/agent_torch/lib/python3.10/site-packages/langchain/callbacks/__init__.py:37: LangChainDeprecationWarning: Importing this callback from langchain is deprecated. Importing it from langchain will no longer be supported as of langchain==0.2.0. Please import from langchain-community instead:
+
+`from langchain_community.callbacks import get_openai_callback`.
+
+To install langchain-community run `pip install -U langchain-community`.
+  warnings.warn(
+Running experiment with config file:  experiments/0419_1600_nollm_2e2/config.yaml
+Skipping:  objects
+named learnable_params:  [('initializer.transition_function.0.new_transmission.learnable_args.R2', Parameter containing:
+tensor([4.7500, 4.7500, 4.7500, 4.7500, 4.7500, 4.7500, 4.7500, 4.7500, 4.7500,
+        4.7500], device='cuda:0', requires_grad=True)), ('initializer.transition_function.1.seirm_progression.learnable_args.M', Parameter containing:
+tensor([0.1200], device='cuda:0', requires_grad=True))]
+
+running episode 0...
+r0 values: tensor([3.8011, 4.0481, 4.1355, 4.2307, 4.1889, 4.2323, 4.1992, 4.1918, 4.1868,
+        4.2413], device='cuda:0', grad_fn=<SelectBackward0>)
+predicted number of cases: tensor([1.9300e+02, 1.6710e+03, 9.4560e+03, 1.3660e+04, 3.6040e+03, 4.2200e+02,
+        4.5000e+01, 2.0000e+00, 0.0000e+00, 0.0000e+00], device='cuda:0',
+       grad_fn=<ToCopyBackward0>), actual number of cases: tensor([101., 138., 114., 129., 130., 201., 151., 120., 142., 111.],
+       device='cuda:0'), loss: 5337.55224609375
+
+running episode 1...
+Skipping:  objects
+r0 values: tensor([2.1538, 2.0514, 2.0253, 2.0669, 2.0807, 2.0729, 2.0746, 2.0690, 2.0500,
+        2.0769], device='cuda:0', grad_fn=<SelectBackward0>)
+predicted number of cases: tensor([ 128.,  651., 2658., 7473., 8640., 4153., 1142.,  237.,   43.,    9.],
+       device='cuda:0', grad_fn=<ToCopyBackward0>), actual number of cases: tensor([101., 138., 114., 129., 130., 201., 151., 120., 142., 111.],
+       device='cuda:0'), loss: 3869.42578125
+
+running episode 2...
+Skipping:  objects
+r0 values: tensor([1.6313, 1.5727, 1.5292, 1.5164, 1.5115, 1.5137, 1.4967, 1.5010, 1.5104,
+        1.5224], device='cuda:0', grad_fn=<SelectBackward0>)
+predicted number of cases: tensor([ 111.,  356., 1096., 3011., 6066., 6437., 3418., 1239.,  373.,  108.],
+       device='cuda:0', grad_fn=<ToCopyBackward0>), actual number of cases: tensor([101., 138., 114., 129., 130., 201., 151., 120., 142., 111.],
+       device='cuda:0'), loss: 3089.0205078125
+
+running episode 3...
+Skipping:  objects
+r0 values: tensor([1.4040, 1.4040, 1.4041, 1.4041, 1.4041, 1.4041, 1.4041, 1.4041, 1.4041,
+        1.4041], device='cuda:0', grad_fn=<SelectBackward0>)
+predicted number of cases: tensor([  85.,  261.,  876., 2387., 5081., 6270., 4162., 1637.,  531.,  160.],
+       device='cuda:0', grad_fn=<ToCopyBackward0>), actual number of cases: tensor([101., 138., 114., 129., 130., 201., 151., 120., 142., 111.],
+       device='cuda:0'), loss: 2925.455078125
+
+running episode 4...
+Skipping:  objects
+r0 values: tensor([1.4015, 1.4015, 1.4015, 1.4015, 1.4015, 1.4015, 1.4015, 1.4015, 1.4015,
+        1.4015], device='cuda:0', grad_fn=<SelectBackward0>)
+predicted number of cases: tensor([  87.,  258.,  873., 2370., 4973., 6199., 4072., 1847.,  626.,  192.],
+       device='cuda:0', grad_fn=<ToCopyBackward0>), actual number of cases: tensor([101., 138., 114., 129., 130., 201., 151., 120., 142., 111.],
+       device='cuda:0'), loss: 2892.075439453125
+
+running episode 5...
+Skipping:  objects
+r0 values: tensor([1.4007, 1.4007, 1.4007, 1.4007, 1.4007, 1.4007, 1.4007, 1.4007, 1.4007,
+        1.4007], device='cuda:0', grad_fn=<SelectBackward0>)
+predicted number of cases: tensor([ 104.,  307.,  999., 2670., 5308., 6077., 3883., 1600.,  525.,  166.],
+       device='cuda:0', grad_fn=<ToCopyBackward0>), actual number of cases: tensor([101., 138., 114., 129., 130., 201., 151., 120., 142., 111.],
+       device='cuda:0'), loss: 2913.339599609375
+
+running episode 6...
+Skipping:  objects
+r0 values: tensor([1.4004, 1.4004, 1.4004, 1.4004, 1.4004, 1.4004, 1.4004, 1.4004, 1.4004,
+        1.4004], device='cuda:0', grad_fn=<SelectBackward0>)
+predicted number of cases: tensor([  88.,  344., 1029., 2774., 5414., 6154., 3700., 1449.,  468.,  143.],
+       device='cuda:0', grad_fn=<ToCopyBackward0>), actual number of cases: tensor([101., 138., 114., 129., 130., 201., 151., 120., 142., 111.],
+       device='cuda:0'), loss: 2927.518798828125
+
+running episode 7...
+Skipping:  objects
+r0 values: tensor([1.4003, 1.4003, 1.4003, 1.4003, 1.4003, 1.4003, 1.4003, 1.4003, 1.4003,
+        1.4003], device='cuda:0', grad_fn=<SelectBackward0>)
+predicted number of cases: tensor([  82.,  255.,  788., 2364., 5132., 6225., 4207., 1695.,  599.,  191.],
+       device='cuda:0', grad_fn=<ToCopyBackward0>), actual number of cases: tensor([101., 138., 114., 129., 130., 201., 151., 120., 142., 111.],
+       device='cuda:0'), loss: 2931.19677734375
+
+running episode 8...
+Skipping:  objects
+r0 values: tensor([1.4002, 1.4002, 1.4002, 1.4002, 1.4002, 1.4002, 1.4002, 1.4002, 1.4002,
+        1.4002], device='cuda:0', grad_fn=<SelectBackward0>)
+predicted number of cases: tensor([  62.,  191.,  543., 1604., 3937., 6166., 5355., 2489.,  898.,  260.],
+       device='cuda:0', grad_fn=<ToCopyBackward0>), actual number of cases: tensor([101., 138., 114., 129., 130., 201., 151., 120., 142., 111.],
+       device='cuda:0'), loss: 2927.900146484375
+
+running episode 9...
+Skipping:  objects
+r0 values: tensor([1.4002, 1.4002, 1.4002, 1.4002, 1.4002, 1.4002, 1.4002, 1.4002, 1.4002,
+        1.4002], device='cuda:0', grad_fn=<SelectBackward0>)
+predicted number of cases: tensor([  86.,  302., 1041., 2722., 5399., 6064., 3749., 1526.,  501.,  142.],
+       device='cuda:0', grad_fn=<ToCopyBackward0>), actual number of cases: tensor([101., 138., 114., 129., 130., 201., 151., 120., 142., 111.],
+       device='cuda:0'), loss: 2912.03564453125
