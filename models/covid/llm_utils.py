@@ -6,7 +6,9 @@ from enum import Enum, auto
 import numpy as np
 from openai import OpenAI
 
-OPENAI_API_KEY = "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"
+OPENAI_API_KEY = None
+if OPENAI_API_KEY is None:
+    print("Key needs to be specified!!")
 
 def _get_column_from_table(table, tag):
     return [row[tag] for row in table]
