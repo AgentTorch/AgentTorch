@@ -6,7 +6,9 @@ Three user experiences to demonstrate
 - Generalize across geographies
 
 2. Data API: [@ayush]
-- Create a custom population (eg: create population for )
+- Create a custom population
 
 3. Dev API: [@vedant]
-- Create a custom simulation (eg: predator-prey model) 
+- Create a custom simulation (eg: predator-prey model)
+- Act using heuristic and adaptive agents
+- Interact over synthetic grid and openstreet map
