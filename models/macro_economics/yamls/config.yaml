@@ -1,5 +1,5 @@
 simulation_metadata:
-  OPENAI_API_KEY: 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
+  OPENAI_API_KEY: None
   device: cpu
   execution_mode: llm
   num_agents: 2712360
@@ -28,7 +28,7 @@ simulation_metadata:
   natural_unemployment_rate: 0.05
   covid_cases_path: ${simulation_metadata.population_dir}/processed_kings_county_monthly_cases.pkl
   initial_claims_path: ${simulation_metadata.population_dir}/kings_county_processed_UI_claims.pkl
-  population_dir: /Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/census_populations/NYC/simulation_input #change this path to be just till NYC
+  population_dir: None #change this path to be just till NYC
   target_inflation_rate: 0.02
   month_mapping : {
     1: "January",

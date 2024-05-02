@@ -2,7 +2,7 @@ simulation_metadata:
     num_episodes: 5 #15
     num_steps_per_episode: 14 #84
     num_substeps_per_step: 2
-    OPENAI_API_KEY: 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
+    OPENAI_API_KEY: None
     device: "cuda" #"cpu"
     START_WEEK: 202048 #202212
     NUM_WEEKS: 3 #12
