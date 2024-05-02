@@ -1,5 +1,4 @@
 MACRO_ECON_PATH  = '/Users/shashankkumar/Documents/GitHub/MacroEcon/models'
-OPENAI_API_KEY = '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'
 import functools
 import json
 import os

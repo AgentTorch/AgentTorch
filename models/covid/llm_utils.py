@@ -8,7 +8,7 @@ from openai import OpenAI
 
 OPENAI_API_KEY = None
 if OPENAI_API_KEY is None:
-    print("Key needs to be specified!!")
+    print("Key needs to be specified!")
 
 def _get_column_from_table(table, tag):
     return [row[tag] for row in table]

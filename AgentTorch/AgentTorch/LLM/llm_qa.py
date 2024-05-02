@@ -248,7 +248,7 @@ class QueryRunnerUsingDspy(dspy.Module):
         return dspy.Prediction(context=context, answer=pred.answer)
     
 if __name__ == "__main__":
-    OPENAI_API_KEY = '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'
+    # OPENAI_API_KEY = None
     model_name = "BAAI/bge-small-en"
     model_kwargs = {"device": "cpu"}
     encode_kwargs = {"normalize_embeddings": True}
