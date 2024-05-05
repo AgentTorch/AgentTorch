@@ -9,6 +9,8 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plotter
 import matplotlib.patches as patcher
+import contextily as ctx
+
 from celluloid import Camera
 
 class Plot:
@@ -27,7 +29,9 @@ class Plot:
     self.coords.sort(key=lambda x: -(x[0] + x[1]))
 
     if self.figure is None:
-      self.figure, self.axes = ox.plot_graph(graph, edge_linewidth=0.3, show=False, close=False)
+      self.figure, self.axes = ox.plot_graph(graph, edge_linewidth=0.3, edge_color='gray', show=False, close=False)
+      ctx.add_basemap(self.axes, crs=graph.graph['crs'], source=ctx.providers.OpenStreetMap.Mapnik)
+      self.axes.set_axis_off()
 
     # get coordinates of all the entities to show.
     prey = state['agents']['prey']
@@ -47,15 +51,10 @@ class Plot:
       self.coords[(self.max_y * pos[0]) + pos[1]] for pos in alive_pred
     ]).T
 
-    # grass doesn't really fit in the city.
-    # grown_grass_x, grown_grass_y = np.array([
-    #   self.coords[(self.max_y * pos[0]) + pos[1]] for pos in grown_grass
-    # ]).T
-
     # show prey in dark blue, predators in maroon, and
     # grass in light green.
-    prey_scatter = self.axes.scatter(alive_prey_x, alive_prey_y, c='#0d52bd')
-    pred_scatter = self.axes.scatter(alive_pred_x, alive_pred_y, c='#8b0000')
+    prey_scatter = self.axes.scatter(alive_prey_x, alive_prey_y, c='#0d52bd', marker='.')
+    pred_scatter = self.axes.scatter(alive_pred_x, alive_pred_y, c='#8b0000', marker='.')
     # grass_scatter = self.axes.scatter(grass_x, grass_y, c='#d1ffbd')
 
     # increment the step count.
@@ -65,8 +64,7 @@ class Plot:
     self.axes.legend(handles=[
       patcher.Patch(color='#fc46aa', label=str(self.i) + ' step'),
       patcher.Patch(color='#0d52bd', label=str(len(alive_prey)) + ' prey'),
-      patcher.Patch(color='#8b0000', label=str(len(alive_pred)) + ' predators'),
-      patcher.Patch(color='#d1ffbd', label=str(len(grown_grass)) + ' grass')
+      patcher.Patch(color='#8b0000', label=str(len(alive_pred)) + ' predators')
     ])
 
     # say cheese!
