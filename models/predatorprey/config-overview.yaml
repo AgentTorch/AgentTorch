@@ -1,0 +1,57 @@
+# config-overview.yaml
+# a high-level overview of the config.yaml file
+
+metadata:
+  device: cpu
+  episode_count: int
+
+state:
+  environment:
+    bounds: (max_x, max_y)
+
+  agents:
+    predator:
+      coordinates: (x, y)
+      energy: float
+      stride_work: float
+
+    prey:
+      coordinates: (x, y)
+      energy: float
+      stride_work: float
+      nutritional_value: float
+
+  objects:
+    grass:
+      coordinates: (x, y)
+      growth_stage: 0|1
+      growth_countdown: float
+      regrowth_time: float
+      nutritional_value: float
+
+  network:
+    # store all the agents in a 2D grid (x, y)
+    agent_agent:
+      grid: [predator, prey]
+
+substeps:
+  move:
+    agents: [predator, prey]
+    observation: # find neighbouring cells
+    action: # move to a random cell
+    transition: # update positions of predators and prey
+  eat_grass:
+    agents: [prey]
+    observation: # find grass at current position
+    action: # none
+    transition: # increment prey energy, reset grass countdown to regrowth time
+  hunt_prey:
+    agents: [predator]
+    observation: # find prey at current position
+    action: # none
+    transition: # increment predator energy, kill prey (= set energy to 0)
+  grow:
+    agents: [grass]
+    observation: # none
+    action: # none
+    transition: # decrement countdown by 1. if < 0, then set growth stage to 1
