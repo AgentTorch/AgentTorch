@@ -1,0 +1,2 @@
+osmnx==1.9.3
+torch_geometric==2.5.3
