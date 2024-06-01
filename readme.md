@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/AgentTorch/AgentTorch/blob/HEAD/LICENSE" target="_blank">
+  <a href="https://github.com/AgentTorch/AgentTorch/blob/master/license.md" target="_blank">
     <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="Released under the MIT license." />
   </a>
 
@@ -136,9 +136,9 @@ Thank you for your interest in contributing! You can contribute by reporting and
 fixing bugs in the framework or models, working on new features for the
 framework, creating new models, or by writing documentation for the project.
 
-Take a look at the [contributing guide](contributing.md) for instructions on how
-to setup your environment, make changes to the codebase, and contribute them
-back to the project.
+Take a look at the [contributing guide](docs/contributing.md) for instructions
+on how to setup your environment, make changes to the codebase, and contribute
+them back to the project.
 
 ## Citation
 
