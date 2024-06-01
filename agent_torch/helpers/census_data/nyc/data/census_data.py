@@ -11,34 +11,38 @@ import pdb
 import json
 import os
 
+
 def obtain_household_size_distribution(county_fips, census_api_key):
-    """ Obtain household size distribution for county from Census data"""
+    """Obtain household size distribution for county from Census data"""
 
     # Define the variables you want to query
     household_variables = [
-        "B11016_001E", "B11016_003E", "B11016_011E", "B11016_004E",
-        "B11016_012E", "B11016_005E", "B11016_013E", "B11016_006E",
-        "B11016_014E", "B11016_007E", "B11016_008E", "B11016_015E",
-        "B11016_016E"
+        "B11016_001E",
+        "B11016_003E",
+        "B11016_011E",
+        "B11016_004E",
+        "B11016_012E",
+        "B11016_005E",
+        "B11016_013E",
+        "B11016_006E",
+        "B11016_014E",
+        "B11016_007E",
+        "B11016_008E",
+        "B11016_015E",
+        "B11016_016E",
     ]
 
     # Define the dictionary with the column mapping
     household_size_acs_var_map = {
-        "1":
-        "B11016_001E - B11016_003E - B11016_011E - B11016_004E -"
+        "1": "B11016_001E - B11016_003E - B11016_011E - B11016_004E -"
         "B11016_012E - B11016_005E - B11016_013E - B11016_006E -"
         "B11016_014E - B11016_007E - B11016_008E - B11016_015E -"
         "B11016_016E",
-        "2":
-        "B11016_003E + B11016_011E",
-        "3":
-        "B11016_004E + B11016_012E",
-        "4":
-        "B11016_005E + B11016_013E",
-        "5":
-        "B11016_006E + B11016_014E",
-        "6":
-        "B11016_007E + B11016_008E + B11016_015E + B11016_016E",
+        "2": "B11016_003E + B11016_011E",
+        "3": "B11016_004E + B11016_012E",
+        "4": "B11016_005E + B11016_013E",
+        "5": "B11016_006E + B11016_014E",
+        "6": "B11016_007E + B11016_008E + B11016_015E + B11016_016E",
     }
 
     base_url = "https://api.census.gov/data/2020/acs/acs5"
@@ -54,14 +58,14 @@ def obtain_household_size_distribution(county_fips, census_api_key):
         # construct dataframe
         df = pd.DataFrame(results[1:], columns=results[0])
         # convert all columns to numeric
-        df = df.apply(pd.to_numeric, errors='ignore')
+        df = df.apply(pd.to_numeric, errors="ignore")
         # Create new columns based on the dictionary mapping
         for new_column, formula in household_size_acs_var_map.items():
             df[new_column] = df.eval(formula)
     else:
         # The request failed, so print the error message
         print(response.status_code, response.reason)
-        print('Failed for county: ', county_fips)
+        print("Failed for county: ", county_fips)
         quit()
 
     # keep only new columns
@@ -86,47 +90,72 @@ def obtain_household_size_distribution(county_fips, census_api_key):
 
 
 def obtain_age_distribution(county_fips, census_api_key):
-    """ Obtain age distribution for county from Census data """
+    """Obtain age distribution for county from Census data"""
 
     age_variables = [
-        "B01001_003E", "B01001_004E", "B01001_005E", "B01001_006E",
-        "B01001_007E", "B01001_027E", "B01001_028E", "B01001_029E",
-        "B01001_030E", "B01001_031E", "B01001_008E", "B01001_009E",
-        "B01001_010E", "B01001_011E", "B01001_012E", "B01001_032E",
-        "B01001_033E", "B01001_034E", "B01001_035E", "B01001_036E",
-        "B01001_013E", "B01001_014E", "B01001_015E", "B01001_016E",
-        "B01001_017E", "B01001_037E", "B01001_038E", "B01001_039E",
-        "B01001_040E", "B01001_041E", "B01001_018E", "B01001_019E",
-        "B01001_020E", "B01001_021E", "B01001_022E", "B01001_023E",
-        "B01001_024E", "B01001_025E", "B01001_042E", "B01001_043E",
-        "B01001_044E", "B01001_045E", "B01001_046E", "B01001_047E",
-        "B01001_048E", "B01001_049E"
+        "B01001_003E",
+        "B01001_004E",
+        "B01001_005E",
+        "B01001_006E",
+        "B01001_007E",
+        "B01001_027E",
+        "B01001_028E",
+        "B01001_029E",
+        "B01001_030E",
+        "B01001_031E",
+        "B01001_008E",
+        "B01001_009E",
+        "B01001_010E",
+        "B01001_011E",
+        "B01001_012E",
+        "B01001_032E",
+        "B01001_033E",
+        "B01001_034E",
+        "B01001_035E",
+        "B01001_036E",
+        "B01001_013E",
+        "B01001_014E",
+        "B01001_015E",
+        "B01001_016E",
+        "B01001_017E",
+        "B01001_037E",
+        "B01001_038E",
+        "B01001_039E",
+        "B01001_040E",
+        "B01001_041E",
+        "B01001_018E",
+        "B01001_019E",
+        "B01001_020E",
+        "B01001_021E",
+        "B01001_022E",
+        "B01001_023E",
+        "B01001_024E",
+        "B01001_025E",
+        "B01001_042E",
+        "B01001_043E",
+        "B01001_044E",
+        "B01001_045E",
+        "B01001_046E",
+        "B01001_047E",
+        "B01001_048E",
+        "B01001_049E",
     ]
 
     # Define the dictionary with the column mapping
     age_acs_var_map = {
-        "AGE_0_9":
-        "B01001_003E + B01001_004E + B01001_027E + B01001_028E",
-        "AGE_10_19":
-        "B01001_005E + B01001_006E + B01001_007E + B01001_029E +"
+        "AGE_0_9": "B01001_003E + B01001_004E + B01001_027E + B01001_028E",
+        "AGE_10_19": "B01001_005E + B01001_006E + B01001_007E + B01001_029E +"
         "B01001_030E + B01001_031E",
-        "AGE_20_29":
-        "B01001_008E + B01001_009E + B01001_010E + "
+        "AGE_20_29": "B01001_008E + B01001_009E + B01001_010E + "
         "B01001_011E + B01001_032E + B01001_033E + "
         "B01001_034E + B01001_035E",
-        "AGE_30_39":
-        "B01001_012E + B01001_013E + B01001_036E + B01001_037E",
-        "AGE_40_49":
-        "B01001_014E + B01001_015E + B01001_038E + B01001_039E",
-        "AGE_50_59":
-        "B01001_016E + B01001_017E + B01001_040E + B01001_041E",
-        "AGE_60_69":
-        "B01001_018E + B01001_019E + B01001_020E + B01001_021E +"
+        "AGE_30_39": "B01001_012E + B01001_013E + B01001_036E + B01001_037E",
+        "AGE_40_49": "B01001_014E + B01001_015E + B01001_038E + B01001_039E",
+        "AGE_50_59": "B01001_016E + B01001_017E + B01001_040E + B01001_041E",
+        "AGE_60_69": "B01001_018E + B01001_019E + B01001_020E + B01001_021E +"
         "B01001_042E + B01001_043E + B01001_044E + B01001_045E",
-        "AGE_70_79":
-        "B01001_022E + B01001_023E + B01001_046E + B01001_047E",
-        "AGE_80":
-        "B01001_024E + B01001_025E + B01001_048E + B01001_049E"
+        "AGE_70_79": "B01001_022E + B01001_023E + B01001_046E + B01001_047E",
+        "AGE_80": "B01001_024E + B01001_025E + B01001_048E + B01001_049E",
     }
 
     base_url = "https://api.census.gov/data/2020/acs/acs5"
@@ -142,14 +171,14 @@ def obtain_age_distribution(county_fips, census_api_key):
         # construct dataframe
         df = pd.DataFrame(results[1:], columns=results[0])
         # convert all columns to numeric
-        df = df.apply(pd.to_numeric, errors='ignore')
+        df = df.apply(pd.to_numeric, errors="ignore")
         # Create new columns based on the dictionary mapping
         for new_column, formula in age_acs_var_map.items():
             df[new_column] = df.eval(formula)
     else:
         # The request failed, so print the error message
         print(response.status_code, response.reason)
-        print('Failed for county: ', county_fips)
+        print("Failed for county: ", county_fips)
         quit()
 
     # keep only new columns
@@ -176,9 +205,9 @@ def obtain_age_distribution(county_fips, census_api_key):
 
 
 def obtain_occupation_distribution(county_fips, census_api_key):
-    """ Obtain occupation distribution for county from Census data 
-        Using NAICS sectors as Abueg et al. 2021, npj Digital Medicine
-        
+    """Obtain occupation distribution for county from Census data
+    Using NAICS sectors as Abueg et al. 2021, npj Digital Medicine
+
     """
     # List of NAICS sectors to query as per
     # https://www.census.gov/programs-surveys/economic-census/year/2022/guidance/understanding-naics.html
@@ -197,43 +226,42 @@ def obtain_occupation_distribution(county_fips, census_api_key):
         "53": "Real Estate and Rental and Leasing",
         "54": "Professional, Scientific, and Technical Services",
         "55": "Management of Companies and Enterprises",
-        "56":
-        "Administrative and Support and Waste Management and Remediation Services",
+        "56": "Administrative and Support and Waste Management and Remediation Services",
         "61": "Educational Services",
         "62": "Health Care and Social Assistance",
         "71": "Arts, Entertainment, and Recreation",
         "72": "Accommodation and Food Services",
         "81": "Other Services (except Public Administration)",
-        "92": "Public Administration"
+        "92": "Public Administration",
     }
     # Define the dictionary with the sector code mapping
     inverted_naics_sectors = {
-        'AGRICULTURE': ['11'],
-        'MINING': ['21'],
-        'UTILITIES': ['22'],
-        'CONSTRUCTION': ['23'],
-        'MANUFACTURING': ['31', '32', '33'],
-        'WHOLESALETRADE': ['42'],
-        'RETAILTRADE': ['44', '45'],
-        'TRANSPORTATION': ['48', '49'],
-        'INFORMATION': ['51'],
-        'FINANCEINSURANCE': ['52'],
-        'REALESTATERENTAL': ['53'],
-        'SCIENTIFICTECHNICAL': ['54'],
-        'ENTERPRISEMANAGEMENT': ['55'],
-        'WASTEMANAGEMENT': ['56'],
-        'EDUCATION': ['61'],
-        'HEALTHCARE': ['62'],
-        'ART': ['71'],
-        'FOOD': ['72'],
-        'OTHER': ['81', '92'],  # adding public administration to other
+        "AGRICULTURE": ["11"],
+        "MINING": ["21"],
+        "UTILITIES": ["22"],
+        "CONSTRUCTION": ["23"],
+        "MANUFACTURING": ["31", "32", "33"],
+        "WHOLESALETRADE": ["42"],
+        "RETAILTRADE": ["44", "45"],
+        "TRANSPORTATION": ["48", "49"],
+        "INFORMATION": ["51"],
+        "FINANCEINSURANCE": ["52"],
+        "REALESTATERENTAL": ["53"],
+        "SCIENTIFICTECHNICAL": ["54"],
+        "ENTERPRISEMANAGEMENT": ["55"],
+        "WASTEMANAGEMENT": ["56"],
+        "EDUCATION": ["61"],
+        "HEALTHCARE": ["62"],
+        "ART": ["71"],
+        "FOOD": ["72"],
+        "OTHER": ["81", "92"],  # adding public administration to other
     }
 
-    df = [['Occupation', 'Number']]
+    df = [["Occupation", "Number"]]
     # convert example api.census.gov/data/2017/ecnbasic?get=NAICS2017_LABEL,EMP,NAME,GEO_ID&for=us:*&NAICS2017=54&key=YOUR_KEY_GOES_HERE
     base_url = "https://api.census.gov/data/2017/ecnbasic"
     for naics_sector in inverted_naics_sectors:
-        print('-------------------')
+        print("-------------------")
         for naics_sector_code in inverted_naics_sectors[naics_sector]:
             print(naics_sector, naics_sector_code)
             url = f"{base_url}?get=NAICS2017_LABEL,EMP,NAME,GEO_ID&for=county:{county_fips[2:]}&in=state:{county_fips[:2]}&NAICS2017={naics_sector_code}&key={census_api_key}"
@@ -256,9 +284,9 @@ def obtain_occupation_distribution(county_fips, census_api_key):
     # construct dataframe
     df = pd.DataFrame(df[1:], columns=df[0])
     # convert all columns to numeric
-    df = df.apply(pd.to_numeric, errors='ignore')
+    df = df.apply(pd.to_numeric, errors="ignore")
     # aggregate by sector but do not sort by sector
-    df = df.groupby(['Occupation'], sort=False).sum()
+    df = df.groupby(["Occupation"], sort=False).sum()
     # reset index
     df = df.reset_index()
     df.to_csv(f"./metadata/{county_fips}/agents_occupations.csv", index=False)
