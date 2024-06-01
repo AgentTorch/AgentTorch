@@ -1,3 +1,8 @@
+# Predator-Prey Model
+
+<details>
+  <summary>Imports</summary>
+
 ```python
 # import agent-torch
 
@@ -37,11 +42,12 @@ def get_var(state, var):
   return get_by_path(state, re.split('/', var))
 ```
 
-# Predator-Prey Model
+</details>
 
-> The complete code for this model can be found [here](../). The architecture of
-> the AgentTorch framework, which explains some key concepts, can be found
-> [here](https://github.com/AgentTorch/AgentTorch/pull/9/files?short_path=140eef3#diff-140eef3ba41bdcf401d507408084181f2c0ac627532b61e0f7906ea7cc926782).
+> The complete code for this model can be found
+> [here](https://github.com/agenttorch/agenttorch/blob/master/models/predator_prey).
+> The architecture of the AgentTorch framework, which explains some key
+> concepts, can be found [here](../../architecture.md).
 
 This guide walks you through creating a custom predator-prey model using the
 AgentTorch framework. This model will simulate an ecosystem consisting of
@@ -190,6 +196,9 @@ an updated state as output. A substep consists of three phases:
 This model consists of four substeps: `move`, `eat_grass`, `hunt_prey`, and
 `grow_grass`.
 
+<details>
+  <summary>Helper functions</summary>
+
 ```python
 # define all the helper functions we need.
 
@@ -282,6 +291,8 @@ def get_grow_grass_input(state, input_variables):
 
     return grass_growth, growth_countdown
 ```
+
+</details>
 
 ### Move
 

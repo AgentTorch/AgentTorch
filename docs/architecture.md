@@ -1,4 +1,4 @@
-## Architecture
+# Framework Architecture
 
 This document details the architecture of the AgentTorch project, explains all
 the building blocks involved and points to relevant code implementation and
@@ -9,7 +9,7 @@ examples.
 A high-level overview of the AgentTorch Python API is provided by the following
 block diagram:
 
-![Agent Torch Block Diagram](https://github.com/AgentTorch/AgentTorch/assets/34235681/3ecadf85-d949-44a6-92b3-5dbfa337fb20)
+![Agent Torch Block Diagram](https://github.com/agenttorch/agenttorch/assets/34235681/3ecadf85-d949-44a6-92b3-5dbfa337fb20)
 
 The AgentTorch Python API provides developers with the ability to
 programmatically create and configure LPMs. This functionality is detailed
@@ -22,16 +22,19 @@ the registry, and the runner.
 
 The configuration holds information about the environment, initial and current
 state, agents, objects, network metadata, as well as substep definitions. The
-'configurator' is defined in [`config.py`](/AgentTorch/config.py).
+'configurator' is defined in
+[`config.py`](https://github.com/agenttorch/agenttorch/agent_torch/config.py).
 
 The registry stores all registered substeps, and helper functions, to be called
-by the runner. It is defined in [`registry.py`](/AgentTorch/registry.py).
+by the runner. It is defined in
+[`registry.py`](https://github.com/agenttorch/agenttorch/agent_torch/registry.py).
 
 The runner accepts a registry and configuration, and exposes an API to execute
 all, single or multiple episodes/steps in a simulation. It also maintains the
 state and trajectory of the simulation across these episodes. It is defined in
-[`runner.py`](/AgentTorch/runner.py), and the substep execution and optimization
-logic is part of [`controller.py`](/AgentTorch/controller.py).
+[`runner.py`](https://github.com/agenttorch/agenttorch/agent_torch/runner.py),
+and the substep execution and optimization logic is part of
+[`controller.py`](https://github.com/agenttorch/agenttorch/agent_torch/controller.py).
 
 #### Data
 
@@ -48,9 +51,11 @@ The base classes of `Agent`, `Object` and `Substep` form the foundation of the
 simulation. The agents defined in the configuration learn and interact with
 either their environment, other agents, or objects through substeps. Substeps
 are executed in the order of their definition in the configuration, and are
-split into three parts: [`SubstepObservation`](/AgentTorch/substep.py#L10),
-[`SubstepAction`](/AgentTorch/substep.py#L27) and
-[`SubstepTransition`](/AgentTorch/substep.py#45).
+split into three parts:
+[`SubstepObservation`](https://github.com/agenttorch/agenttorch/agent_torch/substep.py#L10),
+[`SubstepAction`](https://github.com/agenttorch/agenttorch/agent_torch/substep.py#L27)
+and
+[`SubstepTransition`](https://github.com/agenttorch/agenttorch/agent_torch/substep.py#45).
 
 - A `SubstepObservation` is defined to observe the state, and pick out those
   variables that are of use to the current substep.
