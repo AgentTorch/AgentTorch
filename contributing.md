@@ -24,10 +24,20 @@ you want to fix/implement!
 ## Making Changes
 
 Once you have cloned the repository to your computer (say, in
-`~/Code/AgentTorch`) and picked the issue you want to tackle, create a branch
-based off the `master` branch:
+`~/Code/AgentTorch`) and picked the issue you want to tackle, create a virtual
+environment, install all dependencies, and create a new branch to hold all your
+work.
 
 ```sh
+# create a virtual environment
+> python -m venv .venv/
+
+# set it up
+> . .venv/bin/activate
+> pip install -r requirements.txt
+> pip install -e .
+
+# create a new branch
 > git switch master
 > git switch --create branch-name
 ```
@@ -35,6 +45,39 @@ based off the `master` branch:
 While naming your branch, make sure the name is short and self explanatory.
 
 Once you have created a branch, you can start coding!
+
+## Project Structure
+
+```sh
+.
+├── agent_torch/
+│  ├── helpers/ # defines helper functions used to initialize or work with the state of the simulation.
+│  ├── llm/ # contains all the code related to using llms as agents in the simulation
+│  ├── __init__.py # exports everything to the world
+│  ├── config.py # handles reading and processing the simulation's configuration
+│  ├── controller.py # executes the substeps for each episode
+│  ├── initializer.py # creates a simulation from a configuration and registry
+│  ├── registry.py # registry that stores references to the implementations of the substeps and helper functions
+│  ├── runner.py # executes the episodes of the simulation, and handles its state
+│  ├── substep.py # contains base classes for the substep observations, actions and transitions
+│  └── utils.py # utility functions used throughout the project
+├── docs/
+│  ├── media/ # assets like screenshots or diagrams inserted in .md files
+│  ├── tutorials/ # jupyter notebooks with tutorials and their explanations
+│  ├── architecture.md # the framework's architecture
+│  └── install.md # instructions on installing the framework
+├── models/
+│  ├── covid/ # a model simulating disease spread, using the example of covid 19
+│  └── predator_prey/ # a simple model used to showcase the features of the framework
+├── citation.bib # contains the latex code to use to cite this project
+├── contributing.md # this file, helps onboard contributors
+├── license.md # contains the license for this project (MIT)
+├── readme.md # contains details on the what, why, and how
+├── requirements.txt # lists the dependencies of the framework
+└── setup.py # defines metadata for the project
+```
+
+## Saving Changes
 
 After you have made changes to the code, you will want to
 [`commit`](https://github.com/git-guides/git-commit) (basically, Git's version
