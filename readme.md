@@ -140,6 +140,12 @@ Take a look at the [contributing guide](docs/contributing.md) for instructions
 on how to setup your environment, make changes to the codebase, and contribute
 them back to the project.
 
+## Impact
+
+> **Differential ABMs like AgentTorch are being deployed across the globe.**
+
+![Impact](docs/media/impact.png)
+
 ## Citation
 
 If you use this project or code in your work, please cite it using the following
