@@ -1,4 +1,4 @@
-## Installation
+# Installation Guide
 
 To install the project, run:
 

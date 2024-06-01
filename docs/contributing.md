@@ -48,6 +48,9 @@ Once you have created a branch, you can start coding!
 
 ## Project Structure
 
+The project is structured as follows. The comments written next to the
+file/folder give a brief explanation of what purpose the file/folder serves.
+
 ```sh
 .
 ├── agent_torch/
@@ -76,6 +79,34 @@ Once you have created a branch, you can start coding!
 ├── requirements.txt # lists the dependencies of the framework
 └── setup.py # defines metadata for the project
 ```
+
+Note that after making any code changes, you should run the `black` code
+formatter, as follows:
+
+```sh
+> pip install black
+> black agent_torch/
+```
+
+For any changes to the documentation, run `prettier` over the `*.md` files after
+making changes to them. To preview the generated documentation, run:
+
+```sh
+> pip install mkdocs
+> mkdocs serve
+```
+
+If you wish to write a tutorial, write it in a Jupyter Notebook, and then
+convert it to a markdown file using `nbconvert`:
+
+```sh
+> pip install nbconvert
+> jupyter nbconvert --to markdown <file>.ipynb
+> mv <file>.md index.md
+```
+
+> Rememeber to move any files that it generates to the `docs/media` folder, and
+> update the hyperlinks in the generated markdown file.
 
 ## Saving Changes
 
