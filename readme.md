@@ -52,9 +52,9 @@ Install the framework using `pip`, like so:
 > pip install git+https://github.com/agenttorch/agenttorch
 ```
 
-> You may also want to install
-> [`torch`](https://pytorch.org/get-started/locally/) and
-> [`torch_geometric`](https://github.com/pyg-team/pytorch_geometric#pytorch-20).
+> Some models require extra dependencies that have to be installed separately.
+> For more information regarding this, as well as the hardware the project has
+> been run on, please see [`docs/install.md`](docs/install.md).
 
 ## Getting Started
 
