@@ -1,3 +1,11 @@
 site_name: AgentTorch
 theme:
   name: material
+nav:
+  - 'index.md'
+  - 'install.md'
+  - 'architecture.md'
+  - 'contributing.md'
+  - Tutorials:
+      - 'Creating a Model': 'tutorials/creating-a-model/index.md'
+      - 'Using Models': 'tutorials/using-models/index.md'
