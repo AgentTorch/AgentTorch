@@ -96,6 +96,8 @@ making changes to them. To preview the generated documentation, run:
 > mkdocs serve
 ```
 
+> Rememeber to add any new pages to the sidebar by editing `mkdocs.yaml`.
+
 If you wish to write a tutorial, write it in a Jupyter Notebook, and then
 convert it to a markdown file using `nbconvert`:
 
@@ -121,19 +123,20 @@ of save) the changes. To commit the changes you have made locally:
 
 While writing the `commit-message`, try to follow the below guidelines:
 
-1. Prefix the message with `type:`, where `type` is one of the following
-   dependending on what the commit does:
-   - `fix`: Introduces a bug fix.
-   - `feat`: Adds a new feature.
-   - `test`: Any change related to tests.
-   - `perf`: Any performance related change.
-   - `meta`: Any change related to the build process, workflows, issue
-     templates, etc.
-   - `refc`: Any refactoring work.
-   - `docs`: Any documentation related changes.
-2. Keep the first line brief, and less than 60 characters.
-3. Try describing the change in detail in a new paragraph (double newline after
-   the first line).
+Prefix the message with `type:`, where `type` is one of the following
+dependending on what the commit does:
+
+- `fix`: Introduces a bug fix.
+- `feat`: Adds a new feature.
+- `test`: Any change related to tests.
+- `perf`: Any performance related change.
+- `meta`: Any change related to the build process, workflows, issue templates,
+  etc.
+- `refc`: Any refactoring work.
+- `docs`: Any documentation related changes.
+
+Try to keep the first line brief, and less than 60 characters. Describe the
+change in detail in a new paragraph (double newline after the first line).
 
 ## Contributing Changes
 

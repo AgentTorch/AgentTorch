@@ -1,4 +1,4 @@
-# Index
+# Tutorials
 
 The following tutorials, in alphabetical order, can be found in this folder:
 
