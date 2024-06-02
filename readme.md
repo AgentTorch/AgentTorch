@@ -142,21 +142,6 @@ them back to the project.
 
 ## Impact
 
-> **Differential ABMs like AgentTorch are being deployed across the globe.**
+> **AgentTorch models are being deployed across the globe.**
 
 ![Impact](docs/media/impact.png)
-
-## Citation
-
-If you use this project or code in your work, please cite it using the following
-BibTex entry, which can also be found in [`citation.bib`](citation.bib).
-
-```bib
-@inproceedings{chopra2024framework,
-  title = {A Framework for Learning in Agent-Based Models},
-  author = {Chopra, Ayush and Subramanian, Jayakumar and Krishnamurthy, Balaji and Raskar, Ramesh},
-  booktitle = {Proceedings of the 23rd International Conference on Autonomous Agents and Multi-agent Systems},
-  year = {2024},
-  organization = {International Foundation for Autonomous Agents and Multiagent Systems},
-}
-```
