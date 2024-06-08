@@ -69,11 +69,11 @@ A Jupyter Notebook containing the below examples can be found
 
 ```py
 # re-use existing models and population data easily
-from AgentTorch.models import disease
-from AgentTorch.populations import new_zealand
+from agent_torch.models import disease
+from agent_torch.populations import new_zealand
 
 # use the executor to plug-n-play
-from AgentTorch.execute import Executor
+from agent_torch.execute import Executor
 
 simulation = Executor(disease, new_zealand)
 simulation.execute()
@@ -105,7 +105,7 @@ for i in range(episodes):
 ### Talking to the Simulation
 
 ```py
-from AgentTorch.LLM.qa import SimulationAnalysisAgent, load_state_trace
+from agent_torch.llm.qa import SimulationAnalysisAgent, load_state_trace
 
 # create the simulation
 # ...
