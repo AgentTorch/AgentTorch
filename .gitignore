@@ -24,3 +24,5 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+
+simulation_memory_output/
