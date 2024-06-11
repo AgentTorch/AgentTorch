@@ -1,7 +1,8 @@
-import torch
+import asyncio
 import torch.nn as nn
 import re
 from agent_torch.helpers import get_by_path, set_by_path, copy_module
+from agent_torch.utils import is_async_method
 
 
 class Controller(nn.Module):
@@ -31,9 +32,6 @@ class Controller(nn.Module):
         substep, step = state["current_substep"], state["current_step"]
 
         try:
-            policy_functions = self.config["substeps"][substep]["policy"][
-                agent_type
-            ].keys()
             for policy in self.config["substeps"][substep]["policy"][agent_type].keys():
                 action = {
                     **policy_function[substep][agent_type][policy](state, observation),
@@ -46,8 +44,9 @@ class Controller(nn.Module):
 
     def progress(self, state, action, transition_function):
         next_state = copy_module(state)
+        del state
 
-        substep = state["current_substep"]
+        substep = next_state["current_substep"]
         next_substep = (int(substep) + 1) % self.config["simulation_metadata"][
             "num_substeps_per_step"
         ]
@@ -55,7 +54,9 @@ class Controller(nn.Module):
 
         for trans_func in self.config["substeps"][substep]["transition"].keys():
             updated_vals = {
-                **transition_function[substep][trans_func](state=state, action=action)
+                **transition_function[substep][trans_func](
+                    state=next_state, action=action
+                )
             }
             for var_name in updated_vals:
                 assert self.config["substeps"][substep]["transition"][trans_func][
