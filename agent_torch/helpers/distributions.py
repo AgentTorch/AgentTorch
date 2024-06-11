@@ -72,36 +72,3 @@ class Binomial(torch.autograd.Function):
         ws = (wminus_cont + wplus_cont) / 2
 
         return None, grad_output * ws
-
-
-if __name__ == "__main__":
-    # Example bernoulli usage
-    print("Bernoulli")
-    bernoulli = Bernoulli.apply
-    p = torch.tensor(0.4, requires_grad=True)
-    r = bernoulli(p)
-    print(r)
-    r.backward()
-    print(p.grad)
-
-    print("---" * 8)
-
-    # Example straight-through bernoulli
-    st_bernoulli = StraightThroughBernoulli.apply
-    p = torch.tensor(0.4, requires_grad=True)
-    r = st_bernoulli(p)
-    print(r)
-    r.backward()
-    print(p.grad)
-
-    print("---" * 8)
-
-    # Example binomial usage
-    print("Binomial Distribution")
-    n, p = torch.tensor(10), torch.tensor(0.4, requires_grad=True)
-    binomial = Binomial.apply
-
-    r = binomial(n, p)
-    print(r)
-    r.backward()
-    print(p.grad)
