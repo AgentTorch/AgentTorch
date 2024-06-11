@@ -20,6 +20,9 @@
   <a href="https://twitter.com/intent/follow?screen_name=ayushchopra96" target="_blank">
     <img src="https://img.shields.io/twitter/follow/ayushchopra96?style=social&label=Get%20in%20Touch" alt="Get in Touch" />
   </a>
+  <a href="https://join.slack.com/t/largepopulationmodels/shared_invite/zt-2jalzf9ki-n9nXG5FryVSMaPmEL7Wm2w" target="_blank">
+     <img src="https://img.shields.io/badge/Slack-4A154B?logo=slack&logoColor=white" alt="Join Us"/>
+  </a>
 </p>
 
 Large Population Models (LPMs) are grounded in state-of-the-art AI research, a
