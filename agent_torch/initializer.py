@@ -103,7 +103,6 @@ class Initializer(nn.Module):
 
     def init_environment(self, key="environment"):
         if self.config["state"][key] is None:
-            print("Skipping.. ", key)
             return
 
         for prop in self.config["state"][key].keys():
@@ -117,7 +116,7 @@ class Initializer(nn.Module):
 
     def init_agents(self, key="agents"):
         if self.config["state"][key] is None:
-            print("Skipping: ", key)
+            # print("Skipping: ", key)
             return
 
         for instance_type in self.config["state"][key].keys():
@@ -140,7 +139,7 @@ class Initializer(nn.Module):
 
     def init_objects(self, key="objects"):
         if self.config["state"][key] is None:
-            print("Skipping: ", key)
+            # print("Skipping: ", key)
             return
 
         for instance_type in self.config["state"][key].keys():
@@ -163,7 +162,7 @@ class Initializer(nn.Module):
 
     def init_network(self, key="network"):
         if self.config["state"][key] is None:
-            print("Skipping.. ", key)
+            # print("Skipping.. ", key)
             return
 
         for interaction_type in self.config["state"][key].keys():

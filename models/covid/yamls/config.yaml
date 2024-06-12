@@ -1,0 +1,371 @@
+simulation_metadata:
+    num_episodes: 1
+    num_substeps_per_step: 2
+    num_steps_per_episode: 14
+    OPENAI_API_KEY: None
+    NUM_WEEKS: ${divide:${simulation_metadata.num_steps_per_episode}, 7}
+    NUM_TRAIN_WEEKS: 2
+    device: "cuda"
+    SUSCEPTIBLE_VAR: 0
+    EXPOSED_VAR: 1
+    INFECTED_VAR: 2
+    RECOVERED_VAR: 3
+    MORTALITY_VAR: 4
+    EXPOSED_TO_INFECTED_TIME: 5
+    INFECTED_TO_RECOVERED_TIME: 5
+    learning_params:
+        lr: 5e-3
+        betas:
+            - 0.5
+            - 0.5
+        lr_gamma:  0.9999
+        model_path: "saved_model.pth"
+    INFINITY_TIME: 130
+    RECOVERED_TO_SUSCEPTIBLE_TIME: 100
+    START_WEEK: 202048
+    ALIGN_LLM: True
+    RESCALE_CONFIG: 0
+    INCLUDE_WEEK_COUNT: True
+    USE_GROUND_TRUTH_CASE_NUMBERS: False
+    USE_GROUND_TRUTH_4WK_AVG: False
+    EXECUTION_MODE: heuristic
+    initial_infection_ratio: 0.04 # BE CAREFUL: NOT USED IN SIMULATION HERE
+    NEIGHBORHOOD: "Astoria"
+    num_agents: 37518
+    population_dir: "/u/ayushc/projects/GradABM/systems/AgentTorch/populations/astoria/"
+    mapping_path: ${simulation_metadata.population_dir}/population_mapping.json
+    age_group_file: ${simulation_metadata.population_dir}/age.pickle
+    infection_network_file: ${simulation_metadata.population_dir}/mobility_networks/0.csv
+    disease_stage_file: "data/${simulation_metadata.NEIGHBORHOOD}_${simulation_metadata.START_WEEK}_stages.csv"
+    
+state:
+    environment:            
+        daily_infected:
+            name: "daily_infected"
+            learnable: False
+            shape:
+                - ${simulation_metadata.num_steps_per_episode}
+            initialization_function: null
+            value: 0
+            dtype: "float"
+        
+        daily_deaths:
+            name: "daily_deaths"
+            learnable: False
+            shape:
+                - ${simulation_metadata.num_steps_per_episode}
+            initialization_function: null
+            value: 0
+            dtype: "float"
+        
+        SFSusceptibility:
+            name: "Susceptibility by Age Group"
+            learnable: False
+            shape:
+                - 9
+            initialization_function: null
+            value: 
+                - 0.35
+                - 0.69
+                - 1.03
+                - 1.03
+                - 1.03
+                - 1.03
+                - 1.27
+                - 1.52
+                - 1.52
+            dtype: "float"
+            
+        SFInfector:
+            name: "Infectiousness of Infector"
+            learnable: False
+            shape:
+                - 5
+            initialization_function: null
+            value:
+                - 0.0
+                - 0.33
+                - 0.72
+                - 0.0
+                - 0.0
+            dtype: "float"
+        
+        lam_gamma_integrals:
+            name: "Lam Gamma Integrals"
+            learnable: False
+            shape:
+                - 10
+            initialization_function:
+                generator: "get_lam_gamma_integrals"
+                arguments:
+                    scale: 
+                        name: "Lam Gamma Scale"
+                        learnable: False
+                        shape:
+                            - 1
+                        initialization_function: null
+                        value: 5.5
+                        dtype: "float"
+                    rate:
+                        name: "Lam Gamma Rate"
+                        learnable: False
+                        shape:
+                            - 1
+                        initialization_function: null
+                        value: 2.4
+                        dtype: "float"
+                    t:
+                        name: "Num Steps"
+                        learnable: False
+                        shape:
+                            - 1
+                        initialization_function: null
+                        value: ${simulation_metadata.num_steps_per_episode}
+                        dtype: "int"
+            dtype: "float"
+            
+        mean_interactions:
+            name: "Mean agent interactions across networks"
+            learnable: False
+            shape:
+                - ${simulation_metadata.num_agents} # number of agents
+                - 1 # number of networks
+            initialization_function:
+                generator: "get_mean_agent_interactions"
+                arguments:
+                    file_path:
+                        name: "Filepath for age group stage"
+                        learnable: False
+                        shape:
+                            - 1
+                        initialization_function: null
+                        value: ${simulation_metadata.age_group_file}           
+            dtype: "int"
+            
+    agents:
+        citizens:
+            number: ${simulation_metadata.num_agents}
+            properties:
+                id:
+                  name: "id"
+                  learnable: False
+                  shape:
+                    - ${state.agents.citizens.number}
+                    - 1
+                  initialization_function:
+                    generator: "initialize_id"
+                    arguments:
+                      pop_size:
+                        initialization_function: null
+                        learnable: false
+                        name: "population size"
+                        shape:
+                            - 1
+                        value: ${simulation_metadata.num_agents}
+                  dtype: "float"
+
+                age:
+                    name: "Age"
+                    shape:
+                        - ${state.agents.citizens.number}
+                        - 1
+                    learnable: False
+                    initialization_function:
+                        generator: load_population_attribute
+                        arguments:
+                            attribute:
+                                initialization_function: null
+                                learnable: false
+                                name: Age
+                                shape: null
+                                value: age
+                            file_path:
+                                initialization_function: null
+                                learnable: false
+                                name: Filepath for age group stage
+                                shape:
+                                    - 1
+                                value: ${simulation_metadata.age_group_file}
+                    dtype: "int"
+                    
+                disease_stage:
+                    name: "Disease Stage"
+                    shape:
+                        - ${state.agents.citizens.number}
+                        - 1
+                    learnable: False
+                    initialization_function:
+                        generator: "read_from_file"
+                        arguments:
+                            file_path:
+                                name: "Disease Stage File"
+                                learnable: False
+                                shape:
+                                    - 1
+                                initialization_function: null
+                                value: ${simulation_metadata.disease_stage_file}
+                    dtype: "int"
+                
+                infected_time:
+                    name: "Last Infected timestep"
+                    shape:
+                        - ${state.agents.citizens.number}
+                        - 1
+                    learnable: False
+                    initialization_function:
+                        generator: "get_infected_time"
+                        arguments:
+                            file_path:
+                                name: "Filepath for initial disease stages"
+                                learnable: False
+                                shape: null
+                                initialization_function: null
+                                value: ${simulation_metadata.disease_stage_file}
+                            num_steps:
+                                name: "Num steps per episode"
+                                learnable: False
+                                shape:
+                                    - 1
+                                initialization_function: null
+                                value: ${simulation_metadata.num_steps_per_episode}
+                    dtype: "int"
+                    
+                next_stage_time:
+                    name: "Timestep for next transition"
+                    shape:
+                        - ${state.agents.citizens.number}
+                        - 1
+                    learnable: False
+                    initialization_function:
+                        generator: "get_next_stage_time"
+                        arguments:
+                            file_path:
+                                name: "Filepath for initial disease stages"
+                                learnable: False
+                                shape: null
+                                initialization_function: null
+                                value: ${simulation_metadata.disease_stage_file}
+                            num_steps:
+                                name: "Num steps per episode"
+                                learnable: False
+                                shape:
+                                    - 1
+                                initialization_function: null
+                                value: ${simulation_metadata.num_steps_per_episode}
+                    value: 0
+                    dtype: "int"
+                
+    objects: null
+    
+    network:
+        agent_agent:
+            infection_network:
+                type: "network_from_file"
+                arguments:
+                    file_path: ${simulation_metadata.infection_network_file}
+
+substeps:
+    "0":
+        name: "Transmission"
+        description: "Transmission of new infections"
+        active_agents:
+            - "citizens"
+        observation:
+            citizens: null
+        policy:
+            citizens:
+                make_isolation_decision:
+                    generator: "MakeIsolationDecision"
+                    arguments:
+                        align_vector:
+                            name: "align LLM agents to the populations by scaling"
+                            learnable: true
+                            shape:
+                                - 6 # number of age groups - action masks
+                            value: 0.3
+                            initialization_function: null
+                            dtype: "float"
+                        align_adjustment_vector:
+                            name: "align LLM agents to the populations by shifting"
+                            learnable: true
+                            shape:
+                                - 6 # number of age groups - action masks
+                            value: 0.3
+                            initialization_function: null
+                            dtype: "float"
+                        initial_isolation_prob:
+                            name: "initialize infection prob for the LLM"
+                            learnable: True
+                            shape:
+                                - 6
+                            value: 0.5
+                            initialization_function: null
+                            dtype: "float"
+                    input_variables:
+                        age: 'agents/citizens/age'
+                    output_variables:
+                        - isolation_decision
+        transition:
+            new_transmission:
+                generator: "NewTransmission"
+                arguments:
+                    R2:
+                        name: "R2"
+                        learnable: True
+                        shape:
+                            - ${simulation_metadata.NUM_WEEKS}
+                        initialization_function: null
+                        value: 4.75
+                        dtype: "float"
+
+                input_variables:
+                    SFSusceptibility: 'environment/SFSusceptibility'
+                    SFInfector: 'environment/SFInfector'
+                    lam_gamma_integrals: 'environment/lam_gamma_integrals'
+                    mean_interactions: 'environment/mean_interactions'
+                    age: 'agents/citizens/age'
+                    disease_stage: 'agents/citizens/disease_stage'
+                    next_stage_time: 'agents/citizens/next_stage_time'
+                    infected_time: 'agents/citizens/infected_time'
+                    exposed_to_infected_time: 'environment/exposed_to_infected_time'
+                    adjacency_matrix: 'network/agent_agent/infection_network/adjacency_matrix'
+                    daily_infected: 'environment/daily_infected'
+                output_variables:
+                    - disease_stage
+                    - next_stage_time
+                    - infected_time
+                    - daily_infected
+        reward: null
+        
+    "1":
+        name: "Disease Progression"
+        description: "Evolution of previously infected agents"
+        active_agents:
+            - "citizens"
+        observation:
+            citizens: null
+        policy:
+            citizens: null
+        transition:
+            seirm_progression:
+                generator: "SEIRMProgression"
+                arguments:
+                   M:
+                        name: "Mortality Rate"
+                        learnable: True
+                        shape:
+                            - 1
+                        initialization_function: null
+                        value: 0.12
+                        dtype: "float" 
+                input_variables:
+                    disease_stage: 'agents/citizens/disease_stage'
+                    next_stage_time: 'agents/citizens/next_stage_time'
+                    exposed_to_infected_time: 'environment/exposed_to_infected_time'
+                    infected_to_recovered_time: 'environment/infected_to_recovered_time'
+                    daily_deaths: 'environment/daily_deaths'
+                output_variables:
+                    - disease_stage
+                    - next_stage_time
+                    - daily_deaths
+        reward: null

@@ -33,9 +33,6 @@ class Runner(nn.Module):
             [to_cpu(self.state)]
         )  # move state to cpu and save in trajectory
 
-        for traj_var in self.trajectory.keys():
-            self.trajectory[traj_var].append(deque())
-
     def reset(self):
         r"""
         reinitialize the simulator at the beginning of an episode
@@ -47,7 +44,7 @@ class Runner(nn.Module):
         reinitialize the state trajectory of the simulator at the beginning of an episode
         """
         self.state_trajectory = []
-        self.state_trajectory.append([self.state])
+        self.state_trajectory.append([to_cpu(self.state)])
 
     def step(self, num_steps=None):
         r"""
@@ -57,15 +54,11 @@ class Runner(nn.Module):
         assert self.state is not None
         self.reset_state_before_episode()
 
-        for traj_var in self.trajectory.keys():
-            self.trajectory[traj_var].append(deque())
-
         if not num_steps:
             num_steps = self.config["simulation_metadata"]["num_steps_per_episode"]
 
         for time_step in range(num_steps):
             self.state["current_step"] = time_step
-
 
             for substep in self.config["substeps"].keys():
                 observation_profile, action_profile = {}, {}
