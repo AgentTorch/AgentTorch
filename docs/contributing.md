@@ -88,6 +88,14 @@ formatter, as follows:
 > black agent_torch/
 ```
 
+You should also ensure all the unit tests pass, especially if you have made
+changes to any files in the `agent_torch/` folder.
+
+```sh
+> pip install pytest
+> pytest tests/
+```
+
 For any changes to the documentation, run `prettier` over the `*.md` files after
 making changes to them. To preview the generated documentation, run:
 
