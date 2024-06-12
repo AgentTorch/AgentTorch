@@ -231,30 +231,3 @@ class Configurator(nn.Module):
 
         self.config["substeps"].update({str(self.substep_counter): _created_substep})
         self.substep_counter += 1
-
-
-if __name__ == "__main__":
-
-    conf = Configurator()
-
-    # simulation parameters
-    conf.add_metadata("num_episodes", 3)
-    conf.add_metadata("num_steps_per_episode", 20)
-    conf.add_metadata("num_substeps_per_step", 1)
-    conf.add_metadata("h", 72)
-    conf.add_metadata("w", 72)
-    conf.add_metadata("n_channels", 16)
-    conf.add_metadata("batch_size", 8)
-    conf.add_metadata("device", "cpu")
-    conf.add_metadata("hidden_size", 128)
-    conf.add_metadata("fire_rate", 0.5)
-    conf.add_metadata("angle", 0.0)
-    conf.add_metadata(
-        "learning_params",
-        {
-            "lr": 2e-3,
-            "betas": [0.5, 0.5],
-            "lr_gamma": 0.9999,
-            "model_path": "saved_model.pth",
-        },
-    )
