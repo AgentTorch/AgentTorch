@@ -14,8 +14,8 @@
     <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="Released under the MIT license." />
   </a>
 
-  <a href="https://web.media.mit.edu/~ayushc/motivation.pdf" target="_blank">
-    <img src="https://img.shields.io/badge/Quick%20Introduction-green" alt="Quick Introduction" />
+  <a href="https://agenttorch.github.io/AgentTorch/" target="_blank">
+    <img src="https://img.shields.io/badge/Quick%20Introduction-green" alt="Documentation" />
   </a>
   <a href="https://twitter.com/intent/follow?screen_name=ayushchopra96" target="_blank">
     <img src="https://img.shields.io/twitter/follow/ayushchopra96?style=social&label=Get%20in%20Touch" alt="Get in Touch" />
