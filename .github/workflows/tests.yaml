@@ -10,6 +10,7 @@ jobs:
         with:
           python-version: 3.9
       - run: pip install -r development.txt
+      - run: pip install -e .
       - run: pytest -vvv tests/
   lint:
     runs-on: ubuntu-latest
