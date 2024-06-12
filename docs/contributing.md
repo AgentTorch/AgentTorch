@@ -34,7 +34,7 @@ work.
 
 # set it up
 > . .venv/bin/activate
-> pip install -r requirements.txt
+> pip install -r development.txt
 > pip install -e .
 
 # create a new branch
@@ -84,23 +84,20 @@ Note that after making any code changes, you should run the `black` code
 formatter, as follows:
 
 ```sh
-> pip install black
-> black agent_torch/
+> black agent_torch/ tests/
 ```
 
 You should also ensure all the unit tests pass, especially if you have made
 changes to any files in the `agent_torch/` folder.
 
 ```sh
-> pip install pytest
-> pytest tests/
+> pytest -vvv tests/
 ```
 
 For any changes to the documentation, run `prettier` over the `*.md` files after
 making changes to them. To preview the generated documentation, run:
 
 ```sh
-> pip install mkdocs
 > mkdocs serve
 ```
 
