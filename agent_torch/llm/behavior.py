@@ -79,7 +79,9 @@ if __name__ == "__main__":
     llm = LLMInitializer(backend='dspy', qa=BasicQAEcon, cot=COT, openai_api_key=OPENAI_API_KEY)
     llm.initialize_llm()
     
-    archetype = LLMArchetype(llm = llm, user_prompt = user_prompt,num_agents=12)
+    # Num agents is based on the unique combinations of the prompt variables which correspond to the population attributes
+    # TODO: Remove need for num_agents
+    archetype = LLMArchetype(llm = llm, user_prompt = user_prompt,num_agents=12) 
     earning_behavior = Behavior(archetype=archetype,region=NYC)
     output = earning_behavior.sample(kwargs)
     
