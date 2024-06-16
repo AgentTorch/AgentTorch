@@ -72,7 +72,7 @@ if __name__ == "__main__":
         'year': '2020',
         'covid_cases': 1200,
         'device': 'cpu',
-        'current_memory_dir': '/Users/shashankkumar/Documents/GitHub/MacroEcon/populations/NYC/memory',
+        'current_memory_dir': None,
         'unemployment_rate': 0.05,
     }
     
