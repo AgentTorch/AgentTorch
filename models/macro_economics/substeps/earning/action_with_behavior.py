@@ -30,12 +30,16 @@ class WorkConsumptionPropensity(SubstepAction):
         self.num_agents = self.config['simulation_metadata']['num_agents']
         self.covid_cases_path = self.config['simulation_metadata']['covid_cases_path']
         self.device = torch.device(self.config['simulation_metadata']['device'])
-        self.prompt = self.config['simulation_metadata']['EARNING_ACTION_PROMPT']
+        
         self.expt_mode = self.config['simulation_metadata']['expt_mode']
         self.st_bernoulli = StraightThroughBernoulli.apply
         self.covid_cases = pd.read_csv(self.covid_cases_path)
         self.covid_cases = torch.tensor(self.covid_cases.values) # add to device
         
+        # Get user prompt from config
+        self.prompt = self.config['simulation_metadata']['EARNING_ACTION_PROMPT']
+        
+        # Import respective QA and COT modules
         llm = LLMInitializer(backend='dspy', qa=BasicQAEcon, cot=COT, openai_api_key=OPENAI_API_KEY)
         llm.initialize_llm()
         
@@ -51,6 +55,8 @@ class WorkConsumptionPropensity(SubstepAction):
         month = self.month_mapping[number_of_months % 12]
         covid_cases = self.covid_cases[number_of_months % 12].item()
         
+        # Add values for those variables which are not part of population attributes,
+        # Current memory directory is path to dir where conversation history is stored
         kwargs = {
         'month':month,
         'year': year,
@@ -62,6 +68,8 @@ class WorkConsumptionPropensity(SubstepAction):
         
         output = self.earning_behavior.sample(kwargs)
         
+        # Tested till here only, need to implement same behavior for consumption propensity
+        # Changes in Config will be needed for the same
         return {self.output_variables[0] : will_work, 
                 self.output_variables[1] : consumption_propensity}
 
