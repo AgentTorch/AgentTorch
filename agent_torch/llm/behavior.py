@@ -1,10 +1,7 @@
-from agent_torch.llm.archetype import LLMArchetype
-from agent_torch.llm.llm import COT, BasicQAEcon, LLMInitializer
 from agent_torch.llm.prompt_manager import PromptManager
 from agent_torch.utils import LoadPopulation
 import torch
 
-    
 class Behavior():
     def __init__(self, archetype,region):
         self.archetype = archetype
@@ -63,26 +60,4 @@ class Behavior():
         
         return masks
 
-if __name__ == "__main__":
-    from populations import NYC
-    
-    user_prompt = "Your age is {age} {gender},{unemployment_rate} the number of COVID cases is {covid_cases}."
-    kwargs = {
-        'month': 'January',
-        'year': '2020',
-        'covid_cases': 1200,
-        'device': 'cpu',
-        'current_memory_dir': None,
-        'unemployment_rate': 0.05,
-    }
-    
-    llm = LLMInitializer(backend='dspy', qa=BasicQAEcon, cot=COT, openai_api_key=OPENAI_API_KEY)
-    llm.initialize_llm()
-    
-    # Num agents is based on the unique combinations of the prompt variables which correspond to the population attributes
-    # TODO: Remove need for num_agents
-    archetype = LLMArchetype(llm = llm, user_prompt = user_prompt,num_agents=12) 
-    earning_behavior = Behavior(archetype=archetype,region=NYC)
-    output = earning_behavior.sample(kwargs)
-    
 

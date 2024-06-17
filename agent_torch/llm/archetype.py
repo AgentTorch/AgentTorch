@@ -1,12 +1,27 @@
 import sys
 import os
+
+from agent_torch.llm.agent_memory import DSPYMemoryHandler, LangchainMemoryHandler
 os.environ['DSP_CACHEBOOL'] = 'False'
 from langchain.memory import ConversationBufferMemory
 
 class Archetype():
-    def __init__(self, llm, user_prompt, num_agents):
-        self.llm = LLMArchetype(llm)
-        self.rule_based = RuleBasedArchetype()
+    def __init__(self):
+        self.llm = None
+        self.rule_based = None
+    
+    def llm(self, llm, user_prompt, num_agents):
+        try:
+            llm.initialize_llm()
+            llm_archetype = LLMArchetype(llm, user_prompt, num_agents)
+            return llm_archetype
+        except Exception as e:
+            print(" 'initialize_llm' Not Implemented, make sure if its the intended behaviour")
+            llm_archetype = LLMArchetype(llm, user_prompt, num_agents)
+            return llm_archetype
+    
+    def rule_based(self):
+        raise NotImplementedError
 
 class LLMArchetype():
     def __init__(self, llm, user_prompt, num_agents):
@@ -16,8 +31,14 @@ class LLMArchetype():
         self.backend = llm.backend
         self.user_prompt = user_prompt
         self.agent_memory = [ConversationBufferMemory(memory_key="chat_history", return_messages=True) for _ in range(num_agents)]
-
-    def __call__(self, prompt_list, last_k=12):
+        if self.backend == 'dspy':
+            self.memory_handler = DSPYMemoryHandler(agent_memory=self.agent_memory, llm=self.llm)
+        elif self.backend == 'langchain':
+            self.memory_handler = LangchainMemoryHandler(agent_memory=self.agent_memory)
+        else:
+            raise ValueError(f"Invalid backend: {self.backend}")
+        
+    def __call__(self, prompt_list, last_k):
         last_k = 2 * last_k + 8
         
         prompt_inputs = self.preprocess_prompts(prompt_list, last_k)
@@ -32,39 +53,13 @@ class LLMArchetype():
     def preprocess_prompts(self, prompt_list, last_k):
         prompt_inputs = [{'agent_query': prompt, 'chat_history': self.get_memory(last_k, agent_id=agent_id)['chat_history']} for agent_id, prompt in enumerate(prompt_list)]
         return prompt_inputs
-    
-    def clear_memory(self, agent_id=0):
-        self.agent_memory[agent_id].clear()
-
-    def get_memory(self, last_k=None, agent_id=0):
-        if last_k is not None:
-            last_k_memory = {'chat_history': self.agent_memory[agent_id].load_memory_variables({})['chat_history'][-last_k:]}
-            return last_k_memory
-        else:
-            return self.agent_memory[agent_id].load_memory_variables({})
 
     def reflect(self, reflection_prompt, agent_id, last_k=3):
         last_k = 2 * last_k  # get last 6 messages for each AI and Human
         return self.__call__(prompt_list=[reflection_prompt], last_k=last_k)
-
-    def save_memory(self, context_in, context_out, agent_id):
-        if self.backend == 'dspy':
-            self.agent_memory[agent_id].save_context({"input": context_in['agent_query']}, {"output": context_out})
-        
-        elif self.backend == 'langchain':
-            self.agent_memory[agent_id].save_context({"input": context_in['agent_query']}, {"output": context_out['text']})
+    
+    def save_memory(self, query, output, agent_id):
+        self.memory_handler.save_memory(query, output, agent_id)
 
     def export_memory_to_file(self, file_dir,last_k):
-        if not os.path.exists(file_dir):
-            os.makedirs(file_dir)
-
-        for id in range(len(self.agent_memory)):
-            file_name = f"output_mem_{id}.md"
-            file_path = os.path.join(file_dir, file_name)
-            memory = self.get_memory(agent_id=id)
-            with open(file_path, 'w') as f:
-                f.write(str(memory))
-        
-        if self.backend == 'dspy':
-            self.llm.inspect_history(file_dir=file_dir, last_k=last_k)
-
+        self.memory_handler.export_memory_to_file(file_dir, last_k)
