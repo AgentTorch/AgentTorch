@@ -32,7 +32,7 @@ class LLMArchetype():
         self.user_prompt = user_prompt
         self.agent_memory = [ConversationBufferMemory(memory_key="chat_history", return_messages=True) for _ in range(num_agents)]
         if self.backend == 'dspy':
-            self.memory_handler = DSPYMemoryHandler(agent_memory=self.agent_memory, llm=self.llm)
+            self.memory_handler = DSPYMemoryHandler(agent_memory=self.agent_memory, llm=self.predictor)
         elif self.backend == 'langchain':
             self.memory_handler = LangchainMemoryHandler(agent_memory=self.agent_memory)
         else:
