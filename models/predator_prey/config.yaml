@@ -6,6 +6,8 @@ simulation_metadata:
   num_episodes: 50
   num_steps_per_episode: 1
   num_substeps_per_step: 4
+  calibration: false
+  visualize: false
 
   max_x: 18
   max_y: 25
