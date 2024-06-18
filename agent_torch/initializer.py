@@ -176,17 +176,21 @@ class Initializer(nn.Module):
                     "arguments"
                 ]
 
-                graph, adjacency_matrix = self.registry.network_helpers[
-                    network_type
-                ](params)
+                graph, adjacency_matrix = self.registry.network_helpers[network_type](
+                    params
+                )
 
                 if len(adjacency_matrix) == 2:
                     edge_list, attr_list = adjacency_matrix
-                    edge_list, attr_list = edge_list.to(self.device), attr_list.to(self.device)
+                    edge_list, attr_list = edge_list.to(self.device), attr_list.to(
+                        self.device
+                    )
                     adjacency_matrix = (edge_list, attr_list)
 
                 self.networks[interaction_type][contact_network]["graph"] = graph
-                self.networks[interaction_type][contact_network]["adjacency_matrix"] = adjacency_matrix
+                self.networks[interaction_type][contact_network][
+                    "adjacency_matrix"
+                ] = adjacency_matrix
 
                 # self.networks[interaction_type][contact_network]["adjacency_matrix"] = (
                 #     edge_list.to(self.device),
