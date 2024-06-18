@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
 import os
 import yaml
-import pdb
-from AgentTorch.helpers import read_config
+from agent_torch.helpers import read_config
 
 class DataLoaderBase(ABC):
     @abstractmethod
@@ -34,7 +33,6 @@ class DataLoaderBase(ABC):
         self.config['simulation_metadata'][attribute] = value
         self._write_config()  # Save the config file after setting the attribute
         
-    
     def _write_config(self):
         with open(self.config_path, 'w') as file:  # Use the model attribute to get the config path
             yaml.dump(self.config, file)
