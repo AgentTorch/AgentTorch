@@ -1,3 +1,4 @@
+'''python main.py --c yamls/config.yaml'''
 from __future__ import annotations
 import warnings
 warnings.filterwarnings("ignore")
