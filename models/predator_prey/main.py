@@ -1,6 +1,20 @@
 # main.py
 # runs the simulation
 
+def debug():
+    import os
+    import sys
+    current_file_path = os.path.abspath(__file__)
+    current_directory = os.path.dirname(current_file_path)
+    package_root_directory = os.path.dirname(os.path.dirname(current_directory))
+    sys.path.append(package_root_directory)
+
+try:
+    import agent_torch
+except:
+    debug()
+    import agent_torch
+
 import argparse
 from tqdm import trange
 
@@ -21,6 +35,7 @@ config = read_config(config_file)
 metadata = config.get('simulation_metadata')
 num_episodes = metadata.get('num_episodes')
 num_steps_per_episode = metadata.get('num_steps_per_episode')
+visualize = metadata.get('visualize')
 
 registry = Registry()
 registry.register(read_from_file, 'read_from_file', 'initialization')

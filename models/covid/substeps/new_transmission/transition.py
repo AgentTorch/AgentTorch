@@ -28,10 +28,6 @@ class NewTransmission(SubstepTransitionMessagePassing):
 
         self.mode = self.config["simulation_metadata"]["EXECUTION_MODE"]
 
-        self.external_R = torch.tensor(
-            self.learnable_args["R2"].data, requires_grad=True
-        )
-
         self.st_bernoulli = StraightThroughBernoulli.apply
 
     def _lam(
@@ -123,7 +119,7 @@ class NewTransmission(SubstepTransitionMessagePassing):
         week_id = int(t / 7)
         week_one_hot = self._generate_one_hot_tensor(week_id, self.num_weeks)
 
-        R_tensor = self.external_R  # tensor of size NUM_WEEK
+        R_tensor = self.calibrate_R2  # tensor of size NUM_WEEK
         R = (R_tensor * week_one_hot).sum()
 
         SFSusceptibility = get_by_path(

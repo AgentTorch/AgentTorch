@@ -6,7 +6,7 @@ import numpy as np
 import osmnx as ox
 
 import matplotlib
-matplotlib.use('TkAgg')
+# matplotlib.use('TkAgg')
 import matplotlib.pyplot as plotter
 import matplotlib.patches as patcher
 import contextily as ctx

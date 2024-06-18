@@ -87,13 +87,6 @@ class MakeIsolationDecision(SubstepAction):
                     get_labels(self.neighborhood, self.epiweek_start - 3, 3, Feature.CASES)
                 )
 
-        self.external_align_vector = torch.tensor(
-            self.learnable_args["align_vector"], requires_grad=True
-        )
-        self.external_align_adjustment_vector = torch.tensor(
-            self.learnable_args["align_adjustment_vector"], requires_grad=True
-        )
-
         self.st_bernoulli = StraightThroughBernoulli.apply
 
     def string_to_number(self, string):
@@ -135,7 +128,7 @@ class MakeIsolationDecision(SubstepAction):
         # figure out time step
         time_step = int(state["current_step"])
         week_index = time_step // 7
-        align_vector = self.external_align_vector
+        align_vector = self.calibrate_align_vector
 
         # prompts are segregated based on agent age
         masks = []
@@ -156,7 +149,7 @@ class MakeIsolationDecision(SubstepAction):
             for en in range(len(masks)):
                 all_adjust_mask = (
                     all_adjust_mask
-                    + self.external_align_adjustment_vector[en] * masks[en]
+                    + self.calibrate_align_adjustment_vector[en] * masks[en]
                 )
 
         # if beginning of the week, recalculate isolation probabilities
