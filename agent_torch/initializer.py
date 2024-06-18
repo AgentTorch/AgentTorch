@@ -3,6 +3,7 @@ import torch.nn as nn
 
 from agent_torch.helpers.general import *
 
+
 class Initializer(nn.Module):
     def __init__(self, config, registry):
         super().__init__()
@@ -110,9 +111,7 @@ class Initializer(nn.Module):
             property_value, property_is_learnable = self._initialize_property(
                 property_object, property_key=f"{key}_{prop}"
             )
-            self.environment[prop] = (
-                property_value
-            )
+            self.environment[prop] = property_value
 
     def init_agents(self, key="agents"):
         if self.config["state"][key] is None:
@@ -133,9 +132,7 @@ class Initializer(nn.Module):
                 property_value, property_is_learnable = self._initialize_property(
                     property_object, property_key=f"{key}_{instance_type}_{prop}"
                 )
-                self.agents[instance_type][
-                    prop
-                ] = property_value
+                self.agents[instance_type][prop] = property_value
 
     def init_objects(self, key="objects"):
         if self.config["state"][key] is None:
@@ -156,9 +153,7 @@ class Initializer(nn.Module):
                 property_value, property_is_learnable = self._initialize_property(
                     property_object, property_key=f"{key}_{instance_type}_{prop}"
                 )
-                self.objects[instance_type][
-                    prop
-                ] = property_value
+                self.objects[instance_type][prop] = property_value
 
     def init_network(self, key="network"):
         if self.config["state"][key] is None:
@@ -318,7 +313,7 @@ class Initializer(nn.Module):
 
     def initialize(self):
         self.state["current_step"] = 0
-        self.state["current_substep"] = "0" # use string not int for nn.ModuleDict
+        self.state["current_substep"] = "0"  # use string not int for nn.ModuleDict
 
         self.simulator()
         self.substeps()

@@ -5,6 +5,7 @@ from agent_torch.controller import Controller
 from agent_torch.initializer import Initializer
 from agent_torch.helpers import to_cpu
 
+
 class Runner(nn.Module):
     def __init__(self, config, registry) -> None:
         super().__init__()
