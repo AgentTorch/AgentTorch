@@ -44,6 +44,7 @@ AgentTorch LPMs have four design principles:
 
 AgentTorch is building the future of decision engines - inside the body, around
 us and beyond! 
+
 https://github.com/AgentTorch/AgentTorch/assets/13482350/4c3f9fa9-8bce-4ddb-907c-3ee4d62e7148
 
 ## Installation
