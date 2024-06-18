@@ -25,7 +25,7 @@
   </a>
 </p>
 
-Large Population Models (LPMs) are grounded in state-of-the-art AI research[summary here](lpm.media.mit.edu/research.pdf).
+Large Population Models (LPMs) are grounded in state-of-the-art AI research [summary here](lpm.media.mit.edu/research.pdf).
 
 AgentTorch LPMs have four key features:
 
