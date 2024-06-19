@@ -25,7 +25,13 @@
   </a>
 </p>
 
-Large Population Models (LPMs) help simulate million-size populations by designing realistic environments and capturing expressive individual behavior. Our goal is to "re-invent the census": built entirely in simulation, captured passively and used to protect country-scale populations. Our research is early but actively making an impact - winning awards at AI conferences and being deployed across the world. Learn more about LPMs [here](lpm.media.mit.edu/research.pdf).
+Large Population Models (LPMs) help simulate million-size populations by
+designing realistic environments and capturing expressive indvidual behavior.
+Our goal is to "re-invent the census": built entirely in simulation, captured
+passively and used to protect country-scale populations. Our research is early
+but actively making an impact - winning awards at AI conferences and being
+deployed across the world. Learn more about LPMs
+[here](lpm.media.mit.edu/research.pdf).
 
 AgentTorch LPMs have four design principles:
 
@@ -36,14 +42,14 @@ AgentTorch LPMs have four design principles:
   gradient-based learning.
 - **Composition**: AgentTorch models can compose with deep neural networks (eg:
   LLMs), mechanistic simulators (eg: mitsuba) or other LPMs. This helps describe
-  agent behavior using LLMs, calibrate simulation parameters and specify expressive
-  interaction rules.
+  agent behavior using LLMs, calibrate simulation parameters and specify
+  expressive interaction rules.
 - **Generalization**: AgentTorch helps simulate diverse ecosystems - humans in
   geospatial worlds, cells in anatomical worlds, autonomous avatars in digital
   worlds.
 
 AgentTorch is building the future of decision engines - inside the body, around
-us and beyond! 
+us and beyond!
 
 https://github.com/AgentTorch/AgentTorch/assets/13482350/4c3f9fa9-8bce-4ddb-907c-3ee4d62e7148
 
