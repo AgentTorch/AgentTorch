@@ -1,5 +1,5 @@
 # .gitignore
-# tells git to ignore some files 
+# tells git to ignore some files
 
 __pycache__/
 __pypackages__/
@@ -26,3 +26,4 @@ env.bak/
 venv.bak/
 
 simulation_memory_output/
+cache/
