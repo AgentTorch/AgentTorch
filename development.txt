@@ -1,5 +1,6 @@
 -r requirements.txt
 
+pre-commit==3.7.1
 pytest==7.2.0
 black==24.4.2
 mkdocs==1.6.0
