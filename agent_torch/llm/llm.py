@@ -29,9 +29,12 @@ class LLM(ABC):
 
 class DspyLLM(LLM):
     def __init__(self, openai_api_key, qa, cot, model='gpt-3.5-turbo'):
-        super().__init__(openai_api_key, model)
+        super().__init__()
         self.qa = qa
         self.cot = cot
+        self.backend = 'dspy'
+        self.openai_api_key = openai_api_key
+        self.model = model
 
     def initialize_llm(self):
         self.llm = dspy.OpenAI(model=self.model, api_key=self.openai_api_key, temperature=0.0)
@@ -79,7 +82,7 @@ class DspyLLM(LLM):
 class LangchainLLM(LLM):
     def __init__(self, openai_api_key, agent_profile, model='gpt-3.5-turbo',):
         super().__init__()
-
+        self.backend = 'langchain'
         self.llm = ChatOpenAI(model=self.model, openai_api_key=self.openai_api_key, temperature=1)
         self.prompt = ChatPromptTemplate.from_messages([
             SystemMessagePromptTemplate.from_template(self.agent_profile),

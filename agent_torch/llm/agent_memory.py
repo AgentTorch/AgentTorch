@@ -47,7 +47,7 @@ class DSPYMemoryHandler(MemoryHandler):
         for id in range(len(self.agent_memory)):
             file_name = f"output_mem_{id}.md"
             file_path = os.path.join(file_dir, file_name)
-            memory = self.get_memory(agent_id=id)
+            memory = self.get_memory(agent_id=id,last_k=last_k)
             with open(file_path, 'w') as f:
                 f.write(str(memory))
         self.llm.inspect_history(file_dir=file_dir, last_k=last_k)
@@ -74,6 +74,6 @@ class LangchainMemoryHandler(MemoryHandler):
         for id in range(len(self.agent_memory)):
             file_name = f"output_mem_{id}.md"
             file_path = os.path.join(file_dir, file_name)
-            memory = self.get_memory(agent_id=id)
+            memory = self.get_memory(agent_id=id,last_k=last_k)
             with open(file_path, 'w') as f:
                 f.write(str(memory))

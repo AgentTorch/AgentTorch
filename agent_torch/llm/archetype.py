@@ -6,9 +6,8 @@ os.environ['DSP_CACHEBOOL'] = 'False'
 from langchain.memory import ConversationBufferMemory
 
 class Archetype():
-    def __init__(self):
-        self.llm = None
-        self.rule_based = None
+    def __init__(self,n_arch = 1):
+        self.n_arch = n_arch
     
     def llm(self, llm, user_prompt, num_agents):
         try:
@@ -16,7 +15,7 @@ class Archetype():
             llm_archetype = LLMArchetype(llm, user_prompt, num_agents)
             return llm_archetype
         except Exception as e:
-            print(" 'initialize_llm' Not Implemented, make sure if its the intended behaviour")
+            print(" 'initialize_llm' Not Implemented, make sure if it's the intended behaviour")
             llm_archetype = LLMArchetype(llm, user_prompt, num_agents)
             return llm_archetype
     
@@ -27,12 +26,12 @@ class LLMArchetype():
     def __init__(self, llm, user_prompt, num_agents):
         self.num_agents = num_agents
         self.llm = llm
-        self.predictor = self.llm.initialize_llm()
+        # self.predictor = self.llm.initialize_llm()
         self.backend = llm.backend
         self.user_prompt = user_prompt
         self.agent_memory = [ConversationBufferMemory(memory_key="chat_history", return_messages=True) for _ in range(num_agents)]
         if self.backend == 'dspy':
-            self.memory_handler = DSPYMemoryHandler(agent_memory=self.agent_memory, llm=self.predictor)
+            self.memory_handler = DSPYMemoryHandler(agent_memory=self.agent_memory, llm=self.llm)
         elif self.backend == 'langchain':
             self.memory_handler = LangchainMemoryHandler(agent_memory=self.agent_memory)
         else:
@@ -63,3 +62,6 @@ class LLMArchetype():
 
     def export_memory_to_file(self, file_dir,last_k):
         self.memory_handler.export_memory_to_file(file_dir, last_k)
+    
+    def get_memory(self, last_k, agent_id):
+        return self.memory_handler.get_memory(last_k = last_k, agent_id = agent_id)

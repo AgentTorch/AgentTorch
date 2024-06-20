@@ -1,6 +1,10 @@
+
+from agent_torch.llm.archetype import Archetype
+from agent_torch.llm.llm import DspyLLM
 from agent_torch.llm.prompt_manager import PromptManager
 from agent_torch.utils import LoadPopulation
 import torch
+
 
 class Behavior():
     def __init__(self, archetype,region):
