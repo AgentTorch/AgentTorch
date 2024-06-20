@@ -73,7 +73,6 @@ class DataLoader(DataLoaderBase):
 
     def get_config(self):
         omega_config = read_config(self.config_path)
-        return omega_config
     
 
 class LoadPopulation():

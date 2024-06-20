@@ -37,6 +37,9 @@ work.
 > pip install -r development.txt
 > pip install -e .
 
+# set up the pre commit hooks
+> pre-commit install --config pre-commit.yaml
+
 # create a new branch
 > git switch master
 > git switch --create branch-name

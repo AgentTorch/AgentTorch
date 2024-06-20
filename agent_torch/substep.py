@@ -19,6 +19,11 @@ class SubstepObservation(nn.Module, ABC):
         if self.learnable_args:
             self.learnable_args = nn.ParameterDict(self.learnable_args)
 
+        if self.config["simulation_metadata"]["calibration"] == True:
+            for key, value in self.learnable_args.items():
+                tensor_name = f"calibrate_{key}"
+                setattr(self, tensor_name, torch.tensor(value, requires_grad=True))
+
         self.args = {**self.fixed_args, **self.learnable_args}
         self.custom_observation_network = None
 
@@ -40,6 +45,11 @@ class SubstepAction(nn.Module, ABC):
         )
         if self.learnable_args:
             self.learnable_args = nn.ParameterDict(self.learnable_args)
+
+        if self.config["simulation_metadata"]["calibration"] == True:
+            for key, value in self.learnable_args.items():
+                tensor_name = f"calibrate_{key}"
+                setattr(self, tensor_name, torch.tensor(value, requires_grad=True))
 
         self.args = {**self.fixed_args, **self.learnable_args}
         self.custom_action_network = None
@@ -63,6 +73,11 @@ class SubstepTransition(nn.Module, ABC):
         if self.learnable_args:
             self.learnable_args = nn.ParameterDict(self.learnable_args)
 
+        if self.config["simulation_metadata"]["calibration"] == True:
+            for key, value in self.learnable_args.items():
+                tensor_name = f"calibrate_{key}"
+                setattr(self, tensor_name, torch.tensor(value, requires_grad=True))
+
         self.args = {**self.fixed_args, **self.learnable_args}
         self.custom_transition_network = None
 
@@ -84,6 +99,11 @@ class SubstepTransitionMessagePassing(MessagePassing, ABC):
         )
         if self.learnable_args:
             self.learnable_args = nn.ParameterDict(self.learnable_args)
+
+        if self.config["simulation_metadata"]["calibration"] == True:
+            for key, value in self.learnable_args.items():
+                tensor_name = f"calibrate_{key}"
+                setattr(self, tensor_name, torch.tensor(value, requires_grad=True))
 
     @abstractmethod
     def forward(self, state, action):
