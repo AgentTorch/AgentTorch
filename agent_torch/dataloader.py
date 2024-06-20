@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
 import os
 import yaml
-import pdb
-from AgentTorch.helpers import read_config
+from agent_torch.helpers import read_config
 
 
 class DataLoaderBase(ABC):

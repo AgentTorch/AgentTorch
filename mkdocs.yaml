@@ -1,3 +1,6 @@
+# mkdocs.yaml
+# mkdocs configuration
+
 site_name: AgentTorch
 theme:
   name: material
