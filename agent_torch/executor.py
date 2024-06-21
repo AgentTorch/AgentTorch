@@ -1,8 +1,9 @@
 import importlib
-import pdb
 import sys
+from tqdm import trange
 
 from agent_torch.dataloader import DataLoader
+from agent_torch.runner import Runner
 
 
 class BaseExecutor:
@@ -12,18 +13,9 @@ class BaseExecutor:
     def _get_runner(self, config):
         module_name = f"{self.model.__name__}.simulator"
         module = importlib.import_module(module_name)
-        simulaton_runner = module.SimulationRunner
-        registry = self._get_registry()
-        runner = simulaton_runner(config, registry)
+        registry = module.get_registry()
+        runner = Runner(config, registry)
         return runner
-
-    def _get_registry(self):
-        module_name = f"{self.model.__name__}.simulator"
-        module = importlib.import_module(module_name)
-        simulation_registry = module.simulation_registry
-        sys.path.insert(0, self.model.__path__[0])
-        registry = simulation_registry()
-        return registry
 
 
 class Executor(BaseExecutor):
@@ -36,15 +28,24 @@ class Executor(BaseExecutor):
             self.data_loader = data_loader
 
         self.config = self.data_loader.get_config()
+        self.runner = self._get_runner(self.config)
 
-        # self.runner = self._get_runner(self.config)
-        # self.runner.init()
-        # self.calibrator = Calibrator(self.runner)
+    def init(self, opt):
+        self.runner.init()
+        self.learnable_params = [
+            param for param in self.runner.parameters() if param.requires_grad
+        ]
+        self.opt = opt(self.learnable_params)
 
-    def init(self):
-        pass
-        # self.runner.init()
+    def execute(self, key, num_episodes=None, num_steps_per_episode=None):
+        for episode in trange(num_episodes):
+            self.opt.zero_grad()
+            self.runner.reset()
+            self.runner.step(num_steps_per_episode)
+        self.simulation_values = self.runner.get_simulation_values(key)
 
-    def execute(self):
-        # self.calibrator.run()
-        pass
+    def get_simulation_values(self, key, key_type="environment"):
+        self.simulation_values = self.runner.state_trajectory[-1][-1][key_type][
+            key
+        ]  # List containing values for each step
+        return self.simulation_values
