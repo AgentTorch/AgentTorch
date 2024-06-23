@@ -1,5 +1,9 @@
 # Installation Guide
 
+> AgentTorch is meant to be used in a Python 3.9 environment. If you have not
+> installed Python 3.9, please do so first from
+> [python.org/downloads](https://www.python.org/downloads/).
+
 To install the project, run:
 
 ```sh
