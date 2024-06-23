@@ -8,7 +8,6 @@ import pandas as pd
 import torch
 
 
-
 def get_config_values(conf, keys):
     return {key: conf.get(f"simulation_metadata.{key}") for key in keys}
 

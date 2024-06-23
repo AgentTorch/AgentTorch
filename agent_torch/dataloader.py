@@ -48,7 +48,7 @@ class DataLoaderBase(ABC):
 
 
 class DataLoader(DataLoaderBase):
-    def __init__(self, model,population):
+    def __init__(self, model, population):
         super().__init__("populations", model)
 
         self.config_path = self._get_config_path(model)
@@ -73,33 +73,38 @@ class DataLoader(DataLoaderBase):
 
     def get_config(self):
         omega_config = read_config(self.config_path)
-    
 
-class LoadPopulation():
+
+class LoadPopulation:
     def __init__(self, region):
         self.population_folder_path = region.__path__[0]
         self.population_size = 0
         self.load_population()
-    
+
     def load_population(self):
-        pickle_files = glob.glob(f"{self.population_folder_path}/*.pickle", recursive=False)
+        pickle_files = glob.glob(
+            f"{self.population_folder_path}/*.pickle", recursive=False
+        )
         for file in pickle_files:
-            with open(file, 'rb') as f:
+            with open(file, "rb") as f:
                 key = os.path.splitext(os.path.basename(file))[0]
                 df = pd.read_pickle(file)
                 setattr(self, key, torch.from_numpy(df.values).float())
         self.population_size = len(df)
+
 
 class LinkPopulation(DataLoader):
     def __init__(self, region):
         self.population_folder_path = region.__path__[0]
         self.population_size = 0
         self.load_population()
-        
+
     def load_population(self):
-        pickle_files = glob.glob(f"{self.population_folder_path}/*.pickle", recursive=False)
+        pickle_files = glob.glob(
+            f"{self.population_folder_path}/*.pickle", recursive=False
+        )
         for file in pickle_files:
-            with open(file, 'rb') as f:
+            with open(file, "rb") as f:
                 key = os.path.splitext(os.path.basename(file))[0]
                 df = pd.read_pickle(file)
                 setattr(self, key, torch.from_numpy(df.values).float())

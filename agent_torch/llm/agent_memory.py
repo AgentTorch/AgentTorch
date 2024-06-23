@@ -1,6 +1,7 @@
 import abc
 import os
 
+
 class MemoryHandler(abc.ABC):
     """Abstract base class for handling memory operations."""
 
@@ -24,6 +25,7 @@ class MemoryHandler(abc.ABC):
         """Export memory to a file."""
         pass
 
+
 class DSPYMemoryHandler(MemoryHandler):
     """Concrete implementation of MemoryHandler for dspy backend."""
 
@@ -32,10 +34,16 @@ class DSPYMemoryHandler(MemoryHandler):
         self.llm = llm
 
     def save_memory(self, query, output, agent_id):
-        self.agent_memory[agent_id].save_context({"input": query['agent_query']}, {"output": output})
+        self.agent_memory[agent_id].save_context(
+            {"input": query["agent_query"]}, {"output": output}
+        )
 
     def get_memory(self, last_k, agent_id):
-        last_k_memory = {'chat_history': self.agent_memory[agent_id].load_memory_variables({})['chat_history'][-last_k:]}
+        last_k_memory = {
+            "chat_history": self.agent_memory[agent_id].load_memory_variables({})[
+                "chat_history"
+            ][-last_k:]
+        }
         return last_k_memory
 
     def clear_memory(self, agent_id):
@@ -47,10 +55,11 @@ class DSPYMemoryHandler(MemoryHandler):
         for id in range(len(self.agent_memory)):
             file_name = f"output_mem_{id}.md"
             file_path = os.path.join(file_dir, file_name)
-            memory = self.get_memory(agent_id=id,last_k=last_k)
-            with open(file_path, 'w') as f:
+            memory = self.get_memory(agent_id=id, last_k=last_k)
+            with open(file_path, "w") as f:
                 f.write(str(memory))
         self.llm.inspect_history(file_dir=file_dir, last_k=last_k)
+
 
 class LangchainMemoryHandler(MemoryHandler):
     """Concrete implementation of MemoryHandler for langchain backend."""
@@ -59,10 +68,16 @@ class LangchainMemoryHandler(MemoryHandler):
         self.agent_memory = agent_memory
 
     def save_memory(self, query, output, agent_id):
-        self.agent_memory[agent_id].save_context({"input": query['agent_query']}, {"output": output['text']})
+        self.agent_memory[agent_id].save_context(
+            {"input": query["agent_query"]}, {"output": output["text"]}
+        )
 
     def get_memory(self, last_k, agent_id):
-        last_k_memory = {'chat_history': self.agent_memory[agent_id].load_memory_variables({})['chat_history'][-last_k:]}
+        last_k_memory = {
+            "chat_history": self.agent_memory[agent_id].load_memory_variables({})[
+                "chat_history"
+            ][-last_k:]
+        }
         return last_k_memory
 
     def clear_memory(self, agent_id):
@@ -74,6 +89,6 @@ class LangchainMemoryHandler(MemoryHandler):
         for id in range(len(self.agent_memory)):
             file_name = f"output_mem_{id}.md"
             file_path = os.path.join(file_dir, file_name)
-            memory = self.get_memory(agent_id=id,last_k=last_k)
-            with open(file_path, 'w') as f:
+            memory = self.get_memory(agent_id=id, last_k=last_k)
+            with open(file_path, "w") as f:
                 f.write(str(memory))

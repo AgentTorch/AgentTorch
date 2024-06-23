@@ -12,13 +12,14 @@ from langchain.prompts import (
 )
 from abc import ABC, abstractmethod
 
+
 class LLM(ABC):
     def __init__(self):
-        pass 
-    
+        pass
+
     def initialize_llm(self):
         raise NotImplementedError
-    
+
     @abstractmethod
     def prompt(self, prompt_list):
         pass
@@ -28,16 +29,18 @@ class LLM(ABC):
 
 
 class DspyLLM(LLM):
-    def __init__(self, openai_api_key, qa, cot, model='gpt-3.5-turbo'):
+    def __init__(self, openai_api_key, qa, cot, model="gpt-3.5-turbo"):
         super().__init__()
         self.qa = qa
         self.cot = cot
-        self.backend = 'dspy'
+        self.backend = "dspy"
         self.openai_api_key = openai_api_key
         self.model = model
 
     def initialize_llm(self):
-        self.llm = dspy.OpenAI(model=self.model, api_key=self.openai_api_key, temperature=0.0)
+        self.llm = dspy.OpenAI(
+            model=self.model, api_key=self.openai_api_key, temperature=0.0
+        )
         dspy.settings.configure(lm=self.llm)
         self.predictor = self.cot(self.qa)
         return self.predictor
@@ -50,7 +53,9 @@ class DspyLLM(LLM):
         agent_outputs = []
         try:
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                agent_outputs = list(executor.map(self.dspy_query_and_get_answer, prompt_inputs))
+                agent_outputs = list(
+                    executor.map(self.dspy_query_and_get_answer, prompt_inputs)
+                )
         except Exception as e:
             print(e)
         return agent_outputs
@@ -59,7 +64,9 @@ class DspyLLM(LLM):
         if type(prompt_input) is str:
             agent_output = self.query_agent(prompt_input, [])
         else:
-            agent_output = self.query_agent(prompt_input['agent_query'], prompt_input['chat_history'])
+            agent_output = self.query_agent(
+                prompt_input["agent_query"], prompt_input["chat_history"]
+            )
         return agent_output.answer
 
     def query_agent(self, query, history):
@@ -74,21 +81,30 @@ class DspyLLM(LLM):
         printed_data = buffer.getvalue()
         if file_dir is not None:
             save_path = os.path.join(file_dir, "inspect_history.md")
-            with open(save_path, 'w') as f:
+            with open(save_path, "w") as f:
                 f.write(printed_data)
         sys.stdout = original_stdout
 
 
 class LangchainLLM(LLM):
-    def __init__(self, openai_api_key, agent_profile, model='gpt-3.5-turbo',):
+    def __init__(
+        self,
+        openai_api_key,
+        agent_profile,
+        model="gpt-3.5-turbo",
+    ):
         super().__init__()
-        self.backend = 'langchain'
-        self.llm = ChatOpenAI(model=self.model, openai_api_key=self.openai_api_key, temperature=1)
-        self.prompt = ChatPromptTemplate.from_messages([
-            SystemMessagePromptTemplate.from_template(self.agent_profile),
-            HumanMessagePromptTemplate.from_template("{user_prompt}"),
-        ])
-        
+        self.backend = "langchain"
+        self.llm = ChatOpenAI(
+            model=self.model, openai_api_key=self.openai_api_key, temperature=1
+        )
+        self.prompt = ChatPromptTemplate.from_messages(
+            [
+                SystemMessagePromptTemplate.from_template(self.agent_profile),
+                HumanMessagePromptTemplate.from_template("{user_prompt}"),
+            ]
+        )
+
     def initialize_llm(self):
         self.predictor = LLMChain(llm=self.llm, prompt=self.prompt, verbose=False)
         return self.predictor
@@ -101,7 +117,9 @@ class LangchainLLM(LLM):
         agent_outputs = []
         try:
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                agent_outputs = list(executor.map(self.langchain_query_and_get_answer, prompt_inputs))
+                agent_outputs = list(
+                    executor.map(self.langchain_query_and_get_answer, prompt_inputs)
+                )
         except Exception as e:
             print(e)
         return agent_outputs
@@ -111,4 +129,6 @@ class LangchainLLM(LLM):
         return agent_output
 
     def inspect_history(self, last_k, file_dir):
-        raise NotImplementedError("inspect_history method is not applicable for Langchain backend")
+        raise NotImplementedError(
+            "inspect_history method is not applicable for Langchain backend"
+        )
