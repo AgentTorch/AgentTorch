@@ -1,185 +1,113 @@
-# Contributing Guide
+# Contributing to AgentTorch
 
-Thanks for your interest in contributing to Agent Torch! This guide will show
-you how to set up your environment and contribute to this library.
+Hey there! We're excited to have you on board and eager to help you contribute
+to the AgentTorch framework. To make the process smoother and more enjoyable,
+we've created a step-by-step guide to get you started.
 
-## Prerequisites
-
-You must have the following software installed:
-
-1. [`git`](https://github.com/git-guides/install-git) (latest)
-2. [`python`](https://wiki.python.org/moin/BeginnersGuide/Download) (>= 3.10)
-
-Once you have installed the above, follow
-[these instructions](https://docs.github.com/en/get-started/quickstart/fork-a-repo)
-to
-[`fork`](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks)
-and [`clone`](https://github.com/git-guides/git-clone) the repository
-(`AgentTorch/AgentTorch`).
-
-Once you have forked and cloned the repository, you can
-[pick out an issue](https://github.com/AgentTorch/AgentTorch/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc)
-you want to fix/implement!
-
-## Making Changes
-
-Once you have cloned the repository to your computer (say, in
-`~/Code/AgentTorch`) and picked the issue you want to tackle, create a virtual
-environment, install all dependencies, and create a new branch to hold all your
-work.
-
-```sh
-# create a virtual environment
-> python -m venv .venv/
-
-# set it up
-> . .venv/bin/activate
-> pip install -r development.txt
-> pip install -e .
-
-# set up the pre commit hooks
-> pre-commit install --config pre-commit.yaml
-
-# create a new branch
-> git switch master
-> git switch --create branch-name
+```mermaid
+flowchart LR
+    onb([Onboarding Form]) --> dsc([Discord #level-x])
+    dsc --> ghc([GitHub Clasroom X])
+    ghc --> iss([Issues Corresponding To Level X])
 ```
 
-While naming your branch, make sure the name is short and self explanatory.
+1. First, you'll need to fill out our onboarding form, which will help us
+   determine the level at which you can contribute to the project. Each level
+   has its own Discord channel, `#level-x`, which you'll be invited to join soon
+   after you fill the form.
 
-Once you have created a branch, you can start coding!
+   > Each level's channel will have one moderator, called the level lead, who
+   > will help and unblock you as you progress. You can also connect with other
+   > contributors, get help, and stay updated on the project via Discord.
 
-## Project Structure
+2. Next, you'll need to complete the GitHub Classroom for your assigned level.
+   This tutorial will teach you the skills required to tackle issues at that
+   level.
+3. Then, you can start taking on issues and actually contributing to the
+   project. All issues on GitHub that can be taken up by external contributors
+   will be labelled `level-x`, where `x` denotes the level number.
 
-The project is structured as follows. The comments written next to the
-file/folder give a brief explanation of what purpose the file/folder serves.
+## Levels
 
-```sh
-.
-├── agent_torch/
-│  ├── helpers/ # defines helper functions used to initialize or work with the state of the simulation.
-│  ├── llm/ # contains all the code related to using llms as agents in the simulation
-│  ├── __init__.py # exports everything to the world
-│  ├── config.py # handles reading and processing the simulation's configuration
-│  ├── controller.py # executes the substeps for each episode
-│  ├── initializer.py # creates a simulation from a configuration and registry
-│  ├── registry.py # registry that stores references to the implementations of the substeps and helper functions
-│  ├── runner.py # executes the episodes of the simulation, and handles its state
-│  ├── substep.py # contains base classes for the substep observations, actions and transitions
-│  └── utils.py # utility functions used throughout the project
-├── docs/
-│  ├── media/ # assets like screenshots or diagrams inserted in .md files
-│  ├── tutorials/ # jupyter notebooks with tutorials and their explanations
-│  ├── architecture.md # the framework's architecture
-│  └── install.md # instructions on installing the framework
-├── models/
-│  ├── covid/ # a model simulating disease spread, using the example of covid 19
-│  └── predator_prey/ # a simple model used to showcase the features of the framework
-├── citation.bib # contains the latex code to use to cite this project
-├── contributing.md # this file, helps onboard contributors
-├── license.md # contains the license for this project (MIT)
-├── readme.md # contains details on the what, why, and how
-├── requirements.txt # lists the dependencies of the framework
-└── setup.py # defines metadata for the project
-```
+For each level, a minimum requirement, a GitHub classroom tutorial, and a list
+of issues you can tackle will be provided. If you get stuck at any point, please
+don't hesitate to ask your level lead for help.
 
-Note that after making any code changes, you should run the `black` code
-formatter, as follows:
+> You can become a level lead too, once you reach Level 5! You can apply for
+> this position by messaging a project maintainer on Discord.
 
-```sh
-> black agent_torch/ tests/
-```
+### `level-0`
 
-You should also ensure all the unit tests pass, especially if you have made
-changes to any files in the `agent_torch/` folder.
+This is where you'll start your journey with AgentTorch. The GitHub Classroom
+tutorial for this level will teach you how to set up and run a model using the
+framework, as well as how to set up your environment for development.
 
-```sh
-> pytest -vvv tests/
-```
+Contributions at this level can be made by pointing out inconsistencies, errors
+or other such problems in existing tutorials and documentation. This can be done
+by creating issues in the repository using the correct issue templates.
 
-For any changes to the documentation, run `prettier` over the `*.md` files after
-making changes to them. To preview the generated documentation, run:
+### `level-1`
 
-```sh
-> mkdocs serve
-```
+Once you've completed Level Zero, you'll be ready to move on to Level One. The
+GitHub Classroom tutorial for this level will teach you how to create and deploy
+changes to the documentation.
 
-> Rememeber to add any new pages to the sidebar by editing `mkdocs.yaml`.
+Contributions at this level can be made by fixing errors pointed out by other
+users in the documentation, and by tackling any issues pertaining to writing and
+deploying documentation.
 
-If you wish to write a tutorial, write it in a Jupyter Notebook, and then
-convert it to a markdown file using `nbconvert`:
+### `level-2`
 
-```sh
-> pip install nbconvert
-> jupyter nbconvert --to markdown <file>.ipynb
-> mv <file>.md index.md
-```
+This level is for those contributors who have completed Level Two and are ready
+to take on more challenging tasks. The GitHub Classroom tutorial will teach you
+how to fix minor bugs from the GitHub issue tracker, and refactor small parts of
+the codebase.
 
-> Rememeber to move any files that it generates to the `docs/media` folder, and
-> update the hyperlinks in the generated markdown file.
+At this level, you can contribute by taking up minor bug reports from the GitHub
+issue tracker, interact with the issue reporter, and file a pull request to fix
+the bug. You can also help improve readability of the code and implement best
+practices throughout the codebase.
 
-## Saving Changes
+### `level-3`
 
-After you have made changes to the code, you will want to
-[`commit`](https://github.com/git-guides/git-commit) (basically, Git's version
-of save) the changes. To commit the changes you have made locally:
+Once you've completed a sufficient number of refactors or bug fixes to attain
+familiarity with the codebase, you may move on to Level Three or Four.
 
-```sh
-> git add this/folder that-file.js
-> git commit --message 'commit-message'
-```
+The GitHub Classroom tutorial for Level Three will teach you how to create
+populations using the AgentTorch `DataLoader` API. You can contribute at this
+level by creating and documenting these populations and other such synthetic
+data.
 
-While writing the `commit-message`, try to follow the below guidelines:
+### `level-4`
 
-Prefix the message with `type:`, where `type` is one of the following
-dependending on what the commit does:
+The GitHub Classroom tutorial for this level will teach you how to write models
+that make full use of the features AgentTorch provides, as well as how to write
+good unit tests.
 
-- `fix`: Introduces a bug fix.
-- `feat`: Adds a new feature.
-- `test`: Any change related to tests.
-- `perf`: Any performance related change.
-- `meta`: Any change related to the build process, workflows, issue templates,
-  etc.
-- `refc`: Any refactoring work.
-- `docs`: Any documentation related changes.
+Contributions at this level can be made by refactoring models and testing parts
+of the codebase.
 
-Try to keep the first line brief, and less than 60 characters. Describe the
-change in detail in a new paragraph (double newline after the first line).
+### `level-5`
 
-## Contributing Changes
+By this level, you should be very familiar with the AgentTorch Python API. The
+GitHub Classroom will take your knowledge further by delving deep into several
+aspects of the framework, namely, writing models, using LLMs as agents, the
+`Behavior` API, and various differentiable utilities.
 
-Once you have committed your changes, you will want to
-[`push`](https://github.com/git-guides/git-push) (basically, publish your
-changes to GitHub) your commits. To push your changes to your fork:
+At this level, you'll have the chance to pick up issues in any of these areas,
+or submit a proposal, get feedback from the maintainers, and implement it after
+incorporating the given feedback.
 
-```sh
-> git push origin branch-name
-```
+### `level-6`
 
-If there are changes made to the `master` branch of the `AgentTorch/AgentTorch`
-repository, you may wish to merge those changes into your branch. To do so, you
-can run the following commands:
+At this level, as a seasoned contributor, you'll be mentored directly by the
+project's maintainers. You will work on adding new features, changing and fixing
+existing functionality, and taking on more complex tasks in general.
 
-```
-> git fetch upstream master
-> git merge upstream/master
-```
+## Code of Conduct
 
-This will automatically add the changes from `master` branch of the
-`AgentTorch/AgentTorch` repository to the current branch. If you encounter any
-merge conflicts, follow
-[this guide](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/addressing-merge-conflicts/resolving-a-merge-conflict-using-the-command-line)
-to resolve them.
+By contributing to this project, you agree to abide by its code of conduct,
+which can be found [here](docs/code-of-conduct.md). Please bring any violations
+of the code of conduct to the notice of the project's maintainers.
 
-Once you have pushed your changes to your fork, follow
-[these instructions](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork)
-to open a
-[`pull request`](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests):
-
-Once you have submitted a pull request, the maintainers of the repository will
-review your pull requests and provide feedback. If they find the work to be
-satisfactory, they will merge the pull request.
-
-#### Thanks for contributing!
-
-<!-- This contributing guide was inspired by the Electron project's contributing guide. -->
+#### Thank you for contributing!
