@@ -1,0 +1,42 @@
+[project]
+name = "agent_torch"
+version = "0.3.1"
+description = "large population models"
+readme = "readme.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Ayush Chopra"},
+    {name = "Shashank Kumar"},
+    {name = "Jayakumar Subramanian"},
+    {name = "Balaji Krishnamurthy"},
+    {name = "Ramesh Raskar"}
+]
+maintainers = [
+    {name = "Vedant Kulkarni"}
+]
+requires-python = ">= 3.8"
+dependencies = [
+    "torch",
+    "numpy",
+    "pandas",
+    "omegaconf",
+    "asyncio",
+    "langchain",
+    "langchain-openai",
+    "networkx",
+    "wandb",
+]
+
+[project.urls]
+Homepage = "https://lpm.media.mit.edu/docs"
+Issues = "https://github.com/AgentTorch/AgentTorch/issues"
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pdm]
+distribution = true
+
+[tool.pdm.build]
+excludes = ["populations", "models"]

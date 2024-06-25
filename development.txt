@@ -1,5 +1,7 @@
 -r requirements.txt
 
+build==1.2.1
+pdm==2.15.4
 pre-commit==3.7.1
 pytest==7.2.0
 black==24.4.2
