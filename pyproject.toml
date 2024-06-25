@@ -57,4 +57,5 @@ push = true
 ]
 "pyproject.toml" = [
     'current_version = "{version}"',
+    'version = "{version}"'
 ]
