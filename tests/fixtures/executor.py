@@ -1,10 +1,10 @@
 import pytest
 
-from models import covid
-from populations import astoria
+from agent_torch.models import covid
+from agent_torch.populations import astoria
 
-from agent_torch.dataloader import LoadPopulation
-from agent_torch.executor import Executor
+from agent_torch.core.dataloader import LoadPopulation
+from agent_torch.core.executor import Executor
 
 
 @pytest.fixture

@@ -1,4 +1,5 @@
 import pytest
+from torch.optim import SGD
 from contextlib import contextmanager
 
 from fixtures.executor import executor
@@ -14,4 +15,5 @@ def not_raises():
 
 def test_executor(executor):
     with not_raises():
+        executor.init(opt=SGD)
         executor.execute()

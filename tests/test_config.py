@@ -1,6 +1,6 @@
 from omegaconf import OmegaConf as oc
 
-from agent_torch.config import Configurator
+from agent_torch.core.config import Configurator
 from fixtures.config import config, agent_count, agent_properties
 
 
