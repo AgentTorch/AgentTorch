@@ -82,8 +82,8 @@ A Jupyter Notebook containing the below examples can be found
 
 ```py
 # re-use existing models and population data easily
-from agent_torch.core.models import covid
-from agent_torch.core.populations import astoria
+from agent_torch.models import covid
+from agent_torch.populations import astoria
 
 # use the executor to plug-n-play
 from agent_torch.core.executor import Executor
