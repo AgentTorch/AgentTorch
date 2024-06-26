@@ -78,47 +78,31 @@ Torch API.
 A Jupyter Notebook containing the below examples can be found
 [here](docs/tutorials/using-models/walkthrough.ipynb).
 
-### Executing a Simulation
+### Executing a Simulation with Gradient Based Learning
 
 ```py
 # re-use existing models and population data easily
-from agent_torch.models import disease
-from agent_torch.populations import new_zealand
+from agent_torch.core.models import covid
+from agent_torch.core.populations import astoria
 
 # use the executor to plug-n-play
-from agent_torch.execute import Executor
+from agent_torch.core.executor import Executor
+from agent_torch.core.dataloader import LoadPopulation
 
-simulation = Executor(disease, new_zealand)
-simulation.execute()
-```
-
-### Using Gradient-Based Learning
-
-```py
 # agent_"torch" works seamlessly with the pytorch API
 from torch.optim import SGD
 
-# create the simulation
-# ...
+loader = LoadPopulation(astoria)
+simulation = Executor(model=covid, pop_loader=loader)
 
-# create an optimizer for the learnable parameters
-# in the simulation
-optimizer = SGD(simulation.parameters())
-
-# learn from each "episode" and run the next one
-# with optimized parameters
-for i in range(episodes):
-	optimizer.zero_grad()
-
-	simulation.execute()
-	optimizer.step()
-	simulation.reset()
+simulation.init(SGD)
+simulation.execute()
 ```
 
 ### Talking to the Simulation
 
 ```py
-from agent_torch.llm.qa import SimulationAnalysisAgent, load_state_trace
+from agent_torch.core.llm.qa import SimulationAnalysisAgent, load_state_trace
 
 # create the simulation
 # ...

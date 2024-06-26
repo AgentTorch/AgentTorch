@@ -1,6 +1,6 @@
 import pytest
 
-from agent_torch.config import Configurator
+from agent_torch.core.config import Configurator
 
 
 @pytest.fixture
