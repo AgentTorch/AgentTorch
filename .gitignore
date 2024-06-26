@@ -27,3 +27,4 @@ venv.bak/
 
 simulation_memory_output/
 cache/
+dist/
