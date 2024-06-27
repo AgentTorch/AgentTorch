@@ -116,15 +116,6 @@ class MakeIsolationDecision(SubstepAction):
         return one_hot_tensor.to(self.device)
 
     def forward(self, state, observation):
-        """
-        LangchainLLM class has three functions: a) mask sub-groups, b) format_prompt, c) invoke LLM, d) aggregate response
-        """
-        # if in debug mode, return random values for isolation
-        if self.mode == "debug":
-            will_isolate = torch.rand(self.num_agents, 1).to(self.device)
-        """
-        LangchainLLM class has three functions: a) mask sub-groups, b) format_prompt, c) invoke LLM, d) aggregate response
-        """
         # if in debug mode, return random values for isolation
         if self.mode == "heuristic":
             will_isolate = torch.rand(self.num_agents, 1).to(self.device)
