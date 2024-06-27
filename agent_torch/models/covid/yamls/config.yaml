@@ -35,7 +35,7 @@ simulation_metadata:
   mapping_path: ${simulation_metadata.population_dir}/population_mapping.json
   num_agents: 37518
   num_episodes: 5
-  num_steps_per_episode: 14
+  num_steps_per_episode: 21
   num_substeps_per_step: 2
   population_dir: /u/ayushc/projects/GradABM/applications/tutorial/AgentTorch/agent_torch/populations/astoria
   quarantine_days: 12
@@ -415,38 +415,8 @@ substeps:
             name: R2
             shape:
             - ${simulation_metadata.NUM_WEEKS}
-            - ${simulation_metadata.NUM_WEEKS}
+            - 1
             value: 4.75
-          SFInfector:
-            dtype: float
-            initialization_function: null
-            learnable: false
-            name: Infectiousness of Infector
-            shape:
-            - 5
-            value:
-            - 0.0
-            - 0.33
-            - 0.72
-            - 0.0
-            - 0.0
-          SFSusceptibility:
-            dtype: float
-            initialization_function: null
-            learnable: false
-            name: Susceptibility by Age Group
-            shape:
-            - 9
-            value:
-            - 0.35
-            - 0.69
-            - 1.03
-            - 1.03
-            - 1.03
-            - 1.03
-            - 1.27
-            - 1.52
-            - 1.52
         generator: NewTransmission
         input_variables:
           SFInfector: environment/SFInfector
