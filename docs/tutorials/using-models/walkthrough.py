@@ -16,10 +16,10 @@ debug()
 if __name__ == "__main__":
     from agent_torch.core.executor import Executor
     from agent_torch.core.dataloader import LinkPopulation
-    from populations import NYC
-    from models import covid
+    from agent_torch.populations import astoria
+    from agent_torch.models import covid
 
-    nyc_population = LinkPopulation(NYC)  # all data for config.simulation_metadata
+    nyc_population = LinkPopulation(astoria)  # all data for config.simulation_metadata
     simulation = Executor(
         model=covid, pop_loader=nyc_population
     )  # _update_config(), _get_runner()

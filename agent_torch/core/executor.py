@@ -30,12 +30,12 @@ class Executor(BaseExecutor):
         self.config = self.data_loader.get_config()
         self.runner = self._get_runner(self.config)
 
-    def init(self, opt):
+    def init(self):
         self.runner.init()
-        self.learnable_params = [
-            param for param in self.runner.parameters() if param.requires_grad
-        ]
-        self.opt = opt(self.learnable_params)
+        # self.learnable_params = [
+        #     param for param in self.runner.parameters() if param.requires_grad
+        # ]
+        # self.opt = opt(self.learnable_params)
 
     def execute(self, key=None):
         num_episodes = self.config["simulation_metadata"]["num_episodes"]
@@ -44,7 +44,7 @@ class Executor(BaseExecutor):
         ]
 
         for episode in trange(num_episodes):
-            self.opt.zero_grad()
+            # self.opt.zero_grad()
             self.runner.reset()
             self.runner.step(num_steps_per_episode)
 
