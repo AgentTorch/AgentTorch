@@ -96,11 +96,11 @@ class LangchainLLM(LLM):
         super().__init__()
         self.backend = "langchain"
         self.llm = ChatOpenAI(
-            model=self.model, openai_api_key=self.openai_api_key, temperature=1
+            model=model, openai_api_key=openai_api_key, temperature=1
         )
         self.prompt = ChatPromptTemplate.from_messages(
             [
-                SystemMessagePromptTemplate.from_template(self.agent_profile),
+                SystemMessagePromptTemplate.from_template(agent_profile),
                 HumanMessagePromptTemplate.from_template("{user_prompt}"),
             ]
         )
