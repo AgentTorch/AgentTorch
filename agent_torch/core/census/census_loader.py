@@ -2,10 +2,10 @@ import pandas as pd
 import os
 import json
 
+from agent_torch import populations
 from agent_torch.core.census.generate.base_pop import base_pop_wrapper
 from agent_torch.core.census.generate.household import household_wrapper
 from agent_torch.core.census.generate.mobility_network import mobility_network_wrapper
-import populations
 
 
 class CensusDataLoader:
