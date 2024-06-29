@@ -491,42 +491,5 @@ def household_prep(
             "household_num"
         ].apply(lambda x: max(1, round(x)))
 
-    # proc_household_data = proc_household_data[
-    #     ["area", "adult_num", "children_num", "household_num"]
-    # ]
-
     return proc_household_data
 
-
-if __name__ == "__main__":
-    import sys
-
-    sys.path.append("/Users/shashankkumar/Documents/GitHub/MacroEcon/data/")
-    adult_list = ["20t29", "30t39", "40t49", "50t64", "65A"]
-    children_list = ["U19"]
-    base_pop_path = "/Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/census_populations/NZ/synthetic_populations/population_data.pkl"
-    base_pop = pd.read_pickle(base_pop_path)
-
-    household_data_path = "/Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/census_populations/NZ/user_input/household.pkl"
-    household_data = pd.read_pickle(household_data_path)
-
-    # load if available
-    geo_address_data = pd.read_pickle(
-        "/Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/NZ/output_pop_data/geo_address.pkl"
-    )
-    use_parallel = False
-    n_cpu = 13
-
-    base_pop, base_address = household_wrapper(
-        household_data,
-        base_pop,
-        base_address=None,
-        adult_list=adult_list,
-        children_list=children_list,
-        geo_address_data=geo_address_data,
-        use_parallel=use_parallel,
-        n_cpu=n_cpu,
-    )
-
-    base_pop.to_pickle("base_population.pkl")
-    base_address.to_pickle("base_address.pkl")
