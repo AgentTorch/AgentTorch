@@ -1,19 +1,5 @@
-def debug():
-    import os
-    import sys
-
-    current_file_path = os.path.abspath(__file__)
-    current_directory = os.path.dirname(current_file_path)
-    package_root_directory = os.path.dirname(
-        os.path.dirname(os.path.dirname(current_directory))
-    )
-    sys.path.insert(0, package_root_directory)
-    sys.path.append(current_directory)
-debug()
-
 import pandas as pd
 from agent_torch.data.census.census_loader import CensusDataLoader
-
 
 # Path to the population data file. Should be updated with the actual file path.
 # Should be a pickle file with the population data, in dataframe format.
