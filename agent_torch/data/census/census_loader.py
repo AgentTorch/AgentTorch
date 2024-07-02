@@ -8,7 +8,6 @@ from agent_torch.data.census.generate.household import household_wrapper
 from agent_torch.data.census.generate.mobility_network import mobility_network_wrapper
 
 
-
 class CensusDataLoader:
     def __init__(self, use_parallel=False, n_cpu=8):
         self.use_parallel = use_parallel
@@ -16,7 +15,13 @@ class CensusDataLoader:
         self.population_dir = populations.__path__[0]
 
     def generate_basepop(
-        self, input_data, region, save_path=None, area_selector=None, export=True, num_individuals = None
+        self,
+        input_data,
+        region,
+        save_path=None,
+        area_selector=None,
+        export=True,
+        num_individuals=None,
     ):
         """
         Generate base population data for a given region.
@@ -46,7 +51,7 @@ class CensusDataLoader:
             self.population_df.to_pickle(save_path)
 
         if export:
-            self.export(region,num_individuals=num_individuals)
+            self.export(region, num_individuals=num_individuals)
 
     def generate_household(
         self,
@@ -103,7 +108,9 @@ class CensusDataLoader:
         if export:
             self.export(region)
 
-    def generate_mobility_networks(self, num_steps, mobility_mapping,region, save_path=None):
+    def generate_mobility_networks(
+        self, num_steps, mobility_mapping, region, save_path=None
+    ):
         """
         Generates mobility networks based on the given parameters.
 

@@ -16,7 +16,7 @@ AGE_GROUP_MAPPING = {
 }
 
 # Load household data from the specified path. Ensure the path is correctly set before loading.
-HOUSEHOLD_DATA = np.load(HOUSEHOLD_DATA_PATH, allow_pickle=True)
+HOUSEHOLD_DATA = pd.read_pickle(HOUSEHOLD_DATA_PATH)
 # Load population data from the specified path. Ensure the path is correctly set before loading.
 BASE_POPULATION_DATA = pd.read_pickle(POPULATION_DATA_PATH)
 
@@ -30,6 +30,7 @@ census_data_loader = CensusDataLoader(n_cpu=8, use_parallel=True)
 
 # Generate base population data for a specified region, area, and population size.
 # The data will be exported to folder named "region" under "populations" folder.
+# Parameter 'num_individuals' can be used to specify the number of individuals to generate.
 census_data_loader.generate_basepop(
     input_data=BASE_POPULATION_DATA,  # The population data frame.
     region="astoria",  # The target region for generating base population.
@@ -41,5 +42,5 @@ census_data_loader.generate_basepop(
 census_data_loader.generate_household(
     household_data=HOUSEHOLD_DATA,  # The loaded household data.
     household_mapping=AGE_GROUP_MAPPING,  # Mapping of age groups for household composition.
-    region="astoria"  # The target region for generating households.
+    region="astoria",  # The target region for generating households.
 )

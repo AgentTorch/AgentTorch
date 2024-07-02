@@ -1,7 +1,3 @@
-"""
-Source: https://github.com/sneakatyou/Syspop/tree/NYC/syspop/process
-"""
-
 from datetime import datetime
 from genericpath import exists
 from os import makedirs

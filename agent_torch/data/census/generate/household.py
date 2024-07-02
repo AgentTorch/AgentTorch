@@ -1,7 +1,3 @@
-"""
-Source: https://github.com/sneakatyou/Syspop/tree/NYC/syspop/process
-"""
-
 import numpy as np
 import pandas as pd
 from pandas import merge as pandas_merge
@@ -14,13 +10,8 @@ import logging
 from datetime import datetime
 from copy import deepcopy
 from tqdm import tqdm
-from agent_torch.core.census.generate.address import add_random_address
+from agent_torch.data.census.generate.address import add_random_address
 import random
-import sys
-
-sys.path.append(
-    "/Users/shashankkumar/Documents/GitHub/MacroEcon/simulator_data/step2/process/"
-)
 
 
 logging.basicConfig(level=logging.INFO)
@@ -117,9 +108,9 @@ def assign_any_remained_people(
             num_adults_to_add = len(adults)
 
         adult_ids = adults.sample(num_adults_to_add).index.tolist()
-        proc_base_pop.loc[proc_base_pop.index.isin(adult_ids), "household"] = (
-            household_id
-        )
+        proc_base_pop.loc[
+            proc_base_pop.index.isin(adult_ids), "household"
+        ] = household_id
         adults = adults.loc[~adults.index.isin(adult_ids)]
 
     while len(children) > 0:
@@ -130,9 +121,9 @@ def assign_any_remained_people(
             num_children_to_add = len(children)
 
         children_ids = children.sample(num_children_to_add).index.tolist()
-        proc_base_pop.loc[proc_base_pop.index.isin(children_ids), "household"] = (
-            household_id
-        )
+        proc_base_pop.loc[
+            proc_base_pop.index.isin(children_ids), "household"
+        ] = household_id
         children = children.loc[~children.index.isin(children_ids)]
 
     return proc_base_pop
@@ -301,9 +292,9 @@ def create_household_composition_v3(
             print(f"Children IDs: {children_ids}")
 
             # Update the household_id for the selected adults and children in the proc_base_pop DataFrame
-            proc_base_pop.loc[proc_base_pop["index"].isin(adult_ids), "household"] = (
-                f"{household_id}"
-            )
+            proc_base_pop.loc[
+                proc_base_pop["index"].isin(adult_ids), "household"
+            ] = f"{household_id}"
             proc_base_pop.loc[
                 proc_base_pop["index"].isin(children_ids), "household"
             ] = f"{household_id}"
@@ -492,4 +483,3 @@ def household_prep(
         ].apply(lambda x: max(1, round(x)))
 
     return proc_household_data
-
