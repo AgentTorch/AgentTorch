@@ -199,16 +199,16 @@ def create_household_composition_v3(
     )
 
     household_types = proc_houshold_dataset[
-        ["Family_households", "Nonfamily_households"]
+        ["family_households", "nonfamily_households"]
     ]
-    household_types["Family_households_prob"] = (
-        household_types["Family_households"] / proc_houshold_dataset["household_num"]
+    household_types["family_households_prob"] = (
+        household_types["family_households"] / proc_houshold_dataset["household_num"]
     )
-    household_types["Nonfamily_households_prob"] = (
-        household_types["Nonfamily_households"] / proc_houshold_dataset["household_num"]
+    household_types["nonfamily_households_prob"] = (
+        household_types["nonfamily_households"] / proc_houshold_dataset["household_num"]
     )
     household_proportions = household_types[
-        ["Family_households_prob", "Nonfamily_households_prob"]
+        ["family_households_prob", "nonfamily_households_prob"]
     ]
 
     # Calculate average number of children per family
@@ -243,7 +243,7 @@ def create_household_composition_v3(
             # Simulate number of individuals
             total_individuals = int(
                 random.randint(0, 2)
-                * proc_houshold_dataset["Average_household_size"].iloc[0]
+                * proc_houshold_dataset["average_household_size"].iloc[0]
             )
             if (total_individuals - children_num) <= 0:
                 adults_num = total_individuals
