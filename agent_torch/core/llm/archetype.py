@@ -11,16 +11,16 @@ class Archetype:
     def __init__(self, n_arch=1):
         self.n_arch = n_arch
 
-    def llm(self, llm, user_prompt, num_agents):
+    def llm(self, llm, user_prompt):
         try:
             llm.initialize_llm()
-            llm_archetype = LLMArchetype(llm, user_prompt, num_agents)
+            llm_archetype = LLMArchetype(llm, user_prompt)
             return llm_archetype
         except Exception as e:
             print(
                 " 'initialize_llm' Not Implemented, make sure if it's the intended behaviour"
             )
-            llm_archetype = LLMArchetype(llm, user_prompt, num_agents)
+            llm_archetype = LLMArchetype(llm, user_prompt)
             return llm_archetype
 
     def rule_based(self):
@@ -28,24 +28,11 @@ class Archetype:
 
 
 class LLMArchetype:
-    def __init__(self, llm, user_prompt, num_agents):
-        self.num_agents = num_agents
+    def __init__(self, llm, user_prompt):
         self.llm = llm
         # self.predictor = self.llm.initialize_llm()
         self.backend = llm.backend
         self.user_prompt = user_prompt
-        self.agent_memory = [
-            ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-            for _ in range(num_agents)
-        ]
-        if self.backend == "dspy":
-            self.memory_handler = DSPYMemoryHandler(
-                agent_memory=self.agent_memory, llm=self.llm
-            )
-        elif self.backend == "langchain":
-            self.memory_handler = LangchainMemoryHandler(agent_memory=self.agent_memory)
-        else:
-            raise ValueError(f"Invalid backend: {self.backend}")
 
     def __call__(self, prompt_list, last_k):
         last_k = 2 * last_k + 8
@@ -60,7 +47,22 @@ class LLMArchetype:
             self.save_memory(prompt_input, agent_output, agent_id=id)
 
         return agent_outputs
-
+    
+    def initialize_memory(self,num_agents):
+        self.num_agents = num_agents  # Number of agents
+        self.agent_memory = [
+            ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+            for _ in range(num_agents)
+        ]
+        if self.backend == "dspy":
+            self.memory_handler = DSPYMemoryHandler(
+                agent_memory=self.agent_memory, llm=self.llm
+            )
+        elif self.backend == "langchain":
+            self.memory_handler = LangchainMemoryHandler(agent_memory=self.agent_memory)
+        else:
+            raise ValueError(f"Invalid backend: {self.backend}")
+    
     def preprocess_prompts(self, prompt_list, last_k):
         prompt_inputs = [
             {

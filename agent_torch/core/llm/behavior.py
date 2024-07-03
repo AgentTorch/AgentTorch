@@ -10,7 +10,8 @@ class Behavior:
         self.archetype = archetype
         self.population = LoadPopulation(region)
         self.prompt_manager = PromptManager(self.archetype.user_prompt, self.population)
-
+        self.archetype.initialize_memory(num_agents=self.prompt_manager.distinct_groups)
+        
     def sample(self, kwargs=None):
         print("Behavior: Decision")
 
