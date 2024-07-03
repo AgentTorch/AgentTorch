@@ -99,22 +99,6 @@ simulation.init(SGD)
 simulation.execute()
 ```
 
-### Talking to the Simulation
-
-```py
-from agent_torch.core.llm.qa import SimulationAnalysisAgent, load_state_trace
-
-# create the simulation
-# ...
-
-state_trace = load_state_trace(simulation)
-analyzer = SimulationAnalysisAgent(simulation, state_trace)
-
-# ask questions regarding the simulation
-analyzer.query("How are stimulus payments affecting disease?")
-analyzer.query("Which age group has the lowest median income, and how much is it?")
-```
-
 ## Guides and Tutorials
 
 ### Understanding the Framework
