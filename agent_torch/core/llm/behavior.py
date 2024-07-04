@@ -1,5 +1,5 @@
 from agent_torch.core.llm.archetype import Archetype
-from agent_torch.core.llm.llm import DspyLLM
+from agent_torch.core.llm.backend import DspyLLM
 from agent_torch.core.llm.prompt_manager import PromptManager
 from agent_torch.core.dataloader import LoadPopulation
 import torch
