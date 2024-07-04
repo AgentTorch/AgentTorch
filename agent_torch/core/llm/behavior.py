@@ -1,7 +1,7 @@
 from agent_torch.core.llm.archetype import Archetype
-from agent_torch.core.llm.llm import DspyLLM
+from agent_torch.core.llm.backend import DspyLLM
 from agent_torch.core.llm.prompt_manager import PromptManager
-from agent_torch.core.utils import LoadPopulation
+from agent_torch.core.dataloader import LoadPopulation
 import torch
 
 
@@ -10,6 +10,7 @@ class Behavior:
         self.archetype = archetype
         self.population = LoadPopulation(region)
         self.prompt_manager = PromptManager(self.archetype.user_prompt, self.population)
+        self.archetype.initialize_memory(num_agents=self.prompt_manager.distinct_groups)
 
     def sample(self, kwargs=None):
         print("Behavior: Decision")

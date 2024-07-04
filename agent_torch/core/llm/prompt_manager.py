@@ -17,6 +17,7 @@ class PromptManager:
             self.combinations_of_prompt_variables,
             self.combinations_of_prompt_variables_with_index,
         ) = self.get_combinations_of_prompt_variables(self.filtered_mapping)
+        self.distinct_groups = len(self.combinations_of_prompt_variables)
 
     def load_mapping(self, path):
         with open(path, "r") as f:

@@ -9,6 +9,7 @@ from langchain.prompts import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate,
     SystemMessagePromptTemplate,
+    MessagesPlaceholder,
 )
 from abc import ABC, abstractmethod
 
@@ -95,18 +96,19 @@ class LangchainLLM(LLM):
     ):
         super().__init__()
         self.backend = "langchain"
-        self.llm = ChatOpenAI(
-            model=model, openai_api_key=openai_api_key, temperature=1
-        )
-        self.prompt = ChatPromptTemplate.from_messages(
+        self.llm = ChatOpenAI(model=model, openai_api_key=openai_api_key, temperature=1)
+        self.prompt_template = ChatPromptTemplate.from_messages(
             [
                 SystemMessagePromptTemplate.from_template(agent_profile),
+                MessagesPlaceholder(variable_name="chat_history"),
                 HumanMessagePromptTemplate.from_template("{user_prompt}"),
             ]
         )
 
     def initialize_llm(self):
-        self.predictor = LLMChain(llm=self.llm, prompt=self.prompt, verbose=False)
+        self.predictor = LLMChain(
+            llm=self.llm, prompt=self.prompt_template, verbose=False
+        )
         return self.predictor
 
     def prompt(self, prompt_list):
@@ -125,7 +127,17 @@ class LangchainLLM(LLM):
         return agent_outputs
 
     def langchain_query_and_get_answer(self, prompt_input):
-        agent_output = self.predictor.apply(prompt_input)
+        if type(prompt_input) is str:
+            agent_output = self.predictor.apply(
+                {"user_prompt": prompt_input, "chat_history": []}
+            )
+        else:
+            agent_output = self.predictor.apply(
+                {
+                    "user_prompt": prompt_input["agent_query"],
+                    "chat_history": prompt_input["chat_history"],
+                }
+            )
         return agent_output
 
     def inspect_history(self, last_k, file_dir):
