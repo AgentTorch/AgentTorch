@@ -47,8 +47,8 @@ class LLMArchetype:
             self.save_memory(prompt_input, agent_output, agent_id=id)
 
         return agent_outputs
-    
-    def initialize_memory(self,num_agents):
+
+    def initialize_memory(self, num_agents):
         self.num_agents = num_agents  # Number of agents
         self.agent_memory = [
             ConversationBufferMemory(memory_key="chat_history", return_messages=True)
@@ -62,7 +62,7 @@ class LLMArchetype:
             self.memory_handler = LangchainMemoryHandler(agent_memory=self.agent_memory)
         else:
             raise ValueError(f"Invalid backend: {self.backend}")
-    
+
     def preprocess_prompts(self, prompt_list, last_k):
         prompt_inputs = [
             {

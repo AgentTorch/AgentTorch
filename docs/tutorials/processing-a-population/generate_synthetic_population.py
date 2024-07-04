@@ -1,13 +1,10 @@
 import numpy as np
 import pandas as pd
-
 from agent_torch.data.census.census_loader import CensusDataLoader
 
 
 # Path to the population data file. Should be updated with the actual file path.
-POPULATION_DATA_PATH = None
 # Path to the household data file. Should be updated with the actual file path.
-HOUSEHOLD_DATA_PATH = None
 
 # Mapping of age groups for adults and children in the household data.
 AGE_GROUP_MAPPING = {

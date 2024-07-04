@@ -9,7 +9,7 @@ from langchain.prompts import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate,
     SystemMessagePromptTemplate,
-    MessagesPlaceholder
+    MessagesPlaceholder,
 )
 from abc import ABC, abstractmethod
 
@@ -106,7 +106,9 @@ class LangchainLLM(LLM):
         )
 
     def initialize_llm(self):
-        self.predictor = LLMChain(llm=self.llm, prompt=self.prompt_template, verbose=False)
+        self.predictor = LLMChain(
+            llm=self.llm, prompt=self.prompt_template, verbose=False
+        )
         return self.predictor
 
     def prompt(self, prompt_list):
@@ -126,10 +128,15 @@ class LangchainLLM(LLM):
 
     def langchain_query_and_get_answer(self, prompt_input):
         if type(prompt_input) is str:
-            agent_output =self.predictor.apply({ "user_prompt":prompt_input, "chat_history" : []})
+            agent_output = self.predictor.apply(
+                {"user_prompt": prompt_input, "chat_history": []}
+            )
         else:
             agent_output = self.predictor.apply(
-            { "user_prompt":prompt_input["agent_query"], "chat_history" :prompt_input["chat_history"]}
+                {
+                    "user_prompt": prompt_input["agent_query"],
+                    "chat_history": prompt_input["chat_history"],
+                }
             )
         return agent_output
 
