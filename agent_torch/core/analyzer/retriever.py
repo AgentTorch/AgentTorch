@@ -6,14 +6,15 @@ import dspy
 from agent_torch.core.analyzer.utils import DotDict, load_state_trace
 from langchain_community.document_loaders import TextLoader
 from langchain.vectorstores import FAISS
+import asyncio
 
 class DocumentRetriever:
-    def __init__(self, directory):
+    def __init__(self, region):
         self.model_name = "BAAI/bge-small-en"
         self.model_kwargs = {"device": "cpu"}
         self.encode_kwargs = {"normalize_embeddings": True}
         self.search_kwargs = {"k": 5}
-        self.directory = directory
+        self.directory = region
         self.hf = HuggingFaceBgeEmbeddings(
             model_name=self.model_name, 
             model_kwargs=self.model_kwargs, 
@@ -21,8 +22,8 @@ class DocumentRetriever:
         )
         self.docs = self.load_documents()
         self.docs = self.split_documents(self.docs)
-        self.vectorstore = self.create_vectorstore(self.docs)
-        self.retriever = self.vectorstore.as_retriever(search_kwargs=self.search_kwargs)
+        self.vectorstore = asyncio.run(self.create_vectorstore(self.docs))
+        self.retriever =  self.vectorstore.as_retriever(search_kwargs=self.search_kwargs)
         state_trace_path = self.directory + '/state_data_dict.pkl'
         self.state_trace = load_state_trace(state_trace_path)
     
@@ -38,9 +39,9 @@ class DocumentRetriever:
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=30)
         return text_splitter.split_documents(documents=docs)
 
-    def create_vectorstore(self, docs):
+    async def create_vectorstore(self, docs):
         embeddings = self.hf
-        vectorstore = FAISS.from_documents(docs, embeddings)
+        vectorstore = await FAISS.afrom_documents(docs, embeddings)
         return vectorstore
     
     def save_vectorstore(self, store_name):
@@ -63,7 +64,3 @@ class DSPythonicRMClient(dspy.Retrieve):
         passages = [DotDict(long_text=doc.page_content) for doc in documents]
         # print(psg.long_text for psg in passages)
         return passages
-        # List of top k passages
-        # return dspy.Prediction(
-        #     passages=passages
-        # )

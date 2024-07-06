@@ -40,6 +40,14 @@ class PandasAIClarificationTool(BaseTool):
         :return: Questions to ask for clarification
         """
     args_schema: Type[BaseModel] = SearchInput
+    
+    def _run(self, query: str, run_manager: Optional[CallbackManagerForToolRun] = None) -> str:
+        # External variable return when tool runs
+        return self.metadata['pandas_agent'].clarification_questions(query)
+    
+    async def _arun(self, query: str, run_manager: Optional[AsyncCallbackManagerForToolRun] = None) -> str:
+        """Use the tool asynchronously."""
+        raise NotImplementedError("Not implemented")
 
 class PandasAITool(BaseTool):
     name = "run_analysis_on_simulation_state"

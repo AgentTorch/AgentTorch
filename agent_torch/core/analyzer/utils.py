@@ -10,7 +10,7 @@ class DotDict(dict):
     __delattr__ = dict.__delitem__
 
 
-def load_state_trace(sim_data_path = '/Users/shashankkumar/Documents/GitHub/MacroEcon/state_data_dict.pkl', population_size = 56780):
+def load_state_trace(sim_data_path):
     with open(sim_data_path, 'rb') as handle:
         sim_data_dict = pickle.load(handle)
     agent_prop_df_list = []
@@ -27,6 +27,7 @@ def load_state_trace(sim_data_path = '/Users/shashankkumar/Documents/GitHub/Macr
                 value = value.flatten().squeeze()
                 processed_data['consumers'][key] = value.numpy()
 
+            population_size = len(processed_data['consumers']['ID'])
             # Limit the 'assets' column to the first population_size entries
             processed_data['consumers']['assets'] = processed_data['consumers']['assets'][:population_size]
 
