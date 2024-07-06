@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 from agent_torch.core.helpers import get_by_path
 from agent_torch.core.substep import SubstepAction
-from agent_torch.core.llm.llm import LangchainLLM
+from agent_torch.core.llm.backend import LangchainLLM
 from agent_torch.core.distributions import StraightThroughBernoulli
 
 from ...calibration.utils.data import get_data, get_labels

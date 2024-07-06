@@ -1,6 +1,6 @@
 from agent_torch.core.llm.archetype import Archetype
 from agent_torch.core.llm.behavior import Behavior
-from agent_torch.core.llm.llm import DspyLLM, LangchainLLM
+from agent_torch.core.llm.backend import DspyLLM, LangchainLLM
 from agent_torch.populations import NYC
 from dspy_modules import COT, BasicQAWillToWork
 
