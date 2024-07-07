@@ -52,7 +52,7 @@ tag = true
 push = true
 
 [tool.bumpver.file_patterns]
-"agent_torch/version.py" = [
+"agent_torch/core/version.py" = [
     '^__version__ = "{version}"$',
 ]
 "pyproject.toml" = [
