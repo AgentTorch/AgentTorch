@@ -16,9 +16,10 @@ maintainers = [
 ]
 requires-python = ">= 3.8"
 dependencies = [
-    "torch",
     "numpy",
     "pandas",
+    "torch",
+    "torch_geometric",
     "omegaconf",
     "asyncio",
     "langchain",
