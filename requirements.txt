@@ -9,3 +9,4 @@ pandas==1.5.0
 networkx==3.0
 wandb==0.17.1
 tqdm==4.66.4
+dspy==0.1.5
