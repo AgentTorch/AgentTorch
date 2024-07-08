@@ -4,7 +4,7 @@
 import argparse
 from tqdm import trange
 
-from agent_torch import Registry, Runner
+from agent_torch.core import Registry, Runner
 from agent_torch.core.helpers import read_config, read_from_file, grid_network
 from substeps import *
 from helpers import *
@@ -34,8 +34,12 @@ runner.init()
 print(":: preparing simulation...")
 
 visual = Plot(metadata.get("max_x"), metadata.get("max_y"))
-for episode in trange(num_episodes, desc=":: running simulation"):
-    runner.step(num_steps_per_episode)
-    visual.capture(runner.state)
+for episode in range(num_episodes):
+    runner.reset()
+
+    for step in trange(num_steps_per_episode, desc=f":: running simulation {episode}"):
+        runner.step(1)
+        visual.capture(step, runner.state)
+    visual.compile(episode)
 
 print(":: execution completed")

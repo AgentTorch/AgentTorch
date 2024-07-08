@@ -1,6 +1,6 @@
 [project]
 name = "agent_torch"
-version = "0.3.1"
+version = "0.4.0"
 description = "large population models"
 readme = "readme.md"
 license = {text = "MIT"}
@@ -16,15 +16,16 @@ maintainers = [
 ]
 requires-python = ">= 3.8"
 dependencies = [
-    "torch",
     "numpy",
     "pandas",
+    "torch",
+    "torch_geometric",
     "omegaconf",
     "asyncio",
     "langchain",
     "langchain-openai",
     "networkx",
-    "wandb",
+    "dspy"
 ]
 
 [project.urls]
@@ -42,7 +43,7 @@ distribution = true
 excludes = ["populations", "models"]
 
 [tool.bumpver]
-current_version = "0.3.1"
+current_version = "0.4.0"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "chore: {old_version} -> {new_version}"
 tag_scope = "default"
@@ -52,7 +53,7 @@ tag = true
 push = true
 
 [tool.bumpver.file_patterns]
-"agent_torch/version.py" = [
+"agent_torch/core/version.py" = [
     '^__version__ = "{version}"$',
 ]
 "pyproject.toml" = [

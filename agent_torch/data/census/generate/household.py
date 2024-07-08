@@ -108,9 +108,9 @@ def assign_any_remained_people(
             num_adults_to_add = len(adults)
 
         adult_ids = adults.sample(num_adults_to_add).index.tolist()
-        proc_base_pop.loc[
-            proc_base_pop.index.isin(adult_ids), "household"
-        ] = household_id
+        proc_base_pop.loc[proc_base_pop.index.isin(adult_ids), "household"] = (
+            household_id
+        )
         adults = adults.loc[~adults.index.isin(adult_ids)]
 
     while len(children) > 0:
@@ -121,9 +121,9 @@ def assign_any_remained_people(
             num_children_to_add = len(children)
 
         children_ids = children.sample(num_children_to_add).index.tolist()
-        proc_base_pop.loc[
-            proc_base_pop.index.isin(children_ids), "household"
-        ] = household_id
+        proc_base_pop.loc[proc_base_pop.index.isin(children_ids), "household"] = (
+            household_id
+        )
         children = children.loc[~children.index.isin(children_ids)]
 
     return proc_base_pop
@@ -292,9 +292,9 @@ def create_household_composition_v3(
             print(f"Children IDs: {children_ids}")
 
             # Update the household_id for the selected adults and children in the proc_base_pop DataFrame
-            proc_base_pop.loc[
-                proc_base_pop["index"].isin(adult_ids), "household"
-            ] = f"{household_id}"
+            proc_base_pop.loc[proc_base_pop["index"].isin(adult_ids), "household"] = (
+                f"{household_id}"
+            )
             proc_base_pop.loc[
                 proc_base_pop["index"].isin(children_ids), "household"
             ] = f"{household_id}"

@@ -1,18 +1,18 @@
 # plot.py
 # shows the prey and predators and grass on a scatterplot
 
+import os
 import torch
 import numpy as np
 import osmnx as ox
 
 import matplotlib
+import imageio
 
 # matplotlib.use('TkAgg')
 import matplotlib.pyplot as plotter
 import matplotlib.patches as patcher
 import contextily as ctx
-
-from celluloid import Camera
 
 
 class Plot:
@@ -20,12 +20,12 @@ class Plot:
         # intialize the scatterplot
         self.figure, self.axes = None, None
         self.max_x, self.max_y = max_x, max_y
+        self.images = []
 
         plotter.xlim(0, max_x - 1)
         plotter.ylim(0, max_y - 1)
-        self.i = 0
 
-    def capture(self, state):
+    def capture(self, step, state):
         graph = state["network"]["agent_agent"]["predator_prey"]["graph"]
         self.coords = [(node[1]["x"], node[1]["y"]) for node in graph.nodes(data=True)]
         self.coords.sort(key=lambda x: -(x[0] + x[1]))
@@ -69,24 +69,30 @@ class Plot:
         )
         # grass_scatter = self.axes.scatter(grass_x, grass_y, c='#d1ffbd')
 
-        # increment the step count.
-        self.i += 1
         # show the current step count, and the population counts.
         self.axes.set_title("Predator-Prey Simulation", loc="left")
         self.axes.legend(
             handles=[
-                patcher.Patch(color="#fc46aa", label=str(self.i) + " step"),
-                patcher.Patch(color="#0d52bd", label=str(len(alive_prey)) + " prey"),
-                patcher.Patch(
-                    color="#8b0000", label=str(len(alive_pred)) + " predators"
-                ),
+                patcher.Patch(color="#fc46aa", label=f"{step} step"),
+                patcher.Patch(color="#0d52bd", label=f"{len(alive_prey)} prey"),
+                patcher.Patch(color="#8b0000", label=f"{len(alive_pred)} predators"),
             ]
         )
 
         # say cheese!
-        self.figure.savefig("plots/predator-prey-map-" + str(self.i) + ".png")
+        self.figure.savefig(f"plots/predator-prey-map-{step}.png")
+        self.images.append(f"plots/predator-prey-map-{step}.png")
 
         # remove the points for the next update.
         prey_scatter.remove()
         pred_scatter.remove()
         # grass_scatter.remove()
+
+    def compile(self, episode):
+        # convert all the images to a gif
+        frames = [imageio.imread(f) for f in self.images]
+        imageio.mimsave(f"media/predator-prey-{episode}.gif", frames, fps=50)
+
+        # reset the canvas
+        self.figure, self.axes = None, None
+        self.images = []

@@ -1,7 +1,6 @@
 import glob
 import inspect
 import json
-import wandb
 import types
 import os
 import pandas as pd
@@ -51,10 +50,6 @@ def set_custom_action_network_factory(custom_action_network):
         return CustomAction
 
     return set_custom_action_network
-
-
-def initialise_wandb(entity, project, name, config):
-    wandb.init(entity=entity, project=project, name=name, config=config)
 
 
 def create_dicts_list(params):

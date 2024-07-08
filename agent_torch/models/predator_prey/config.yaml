@@ -3,8 +3,8 @@
 
 simulation_metadata:
   device: 'cpu'
-  num_episodes: 50
-  num_steps_per_episode: 1
+  num_episodes: 3
+  num_steps_per_episode: 20
   num_substeps_per_step: 4
   calibration: false
   visualize: false
