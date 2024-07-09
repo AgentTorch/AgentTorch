@@ -111,18 +111,21 @@ found [here](docs/architecture.md).
 A tutorial on how to create a simple predator-prey model can be found in the
 [`tutorials/`](docs/tutorials/) folder.
 
-### Configure Behavior
+### LLM-Powered Agent Behavior Simulation with Archetypes
 
 ```py
 from agent_torch.core.llm.archetype import Archetype
 from agent_torch.core.llm.behavior import Behavior
-from agent_torch.core.llm.backend import DspyLLM
+from agent_torch.core.llm.backend import LangchainLLM
 from agent_torch.populations import NYC
-from dspy_modules import COT, BasicQAWillToWork
 
 user_prompt_template = "Your age is {age} {gender},{unemployment_rate} the number of COVID cases is {covid_cases}."
-# Using Dspy to build LLM Agents
-llm_dspy = DspyLLM(qa=BasicQAWillToWork, cot=COT, openai_api_key=OPENAI_API_KEY)
+
+# Using Langchain to build LLM Agents
+agent_profile = "You are an helpful agent who is trying to help the user make a decision. Give answer as a single number between 0 and 1, only."
+llm_langchian = LangchainLLM(
+    openai_api_key=OPENAI_API_KEY, agent_profile=agent_profile, model="gpt-3.5-turbo"
+)
 
 # Create an object of the Archetype class
 # n_arch is the number of archetypes to be created. This is used to calculate a distribution from which the outputs are then sampled.
@@ -132,7 +135,7 @@ archetype = Archetype(n_arch=7)
 # You have options to pass any of the above created llm objects to the behavior class
 # Specify the region for which the behavior is to be generated. This should be the name of any of the regions available in the populations folder.
 earning_behavior = Behavior(
-    archetype=archetype.llm(llm=llm_dspy, user_prompt=user_prompt_template), region=NYC
+    archetype=archetype.llm(llm=llm_langchian, user_prompt=user_prompt_template), region=NYC
 )
 
 kwargs = {
