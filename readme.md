@@ -111,7 +111,7 @@ found [here](docs/architecture.md).
 A tutorial on how to create a simple predator-prey model can be found in the
 [`tutorials/`](docs/tutorials/) folder.
 
-### LLM-Powered Agent Behavior Simulation with Archetypes
+### Build LLM Agents for Behavior Simulation
 
 ```py
 from agent_torch.core.llm.archetype import Archetype
@@ -122,7 +122,7 @@ from agent_torch.populations import NYC
 user_prompt_template = "Your age is {age} {gender},{unemployment_rate} the number of COVID cases is {covid_cases}."
 
 # Using Langchain to build LLM Agents
-agent_profile = "You are an helpful agent who is trying to help the user make a decision. Give answer as a single number between 0 and 1, only."
+agent_profile = "You are a person living in NYC. Given some info about you and your surroundings, decide your willingness to work. Give answer as a single number between 0 and 1, only."
 llm_langchian = LangchainLLM(
     openai_api_key=OPENAI_API_KEY, agent_profile=agent_profile, model="gpt-3.5-turbo"
 )
