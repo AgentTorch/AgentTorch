@@ -49,6 +49,9 @@ class CensusDataLoader:
 
         if save_path is not None:
             self.population_df.to_pickle(save_path)
+        
+        if num_individuals is not None:
+            self.population_df = self.population_df.head(num_individuals)
 
         if export:
             self.export(region, num_individuals=num_individuals)
