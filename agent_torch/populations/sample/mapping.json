@@ -1,1 +1,1 @@
-{"area": ["BK0101"], "age": ["20t29", "30t39", "40t49", "50t64", "65A", "U19"], "gender": ["male", "female"], "ethnicity": ["hispanic", "white", "asian", "other", "black", "native"], "region": ["BK"]}
+{"area": ["BK0101"], "age": ["20t29"], "gender": ["female", "male"], "ethnicity": ["white", "other", "hispanic", "asian", "black"], "region": ["BK"]}
