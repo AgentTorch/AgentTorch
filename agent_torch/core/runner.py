@@ -111,7 +111,7 @@ class Runner(nn.Module):
             current_tensor = getattr(substep_function, 'calibrate_' + var_name)
             
             if new_value is not None:
-                assert new_value.requires_grad == current_tensor.requires_grad
+                # assert new_value.requires_grad == current_tensor.requires_grad
                 setvar_name = 'calibrate_' + var_name
                 setattr(substep_function, setvar_name, new_value)
                 current_tensor = getattr(substep_function, 'calibrate_' + var_name)

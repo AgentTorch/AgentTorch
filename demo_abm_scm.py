@@ -11,14 +11,20 @@ loader = LoadPopulation(sample)
 simulation = Executor(model=covid, pop_loader=loader)
 
 runner = simulation.runner
+runner.config['simulation_metadata']['device'] = "cpu"
+print(runner.config['simulation_metadata'])
 runner.init()
 learn_params = [(name, params) for (name, params) in runner.named_parameters()]
 
+
 def get_trajectory(parameters: OrderedDict[str, torch.Tensor]) -> OrderedDict[str, torch.Tensor]:
+    # print("Computing Trajectory")
+    # print("Parameters: ", parameters)
+    # print("-------------------")
+
     new_tensor = parameters['transmission_rate']
     old_tensor = learn_params[0][1]
 
-    assert new_tensor.requires_grad
     assert new_tensor.shape == old_tensor.shape
 
     input_string = learn_params[0][0]    
@@ -31,19 +37,23 @@ def get_trajectory(parameters: OrderedDict[str, torch.Tensor]) -> OrderedDict[st
     daily_infected = runner.state_trajectory[-1][-1]['environment']['daily_infected']
     runner.reset()
 
+    if new_tensor.requires_grad:
+        assert daily_infected.requires_grad, "input requires grad but output had no grad."
+
     return OrderedDict(
-        daily_infected=daily_infected
+        daily_infected=daily_infected[..., None]
     )
 
 
-for i in range(5):
-    start_time = time.time()
-    new_tensor = torch.tensor([3.5, 4.2, 5.6], requires_grad=True)[:, None]
-    predictions = get_trajectory(OrderedDict(transmission_rate=new_tensor))
-    end_time = time.time()
-    print("time consumed: ", end_time - start_time)
+if __name__ == "__main__":
+    for i in range(5):
+        start_time = time.time()
+        new_tensor = torch.tensor([3.5, 4.2, 5.6], requires_grad=True)[:, None]
+        predictions = get_trajectory(OrderedDict(transmission_rate=new_tensor))
+        end_time = time.time()
+        print("time consumed: ", end_time - start_time)
 
-breakpoint()
+# breakpoint()
 
 # learn_params = [(name, params) for (name, params) in runner.named_parameters()]
 # new_tensor = torch.tensor([3.5, 4.2, 5.6], requires_grad=True)
