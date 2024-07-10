@@ -50,7 +50,7 @@ class SEIRMProgression(SubstepTransition):
         )
 
         if self.calibration_mode:
-            num_dead_today = new_death_recovered_today.sum() * self.calibrate_M
+            num_dead_today = new_death_recovered_today.sum() * self.calibrate_M.to(self.device)
         else:
             num_dead_today = new_death_recovered_today.sum() * self.learnable_args["M"]
 

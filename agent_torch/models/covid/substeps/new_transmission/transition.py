@@ -120,7 +120,7 @@ class NewTransmission(SubstepTransitionMessagePassing):
         week_one_hot = self._generate_one_hot_tensor(week_id, self.num_weeks)
 
         if self.calibration_mode:
-            R_tensor = self.calibrate_R2
+            R_tensor = self.calibrate_R2.to(self.device)
         else:
             R_tensor = self.learnable_args["R2"]  # tensor of size NUM_WEEK
         R = (R_tensor * week_one_hot).sum()
@@ -205,9 +205,9 @@ class NewTransmission(SubstepTransitionMessagePassing):
         potentially_exposed_today = self.st_bernoulli(probs)[:, 0].to(
             self.device
         )  # using straight-through bernoulli
-        potentially_exposed_today = potentially_exposed_today * (
-            1.0 - will_isolate.squeeze()
-        )
+        # potentially_exposed_today = potentially_exposed_today * (
+        #     1.0 - will_isolate.squeeze()
+        # )
 
         newly_exposed_today = (
             current_stages == self.SUSCEPTIBLE_VAR
