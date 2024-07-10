@@ -1,0 +1,24 @@
+{
+    "interaction_map": {
+        "CHILD": {
+            "mu": 1,
+            "sigma": 2
+        },
+        "ADULT": {
+            "mu": 3,
+            "sigma": 2
+        },
+        "ELDERLY": {
+            "mu": 3,
+            "sigma": 2
+        }
+    },
+    "age_map": {
+        "U19": "CHILD",
+        "20t29": "ADULT",
+        "30t39": "ADULT",
+        "40t49": "ADULT",
+        "50t64": "ADULT",
+        "65A": "ELDERLY"
+    }
+}

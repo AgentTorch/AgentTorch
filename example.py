@@ -9,10 +9,6 @@ import operator
 from functools import reduce
 import torch
 
-def set_params(runner, input_string, new_value):
-    tensor_func = map_and_replace_tensor(input_string)
-    current_tensor = tensor_func(runner, new_value)
-
 def map_and_replace_tensor(input_string):
     # Split the input string into its components
     parts = input_string.split('.')
@@ -43,6 +39,10 @@ def map_and_replace_tensor(input_string):
             return current_tensor
 
     return getter_and_setter
+
+def set_params(runner, input_string, new_value):
+    tensor_func = map_and_replace_tensor(input_string)
+    current_tensor = tensor_func(runner, new_value)
 
 def setup(model, population):
     loader = LoadPopulation(population)
@@ -77,7 +77,5 @@ runner._set_parameters(params_dict)
 Tasks to do:
 1. Custom population size 
 2. Init Infections
-3. Set parameters
-4. Visualize values
 '''
 
