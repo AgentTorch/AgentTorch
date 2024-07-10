@@ -37,7 +37,7 @@ simulation_metadata:
   num_episodes: 5
   num_steps_per_episode: 21
   num_substeps_per_step: 2
-  population_dir: "Add Your local path agent_torch.populations.<population_name>"
+  population_dir: /u/ayushc/projects/GradABM/systems/AgentTorch/agent_torch/populations/astoria
   quarantine_days: 12
   test_ineligible_days: 2
   test_result_delay_days: 3
@@ -378,7 +378,7 @@ substeps:
             align_adjustment_vector:
               dtype: float
               initialization_function: null
-              learnable: true
+              learnable: false
               name: align LLM agents to the populations by shifting
               shape:
               - 6
@@ -386,7 +386,7 @@ substeps:
             align_vector:
               dtype: float
               initialization_function: null
-              learnable: true
+              learnable: false
               name: align LLM agents to the populations by scaling
               shape:
               - 6
@@ -394,7 +394,7 @@ substeps:
             initial_isolation_prob:
               dtype: float
               initialization_function: null
-              learnable: true
+              learnable: false
               name: initialize infection prob for the LLM
               shape:
               - 6
