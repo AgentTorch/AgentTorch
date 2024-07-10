@@ -22,7 +22,7 @@ simulation_metadata:
   age_group_file: ${simulation_metadata.population_dir}/age.pickle
   calibration: true
   device: cpu
-  disease_stage_file: ${simulation_metadata.population_dir}/${simulation_metadata.NEIGHBORHOOD}_${simulation_metadata.START_WEEK}_stages.csv
+  disease_stage_file: ${simulation_metadata.population_dir}/disease_stages.csv
   infection_network_file: ${simulation_metadata.population_dir}/mobility_networks/0.csv
   initial_infection_ratio: 0.04
   learning_params:
