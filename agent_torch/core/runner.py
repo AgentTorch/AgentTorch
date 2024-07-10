@@ -87,12 +87,10 @@ class Runner(nn.Module):
                 )  # move state in state trajectory to cpu
 
     def _set_parameters(self, params_dict):
-        print(":: calling _set_parameters_")
         for param_name in params_dict:
             tensor_func = self._map_and_replace_tensor(param_name)
             param_value = params_dict[param_name]
             new_tensor = tensor_func(self, param_value)
-            print("new_tensor: ", new_tensor)
 
     def _map_and_replace_tensor(self, input_string):
         # Split the input string into its components
@@ -111,8 +109,6 @@ class Runner(nn.Module):
             substep_type = getattr(runner.initializer, function)
             substep_function = getattr(substep_type[str(index)], sub_func)
             current_tensor = getattr(substep_function, 'calibrate_' + var_name)
-
-            print("current tensor: ", current_tensor)
             
             if new_value is not None:
                 assert new_value.requires_grad == current_tensor.requires_grad
