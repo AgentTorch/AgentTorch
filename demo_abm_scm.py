@@ -46,12 +46,19 @@ def get_trajectory(parameters: OrderedDict[str, torch.Tensor]) -> OrderedDict[st
 
 
 if __name__ == "__main__":
+    import warnings
+    warnings.simplefilter("ignore")
     for i in range(5):
         start_time = time.time()
         new_tensor = torch.tensor([3.5, 4.2, 5.6], requires_grad=True)[:, None]
         predictions = get_trajectory(OrderedDict(transmission_rate=new_tensor))
+        predictions["daily_infected"].sum().backward()
         end_time = time.time()
         print("time consumed: ", end_time - start_time)
+
+        old_tensor = learn_params[0][1]
+        print("Old Parameter Grads", [param.grad for param in old_tensor])
+        print("New Parameter Grads", [param.grad for param in new_tensor])
 
 # breakpoint()
 

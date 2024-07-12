@@ -11,6 +11,7 @@ from pyro.infer.predictive import Predictive
 import warnings
 warnings.simplefilter("ignore")
 from demo_abm_scm import get_trajectory
+pyro.settings.set(module_local_params=True)
 
 
 Simulation = TypeVar('Simulation')
