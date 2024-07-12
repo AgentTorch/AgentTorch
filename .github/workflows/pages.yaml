@@ -1,6 +1,9 @@
 name: pages
 
-on: push
+on:
+  push:
+    paths:
+      - docs/**
 permissions:
   contents: write
 jobs:
