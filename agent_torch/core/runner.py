@@ -102,19 +102,30 @@ class Runner(nn.Module):
         sub_func = parts[3]
         arg_type = parts[4]
         var_name = parts[5]
-        
-        def getter_and_setter(runner, new_value=None):
-            current = runner
 
+        self.mode_calibrate = self.config['simulation_metadata']['calibration']
+
+        def getter_and_setter(runner, new_value=None):
             substep_type = getattr(runner.initializer, function)
             substep_function = getattr(substep_type[str(index)], sub_func)
-            current_tensor = getattr(substep_function, 'calibrate_' + var_name)
-            
+
+            if self.mode_calibrate:
+                current_tensor = getattr(substep_function, 'calibrate_' + var_name)
+            else:
+                current_tensor = getattr(getattr(substep_function, 'learnable_args'), var_name)
+
             if new_value is not None:
                 assert new_value.requires_grad == current_tensor.requires_grad
-                setvar_name = 'calibrate_' + var_name
-                setattr(substep_function, setvar_name, new_value)
-                current_tensor = getattr(substep_function, 'calibrate_' + var_name)
+                if self.mode_calibrate:
+                    setvar_name = 'calibrate_' + var_name
+                    setattr(substep_function, setvar_name, new_value)
+                    current_tensor = getattr(substep_function, setvar_name)
+                else:
+                    setvar_name = var_name
+                    subfunc_param = getattr(substep_function, 'learnable_args')
+                    setattr(subfunc_param, setvar_name, new_value)
+                    current_tensor = getattr(subfunc_param, setvar_name)
+
                 return current_tensor
             else:
                 return current_tensor
