@@ -16,6 +16,8 @@ class Initializer(nn.Module):
 
         self.fixed_parameters, self.learnable_parameters = {}, {}
 
+        self.augmented_config = False
+
         (
             self.observation_function,
             self.policy_function,
@@ -48,8 +50,10 @@ class Initializer(nn.Module):
 
             arg_name = f"{name_root}_{argument}"
 
-            arg_learnable, arg_shape = arg_object["learnable"], arg_object["shape"]
-            arg_init_func = arg_object["initialization_function"]
+            arg_learnable, arg_shape = arg_object.get(
+                "learnable", False
+            ), arg_object.get("shape", [1])
+            arg_init_func = arg_object.get("initialization_function", None)
 
             if arg_init_func is None:
                 arg_value = self._initialize_from_default(
@@ -76,13 +80,13 @@ class Initializer(nn.Module):
         return init_value
 
     def _initialize_property(self, property_object, property_key):
-        property_name = property_object["name"]
+        property_name = property_object.get("name", property_key)
         property_shape, property_dtype = (
             property_object["shape"],
-            property_object["dtype"],
+            property_object.get("dtype", "float"),
         )
-        property_is_learnable = property_object["learnable"]
-        property_initializer = property_object["initialization_function"]
+        property_is_learnable = property_object.get("learnable", False)
+        property_initializer = property_object.get("initialization_function", None)
 
         if property_initializer is None:
             property_value = self._initialize_from_default(
@@ -129,6 +133,15 @@ class Initializer(nn.Module):
 
             for prop in instance_properties.keys():
                 property_object = instance_properties[prop]
+
+                # agent properties are actually a tensor that is of shape PxQ, where P
+                # is the number of agents, and Q is the shape of the property
+                if not self.augmented_config:
+                    property_object["shape"] = [
+                        self.config["state"][key][instance_type]["number"],
+                        *property_object["shape"],
+                    ]
+
                 property_value, property_is_learnable = self._initialize_property(
                     property_object, property_key=f"{key}_{instance_type}_{prop}"
                 )
@@ -150,6 +163,13 @@ class Initializer(nn.Module):
 
             for prop in instance_properties.keys():
                 property_object = instance_properties[prop]
+
+                if not self.augmented_config:
+                    property_object["shape"] = [
+                        self.config["state"][key][instance_type]["number"],
+                        *property_object["shape"],
+                    ]
+
                 property_value, property_is_learnable = self._initialize_property(
                     property_object, property_key=f"{key}_{instance_type}_{prop}"
                 )
@@ -199,9 +219,11 @@ class Initializer(nn.Module):
 
     def simulator(self):
         self.init_environment()
-        self.init_agents(key="agents")
-        self.init_objects(key="objects")
+        self.init_agents()
+        self.init_objects()
         self.init_network()
+
+        self.augmented_config = True
 
         # track learnable parameters
         self.parameters_dict = nn.ParameterDict(self.learnable_parameters)
