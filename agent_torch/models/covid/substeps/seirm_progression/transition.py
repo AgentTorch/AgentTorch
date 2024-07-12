@@ -23,7 +23,7 @@ class SEIRMProgression(SubstepTransition):
         self.STAGE_SAME_VAR = 0
         self.STAGE_UPDATE_VAR = 1
 
-        self.calibration_mode = self.config['simulation_metadata']['calibration']
+        self.calibration_mode = self.config["simulation_metadata"]["calibration"]
 
         self.INFINITY_TIME = (
             self.config["simulation_metadata"]["num_steps_per_episode"] + 20

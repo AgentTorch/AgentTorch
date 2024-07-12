@@ -133,7 +133,7 @@ class CensusDataLoader:
 
         """
         save_root = os.path.join(self.population_dir, region)
-        save_dir = os.path.join(save_root, 'mobility_networks')
+        save_dir = os.path.join(save_root, "mobility_networks")
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
