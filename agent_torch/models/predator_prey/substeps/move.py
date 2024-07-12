@@ -108,12 +108,8 @@ class UpdatePositions(SubstepTransition):
 
         # reduce the energy of the agent by the work required by them
         # to take one step.
-        prey_energy = prey_energy + torch.full(
-            prey_energy.shape, -1 * (prey_work.item())
-        )
-        pred_energy = pred_energy + torch.full(
-            pred_energy.shape, -1 * (pred_work.item())
-        )
+        prey_energy = prey_energy + (-1 * prey_work)
+        pred_energy = pred_energy + (-1 * pred_work)
 
         return {
             self.output_variables[0]: action["prey"]["next_positions"],

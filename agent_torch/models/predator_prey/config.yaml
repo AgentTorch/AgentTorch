@@ -38,10 +38,7 @@ state:
       number: ${simulation_metadata.num_predators}
       properties:
         coordinates:
-          name: 'Position'
-          learnable: false
           shape:
-            - ${state.agents.predator.number}
             - 2
           dtype: 'int'
           initialization_function:
@@ -49,34 +46,20 @@ state:
             arguments:
               file_path:
                 name: 'Predator Coordinates File'
-                learnable: false
-                shape: null
                 value: ${simulation_metadata.predator_coords_file}
-                initialization_function: null
         energy:
           name: 'Energy'
-          learnable: false
           shape:
-            - ${state.agents.predator.number}
             - 1
-          dtype: 'float'
           initialization_function:
             generator: 'random_float'
             arguments:
               lower_limit:
                 name: 'Lower Bound'
-                learnable: false
-                shape:
-                  - 1
                 value: 30
-                initialization_function: null
               upper_limit:
                 name: 'Upper Bound'
-                learnable: false
-                shape:
-                  - 1
                 value: 100
-                initialization_function: null
         stride_work:
           name: 'Energy Lost in Taking One Step'
           learnable: true
@@ -90,9 +73,7 @@ state:
       properties:
         coordinates:
           name: 'Position'
-          learnable: false
           shape:
-            - ${state.agents.prey.number}
             - 2
           dtype: 'int'
           initialization_function:
@@ -100,50 +81,32 @@ state:
             arguments:
               file_path:
                 name: 'Prey Coordinates File'
-                learnable: false
-                shape: null
                 value: ${simulation_metadata.prey_coords_file}
-                initialization_function: null
         energy:
           name: 'Energy'
-          learnable: false
           shape:
-            - ${state.agents.prey.number}
             - 1
-          dtype: 'float'
           initialization_function:
             generator: 'random_float'
             arguments:
               lower_limit:
                 name: 'Lower Bound'
-                learnable: false
-                shape:
-                  - 1
                 value: 40
-                initialization_function: null
               upper_limit:
                 name: 'Upper Bound'
-                learnable: false
-                shape:
-                  - 1
                 value: 100
-                initialization_function: null
         stride_work:
           name: 'Energy Lost in Taking One Step'
           learnable: true
           shape:
             - 1
-          dtype: 'float'
           value: 5
-          initialization_function: null
         nutritional_value:
           name: 'Energy Gained Upon Consuming Prey'
           learnable: true
           shape:
             - 1
-          dtype: 'float'
           value: 20
-          initialization_function: null
 
   objects:
     grass:
@@ -153,7 +116,6 @@ state:
           name: 'Position'
           learnable: false
           shape:
-            - ${state.objects.grass.number}
             - 2
           dtype: 'int'
           initialization_function:
@@ -161,15 +123,11 @@ state:
             arguments:
               file_path:
                 name: 'Grass Coordinates File'
-                learnable: false
-                shape: null
                 value: ${simulation_metadata.grass_coords_file}
-                initialization_function: null
         growth_stage:
           name: 'The Grass Growth Stage'
           learnable: false
           shape:
-            - ${state.objects.grass.number}
             - 1
           dtype: 'int'
           initialization_function:
@@ -177,42 +135,29 @@ state:
             arguments:
               file_path:
                 name: 'Grass Growth Stage File'
-                learnable: false
-                shape: null
                 value: ${simulation_metadata.grass_growth_stage_file}
-                initialization_function: null
         regrowth_time:
           name: 'Time for Grass to Regrow Completely'
           learnable: true
           shape:
             - 1
-          dtype: 'float'
           value: 100 # steps
-          initialization_function: null
         growth_countdown:
           name: 'Time for Grass to Grow Fully'
-          learnable: false
           shape:
-            - ${state.objects.grass.number}
             - 1
-          dtype: 'float'
           initialization_function:
             generator: 'read_from_file'
             arguments:
               file_path:
                 name: 'Grass Growth Countdown File'
-                learnable: false
-                shape: null
                 value: ${simulation_metadata.grass_growth_countdown_file}
-                initialization_function: null
         nutritional_value:
           name: 'Energy Gained Upon Consuming Grass at Max Growth Stage'
           learnable: true
           shape:
             - 1
-          dtype: 'float'
           value: 7
-          initialization_function: null
 
   network:
     agent_agent:

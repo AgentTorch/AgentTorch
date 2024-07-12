@@ -54,7 +54,8 @@ class HuntPrey(SubstepTransition):
         prey_energy = get_var(state, input_variables["prey_energy"])
         pred_pos = get_var(state, input_variables["pred_pos"])
         pred_energy = get_var(state, input_variables["pred_energy"])
-        nutrition = get_var(state, input_variables["nutritional_value"])
+
+        nutrition = get_var(state, input_variables["nutritional_value"])[0][0]
 
         # if there are no targets, skip the state modifications.
         if len(action["predator"]["target_positions"]) < 1:

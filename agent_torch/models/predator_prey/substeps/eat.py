@@ -57,10 +57,11 @@ class EatGrass(SubstepTransition):
         bounds = get_var(state, input_variables["bounds"])
         prey_pos = get_var(state, input_variables["prey_pos"])
         energy = get_var(state, input_variables["energy"])
-        nutrition = get_var(state, input_variables["nutrition"])
         grass_growth = get_var(state, input_variables["grass_growth"])
         growth_countdown = get_var(state, input_variables["growth_countdown"])
-        regrowth_time = get_var(state, input_variables["regrowth_time"])
+
+        nutrition = get_var(state, input_variables["nutrition"])[0][0]
+        regrowth_time = get_var(state, input_variables["regrowth_time"])[0][0]
 
         # if no grass can be eaten, skip modifying the state.
         if len(action["prey"]["eatable_grass_positions"]) < 1:
