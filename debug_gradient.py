@@ -13,8 +13,9 @@ sim = Executor(covid, pop_loader=LoadPopulation(sample))
 runner = sim.runner
 runner.init()
 
-mode = 1
+mode = 3
 learnable_params = [(name, param) for (name, param) in runner.named_parameters()]
+# breakpoint()
 
 class LearnableParams(nn.Module):
     def __init__(self, num_params, device='cpu'):
@@ -92,8 +93,10 @@ def mode_2_test():
     print(":: test 2 - optimize deterministic external parameters fed into simulation")
     debug_nn_param = nn.Parameter(torch.tensor([2.7, 3.8, 4.6], requires_grad=True)[:, None])
     input_string = learnable_params[0][0]
-    tensorfunc = map_and_replace_tensor(input_string)
-    current_tensor = tensorfunc(runner, debug_nn_param, mode_calibrate=False)
+    print("Input String: ", input_string)
+
+    params_dict = {input_string: debug_nn_param}
+    runner._set_parameters(params_dict)
 
     loss = execute(runner)
     loss.backward()
@@ -105,10 +108,15 @@ def mode_3_test():
     # sample parameters
     learn_model = LearnableParams(3)
     debug_tensor = learn_model()[:, None]
+    print("debug_tensor: ", debug_tensor, type(debug_tensor))
     # set parameters
     input_string = learnable_params[0][0]
-    tensorfunc = map_and_replace_tensor(input_string)
-    current_tensor = tensorfunc(runner, debug_tensor, mode_calibrate=True)
+
+    print("Ensure - calibration: true for mode 3!")
+
+    params_dict = {input_string: debug_tensor}
+    runner._set_parameters(params_dict)
+
     # execute runner
     loss = execute(runner)
     loss.backward()
@@ -123,6 +131,7 @@ elif mode == 2:
     mode_2_test()
 elif mode == 3:
     mode_3_test()
+
 
 # if mode ==  1:
 #     print(":: test 1 - optimize internal simulation parameters!")
