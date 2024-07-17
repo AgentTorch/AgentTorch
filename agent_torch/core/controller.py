@@ -23,6 +23,7 @@ class Controller(nn.Module):
                     **observation,
                 }
         except Exception as e:
+            raise e
             observation = None
 
         return observation
@@ -38,6 +39,7 @@ class Controller(nn.Module):
                     **action,
                 }
         except Exception as e:
+            raise e
             action = None
 
         return action
