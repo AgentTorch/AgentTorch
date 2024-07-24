@@ -1,101 +1,80 @@
 import os
 import sys
+import io
+import concurrent.futures
+from abc import ABC, abstractmethod
 from langchain_openai import ChatOpenAI
 from langchain.chains import LLMChain
 import dspy
-import concurrent.futures
-import io
 from langchain.prompts import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate,
     SystemMessagePromptTemplate,
     MessagesPlaceholder,
 )
-from abc import ABC, abstractmethod
 
 
 class LLM(ABC):
-    def __init__(self):
-        pass
-
+    @abstractmethod
     def initialize_llm(self):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def prompt(self, prompt_list):
         pass
 
+    @abstractmethod
     def inspect_history(self, last_k, file_dir):
-        raise NotImplementedError
+        pass
 
 
 class DspyLLM(LLM):
     def __init__(self, openai_api_key, qa, cot, model="gpt-3.5-turbo"):
-        super().__init__()
+        self.openai_api_key = openai_api_key
         self.qa = qa
         self.cot = cot
-        self.backend = "dspy"
-        self.openai_api_key = openai_api_key
         self.model = model
+        self.llm = None
+        self.predictor = None
 
     def initialize_llm(self):
-        self.llm = dspy.OpenAI(
-            model=self.model, api_key=self.openai_api_key, temperature=0.0
-        )
+        self.llm = dspy.OpenAI(model=self.model, api_key=self.openai_api_key, temperature=0.0)
         dspy.settings.configure(lm=self.llm)
         self.predictor = self.cot(self.qa)
         return self.predictor
 
     def prompt(self, prompt_list):
-        agent_outputs = self.call_dspy_agent(prompt_list)
-        return agent_outputs
+        return self.call_dspy_agent(prompt_list)
 
     def call_dspy_agent(self, prompt_inputs):
-        agent_outputs = []
-        try:
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                agent_outputs = list(
-                    executor.map(self.dspy_query_and_get_answer, prompt_inputs)
-                )
-        except Exception as e:
-            print(e)
-        return agent_outputs
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            return list(executor.map(self.dspy_query_and_get_answer, prompt_inputs))
 
     def dspy_query_and_get_answer(self, prompt_input):
-        if type(prompt_input) is str:
-            agent_output = self.query_agent(prompt_input, [])
-        else:
-            agent_output = self.query_agent(
-                prompt_input["agent_query"], prompt_input["chat_history"]
-            )
-        return agent_output.answer
+        if isinstance(prompt_input, str):
+            return self.query_agent(prompt_input, []).answer
+        return self.query_agent(prompt_input["agent_query"], prompt_input["chat_history"]).answer
 
     def query_agent(self, query, history):
-        pred = self.predictor(question=query, history=history)
-        return pred.answer
+        return self.predictor(question=query, history=history)
 
     def inspect_history(self, last_k, file_dir):
         buffer = io.StringIO()
         original_stdout = sys.stdout
         sys.stdout = buffer
-        self.llm.inspect_history(last_k)
-        printed_data = buffer.getvalue()
-        if file_dir is not None:
-            save_path = os.path.join(file_dir, "inspect_history.md")
-            with open(save_path, "w") as f:
-                f.write(printed_data)
-        sys.stdout = original_stdout
+        try:
+            self.llm.inspect_history(last_k)
+            printed_data = buffer.getvalue()
+            if file_dir:
+                save_path = os.path.join(file_dir, "inspect_history.md")
+                with open(save_path, "w") as f:
+                    f.write(printed_data)
+        finally:
+            sys.stdout = original_stdout
 
 
 class LangchainLLM(LLM):
-    def __init__(
-        self,
-        openai_api_key,
-        agent_profile,
-        model="gpt-3.5-turbo",
-    ):
-        super().__init__()
-        self.backend = "langchain"
+    def __init__(self, openai_api_key, agent_profile, model="gpt-3.5-turbo"):
         self.llm = ChatOpenAI(model=model, openai_api_key=openai_api_key, temperature=1)
         self.prompt_template = ChatPromptTemplate.from_messages(
             [
@@ -104,43 +83,25 @@ class LangchainLLM(LLM):
                 HumanMessagePromptTemplate.from_template("{user_prompt}"),
             ]
         )
+        self.predictor = LLMChain(llm=self.llm, prompt=self.prompt_template, verbose=False)
 
     def initialize_llm(self):
-        self.predictor = LLMChain(
-            llm=self.llm, prompt=self.prompt_template, verbose=False
-        )
         return self.predictor
 
     def prompt(self, prompt_list):
-        agent_outputs = self.call_langchain_agent(prompt_list)
-        return agent_outputs
+        return self.call_langchain_agent(prompt_list)
 
     def call_langchain_agent(self, prompt_inputs):
-        agent_outputs = []
-        try:
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                agent_outputs = list(
-                    executor.map(self.langchain_query_and_get_answer, prompt_inputs)
-                )
-        except Exception as e:
-            print(e)
-        return agent_outputs
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            return list(executor.map(self.langchain_query_and_get_answer, prompt_inputs))
 
     def langchain_query_and_get_answer(self, prompt_input):
-        if type(prompt_input) is str:
-            agent_output = self.predictor.apply(
-                {"user_prompt": prompt_input, "chat_history": []}
-            )
-        else:
-            agent_output = self.predictor.apply(
-                {
-                    "user_prompt": prompt_input["agent_query"],
-                    "chat_history": prompt_input["chat_history"],
-                }
-            )
-        return agent_output
+        if isinstance(prompt_input, str):
+            return self.predictor.apply({"user_prompt": prompt_input, "chat_history": []})
+        return self.predictor.apply({
+            "user_prompt": prompt_input["agent_query"],
+            "chat_history": prompt_input["chat_history"],
+        })
 
     def inspect_history(self, last_k, file_dir):
-        raise NotImplementedError(
-            "inspect_history method is not applicable for Langchain backend"
-        )
+        raise NotImplementedError("inspect_history method is not applicable for Langchain backend")
