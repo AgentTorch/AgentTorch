@@ -1,7 +1,4 @@
-
-import sys
 from typing import Any, Dict
-sys.path.append("/Users/shashankkumar/Documents/GitHub/AgentTorchLLM")
 from agent_torch.core.analyzer.datamodels import (
     ConversationalResponse,
     GradeAnswer,
