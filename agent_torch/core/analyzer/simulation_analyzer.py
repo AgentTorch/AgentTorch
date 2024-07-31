@@ -1,55 +1,72 @@
-import dspy
-from langchain.agents import AgentExecutor,create_react_agent
-from langchain.tools.retriever import create_retriever_tool
-from langchain import hub
-from langchain_openai import ChatOpenAI
-from pandasai.llm import OpenAI
 
-from agent_torch.core.analyzer.retriever import DSPythonicRMClient, DocumentRetriever
-from agent_torch.core.analyzer.tools import PandasAIClarificationTool, PandasAITool
-from agent_torch.core.analyzer.utils import get_pandas_agent, load_state_trace
+import asyncio
+from langchain_openai import ChatOpenAI
+import yaml
+from agent_torch.core.analyzer.agent_graph import AgentRunner
+from agent_torch.core.analyzer.retriever import DocumentRetriever
+from agent_torch.core.analyzer.utils import generate_attribute_info_list
+from agent_torch.core.executor import Executor
+from langchain.chains.query_constructor.base import AttributeInfo
+
 
 class SimulationAnalysisAgent:
     def __init__(
         self,
-        openai_api_key,
-        model_name="gpt-3.5-turbo",
-        temperature=0,
-        document_retriever=None # this retriever is responsible for getting context from simulation memory
+        openai_api_key: str,
+        simulation: Executor,
+        document_retriever: DocumentRetriever,
+        model_name: str = "gpt-4o-mini",
+        thread_id: int = 7,
+        temperature: float = 0,
     ):
-        self.llm_pandas = OpenAI(
-            api_token=openai_api_key, model_name=model_name, temperature=temperature
+        self.openai_api_key = openai_api_key
+        self.model_name = model_name
+        self.temperature = temperature
+        self.document_retriever = document_retriever
+        self.simulation_id = 0
+        self.llm = ChatOpenAI(
+            api_key=self.openai_api_key,
+            model_name=self.model_name,
+            temperature=self.temperature,
         )
-        self.pandas_agent = get_pandas_agent(
-            agent_prop_df_list=self.state_trace, llm=self.llm_pandas,
-            
+        self.simulation = simulation
+        self.thread_id = thread_id
+
+    def query(self, query: str):
+        return self.agent.query(query=query)
+
+    def speculate(self, query: str):
+        pass
+
+    def append_simulation_id_if_not_present(self,metadata_field_info):
+        # Check if 'simulation_id' is already present
+        if not any(attr.name == "simulation_id" for attr in metadata_field_info):
+            # Append 'simulation_id' if not present
+            metadata_field_info.append(
+                AttributeInfo(
+                    name="simulation_id",
+                    description="The unique identifier for the simulation",
+                    type="integer",
+                )
+            )
+
+    async def add_new_run(self, metadata: dict, metadata_field_info):
+        self.simulation_id += 1
+
+        metadata.update(
+            {
+                "simulation_id": self.simulation_id,
+            }
         )
-        
-        self.langchain_llm = ChatOpenAI(api_key=openai_api_key, model_name="gpt-3.5-turbo", temperature=0)
-        self.prompt = hub.pull("hwchase17/react")
-        self.setup_tools(document_retriever, self.prompt)
 
-    def setup_tools(self, document_retriever, prompt):
-        self.retriever_tool = self.get_state_trace_retriever(document_retriever)
-        self.tools = [PandasAITool(metadata={'pandas_agent': self.pandas_agent}),PandasAIClarificationTool(metadata={'pandas_agent': self.pandas_agent}), PandasAIExplanationTool(metadata={'pandas_agent': self.pandas_agent}),self.retriever_tool]
-        self.llm_agent = create_react_agent(self.langchain_llm, self.tools, prompt)
-        self.agent_executor = AgentExecutor(
-            agent=self.llm_agent, tools=self.tools, verbose=True
+        self.append_simulation_id_if_not_present(metadata_field_info)
+        await self.document_retriever.initialise_vectorstore(
+            metadata=metadata, metadata_field_info=metadata_field_info, llm=self.llm
         )
-
-    def get_state_trace_retriever(self, document_retriever):
-        return create_retriever_tool(
-            document_retriever.retriever,
-            "simulation_memory_retriever",
-            "You must always use this tool to retrieve relevant context for each query.",
+        self.agent = AgentRunner(
+            llm=self.llm,
+            simulation=self.simulation,
+            thread_id=self.thread_id,
+            retriever=self.document_retriever,
         )
-
-    def query(self, query):
-        return self.agent_executor.invoke({"input": query})
-    
-if __name__ == "__main__":
-    conversations_memory_directory = ROOT_DIR + 'populations/NYC/simulation_memory_output/2020'
-
-    conversations_memory_retriever = DocumentRetriever(directory=conversations_memory_directory)
-    analyzer = SimulationAnalysisAgent(openai_api_key=OPENAI_API_KEY, document_retriever=conversations_memory_retriever, temperature=0)
-    analyzer.query("Which age group has lowest median income, how much is it?")
+        self.agent.setup_and_compile()
