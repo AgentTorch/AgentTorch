@@ -12,6 +12,14 @@ import warnings
 warnings.simplefilter("ignore")
 from demo_abm_scm import get_trajectory
 # pyro.settings.set(module_local_params=True)
+from functools import partial
+from chirho.dynamical.handlers.solver import TorchDiffEq
+from chirho.dynamical.handlers.trajectory import LogTrajectory
+from chirho.dynamical.ops import simulate
+
+
+def to_torch(d: dict) -> dict:
+    return {k: torch.tensor(v) for k, v in d.items()}
 
 
 Simulation = TypeVar('Simulation')
@@ -23,7 +31,7 @@ Simulation = TypeVar('Simulation')
 #     )
 
 
-def prior():
+def direct_transmission_rate_prior():
     expanded_dist = dist.Uniform(0.01, 20.0).expand((3, 1)).to_event(2)
     transmission_rate = pyro.sample("transmission_rate", expanded_dist)
 
@@ -32,19 +40,55 @@ def prior():
     )
 
 
-# def augment_parameters_with_transmissability_progression_ode_solution(
-#         parameters: OrderedDict[str, torch.Tensor],
-#         times: torch.Tensor
-# ):
-#     return ...
+def ode_prior():
+    # Make a simple prior centered here: dict(c=1., k=3., lam=0.2)), where all are positive. Return an OrderedDicct.
+    c = pyro.sample("c", dist.Uniform(0.9, 1.1))
+    k = pyro.sample("k", dist.Uniform(2.9, 3.1))
+    lam = pyro.sample("lam", dist.Uniform(0.1, 0.3))
+
+    return OrderedDict(
+        c=c,
+        k=k,
+        lam=lam,
+    )
+
+
+def augment_parameters_with_transmissability_progression_ode_solution(
+        parameters: OrderedDict[str, torch.Tensor],
+        times: torch.Tensor
+):
+    def gamma_like_ode_pure(state, atemp_params):
+        y = state['y']
+        t = state['t']
+        c = atemp_params['c']
+        k = atemp_params['k']
+        lam = atemp_params['lam']
+        dydt = c * (t ** (k - 1)) * torch.exp(-lam * t) - y * t
+        return dict(y=dydt)
+
+    gamma_like_ode_closure = partial(gamma_like_ode_pure, atemp_params=parameters)
+
+    with LogTrajectory(times=times) as logging_trajectory:
+        with TorchDiffEq():
+            simulate(gamma_like_ode_closure, to_torch(dict(y=0.)), times[0], times[-1])
+
+    return OrderedDict(
+        transmission_rate=logging_trajectory.trajectory['y'].unsqueeze(-1)
+    )
 
 
 def ab_model():
-    parameters = prior()
-    # parametsrs = augment_parameters_with_transmissability_progression_ode_solution(
-    #     parameters,
-    #     times=torch.tensor([7.0, 14.0, 21.0])
-    # )
+
+    # ODE trajectory.
+    parameters = ode_prior()
+    parameters = augment_parameters_with_transmissability_progression_ode_solution(
+        parameters,
+        times=torch.tensor([7.0, 14.0, 21.0])
+    )
+
+    # Direct trajectory prior.
+    # parameters = direct_transmission_rate_prior()
+
     trajectory = get_trajectory(parameters)
 
     daily_infected = pyro.deterministic("daily_infected", trajectory["daily_infected"])
@@ -130,7 +174,7 @@ def main():
     # Condition model on
     observed_infected_count = Predictive(true_model, num_samples=1)()["observed_infected_count"].squeeze(0).detach().clone()
     conditioned_model = pyro.condition(ab_model, data={"observed_infected_count": observed_infected_count})
-    guide, losses = approximate_posterior(conditioned_model, 2e-3, n=500)
+    guide, losses = approximate_posterior(conditioned_model, 4e-3, n=2000)
 
     plt.plot(losses)
     # Also plot a running average of the losses.
