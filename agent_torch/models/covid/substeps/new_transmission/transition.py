@@ -123,7 +123,10 @@ class NewTransmission(SubstepTransitionMessagePassing):
             R_tensor = self.calibrate_R2.to(self.device)
         else:
             R_tensor = self.learnable_args["R2"]  # tensor of size NUM_WEEK
-        R = (R_tensor * week_one_hot).sum()
+        
+        R_legacy = (R_tensor * week_one_hot).sum()
+
+        R = action["citizens"]["daily_transmission"]
 
         SFSusceptibility = get_by_path(
             state, re.split("/", input_variables["SFSusceptibility"])
@@ -160,6 +163,8 @@ class NewTransmission(SubstepTransitionMessagePassing):
         )
 
         will_isolate = action["citizens"]["isolation_decision"]
+
+        daily_transmission = action["citizens"]["daily_transmission"]
 
         all_node_attr = (
             torch.stack(

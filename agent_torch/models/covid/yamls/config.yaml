@@ -399,11 +399,23 @@ substeps:
               shape:
               - 6
               value: 0.5
+            odeparams:
+              dtype: float
+              initialization_function: null
+              learnable: true
+              name: parameters for virus transmissibility ode
+              shape:
+              - 3
+              value:
+              - 1.0
+              - 3.0
+              - 0.2
           generator: MakeIsolationDecision
           input_variables:
             age: agents/citizens/age
           output_variables:
           - isolation_decision
+          - daily_transmission
     reward: null
     transition:
       new_transmission:

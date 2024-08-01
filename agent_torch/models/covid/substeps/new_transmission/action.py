@@ -13,6 +13,10 @@ from ...calibration.utils.feature import Feature
 from ...calibration.utils.llm import AgeGroup, SYSTEM_PROMPT, construct_user_prompt
 from ...calibration.utils.misc import week_num_to_epiweek, name_to_neighborhood
 
+from chirho.dynamical.handlers.solver import TorchDiffEq
+from chirho.dynamical.handlers.trajectory import LogTrajectory
+from chirho.dynamical.ops import simulate
+
 
 class MakeIsolationDecision(SubstepAction):
     def __init__(self, *args, **kwargs):
@@ -23,6 +27,8 @@ class MakeIsolationDecision(SubstepAction):
         self.num_agents = self.config["simulation_metadata"]["num_agents"]
 
         self.st_bernoulli = StraightThroughBernoulli.apply
+
+        self.calibration_mode = self.config['simulation_metadata']['calibration']
 
     def string_to_number(self, string):
         if string.lower() == "yes":
@@ -44,26 +50,34 @@ class MakeIsolationDecision(SubstepAction):
         one_hot_tensor = F.one_hot(timestep_tensor, num_classes=num_timesteps)
 
         return one_hot_tensor.to(self.device)
-    #
-    # def susceptible_dynamics(self, viral_dynamics, current_time, recovered_time):
-    #     days_since_recovery = current_time - recovered_time + 1 # ODE is defined in this time-scale.
-    #
-    #     agent_susceptibility = viral_dynamics.eval(days_since_recovery)
-    #     return agent_susceptibility
-    #
-    # def transmissible_dynamics(self, viral_dynamics, current_time, infected_time):
-    #     days_since_infection = current_time - infected_time + 1 # ODE is defined in this time-scale.
-    #
-    #     agent_transmissibility = viral_dynamics.eval(days_since_infection)
-    #     return agent_transmissibility
+
+    def my_custom_ode(self, eval_time):
+
+        # A vector of length 3.
+        if self.calibration_mode:
+            c, k, lam = self.calibrate_odeparams.to(self.device)
+        else:
+            c, k, lam = self.learnable_args["odeparams"]
+
+        def gamma_like_ode(state):
+            y = state['y']
+            t = state['t']
+            dydt = c * (t ** (k - 1)) * torch.exp(-lam * t) - y * t
+            return dict(y=dydt)
+
+        with TorchDiffEq(atol=1e-6, rtol=1e-6):
+            end_state = simulate(gamma_like_ode, dict(y=torch.tensor(0.)), torch.tensor(0.), eval_time)
+
+        return end_state['y']
 
     def forward(self, state, observation):
         # if in debug mode, return random values for isolation
         will_isolate = torch.rand(self.num_agents, 1).to(self.device)
-        #
-        # recovered_time = # get from agent state
-        #
-        # agent_susceptibility = susceptible_dynamics(viral_dynamics, current_time, recovered_time) # (num_agent, )
-        # agent_transmissibility = transmissible_dynamics(viral_dynamics, current_time, infected_time) # (num_agents,)
 
-        return {self.output_variables[0]: will_isolate}
+        eval_time = state["current_step"]
+
+        daily_transmission = self.my_custom_ode(eval_time)
+        # breakpoint()
+
+        return {self.output_variables[0]: will_isolate,
+                self.output_variables[1]: daily_transmission}

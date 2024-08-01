@@ -53,41 +53,44 @@ def ode_prior():
     )
 
 
-def augment_parameters_with_transmissability_progression_ode_solution(
-        parameters: OrderedDict[str, torch.Tensor],
-        times: torch.Tensor
-):
-    def gamma_like_ode_pure(state, atemp_params):
-        y = state['y']
-        t = state['t']
-        c = atemp_params['c']
-        k = atemp_params['k']
-        lam = atemp_params['lam']
-        dydt = c * (t ** (k - 1)) * torch.exp(-lam * t) - y * t
-        return dict(y=dydt)
+# def augment_parameters_with_transmissability_progression_ode_solution(
+#         parameters: OrderedDict[str, torch.Tensor],
+#         times: torch.Tensor
+# ):
+#     def gamma_like_ode_pure(state, atemp_params):
+#         y = state['y']
+#         t = state['t']
+#         c = atemp_params['c']
+#         k = atemp_params['k']
+#         lam = atemp_params['lam']
+#         dydt = c * (t ** (k - 1)) * torch.exp(-lam * t) - y * t
+#         return dict(y=dydt)
 
-    gamma_like_ode_closure = partial(gamma_like_ode_pure, atemp_params=parameters)
+#     gamma_like_ode_closure = partial(gamma_like_ode_pure, atemp_params=parameters)
 
-    with LogTrajectory(times=times) as logging_trajectory:
-        with TorchDiffEq():
-            simulate(gamma_like_ode_closure, to_torch(dict(y=0.)), times[0], times[-1])
+#     with LogTrajectory(times=times) as logging_trajectory:
+#         with TorchDiffEq():
+#             simulate(gamma_like_ode_closure, to_torch(dict(y=0.)), times[0], times[-1])
 
-    return OrderedDict(
-        transmission_rate=logging_trajectory.trajectory['y'].unsqueeze(-1)
-    )
+#     return OrderedDict(
+#         transmission_rate=logging_trajectory.trajectory['y'].unsqueeze(-1)
+#     )
 
 
 def ab_model():
 
-    # ODE trajectory.
+    # # ODE trajectory.
     parameters = ode_prior()
-    parameters = augment_parameters_with_transmissability_progression_ode_solution(
-        parameters,
-        times=torch.tensor([7.0, 14.0, 21.0])
-    )
+    # parameters = augment_parameters_with_transmissability_progression_ode_solution(
+    #     parameters,
+    #     times=torch.tensor([7.0, 14.0, 21.0])
+    # )
 
     # Direct trajectory prior.
     # parameters = direct_transmission_rate_prior()
+
+    # Stacking ode params into one vector.
+    parameters = dict(ode_params=torch.stack([parameters["c"], parameters["k"], parameters["lam"]]))
 
     trajectory = get_trajectory(parameters)
 
@@ -169,7 +172,7 @@ def main():
     # Plot samples from the true model.
     plot_predictive(true_model, num_samples=5)
 
-    # return
+    return
 
     # Condition model on
     observed_infected_count = Predictive(true_model, num_samples=1)()["observed_infected_count"].squeeze(0).detach().clone()

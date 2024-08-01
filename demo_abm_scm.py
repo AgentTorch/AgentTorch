@@ -61,7 +61,8 @@ def get_trajectory(parameters: OrderedDict[str, torch.Tensor]) -> OrderedDict[st
     # print("Parameters: ", parameters)
     # print("-------------------")
 
-    new_tensor = parameters['transmission_rate']
+    # new_tensor = parameters['transmission_rate']
+    new_tensor = parameters['ode_params']
     # old_tensor = learn_params[0][1]
 
     # assert new_tensor.shape == old_tensor.shape
