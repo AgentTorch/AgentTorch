@@ -13,7 +13,7 @@ sim = Executor(covid, pop_loader=LoadPopulation(sample))
 runner = sim.runner
 runner.init()
 
-mode = 1
+mode = 3
 learnable_params = [(name, param) for (name, param) in runner.named_parameters()]
 
 class LearnableParams(nn.Module):
@@ -91,9 +91,12 @@ def mode_1_test():
 def mode_2_test():
     print(":: test 2 - optimize deterministic external parameters fed into simulation")
     debug_nn_param = nn.Parameter(torch.tensor([2.7, 3.8, 4.6], requires_grad=True)[:, None])
+    # input_string = learnable_params[0][0]
+    # tensorfunc = map_and_replace_tensor(input_string)
+    # current_tensor = tensorfunc(runner, debug_nn_param, mode_calibrate=False)
     input_string = learnable_params[0][0]
-    tensorfunc = map_and_replace_tensor(input_string)
-    current_tensor = tensorfunc(runner, debug_nn_param, mode_calibrate=False)
+    params_dict = {input_string: debug_nn_param}
+    runner._set_parameters(params_dict)
 
     loss = execute(runner)
     loss.backward()

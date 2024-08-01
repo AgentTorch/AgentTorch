@@ -44,9 +44,26 @@ class MakeIsolationDecision(SubstepAction):
         one_hot_tensor = F.one_hot(timestep_tensor, num_classes=num_timesteps)
 
         return one_hot_tensor.to(self.device)
+    #
+    # def susceptible_dynamics(self, viral_dynamics, current_time, recovered_time):
+    #     days_since_recovery = current_time - recovered_time + 1 # ODE is defined in this time-scale.
+    #
+    #     agent_susceptibility = viral_dynamics.eval(days_since_recovery)
+    #     return agent_susceptibility
+    #
+    # def transmissible_dynamics(self, viral_dynamics, current_time, infected_time):
+    #     days_since_infection = current_time - infected_time + 1 # ODE is defined in this time-scale.
+    #
+    #     agent_transmissibility = viral_dynamics.eval(days_since_infection)
+    #     return agent_transmissibility
 
     def forward(self, state, observation):
         # if in debug mode, return random values for isolation
         will_isolate = torch.rand(self.num_agents, 1).to(self.device)
+        #
+        # recovered_time = # get from agent state
+        #
+        # agent_susceptibility = susceptible_dynamics(viral_dynamics, current_time, recovered_time) # (num_agent, )
+        # agent_transmissibility = transmissible_dynamics(viral_dynamics, current_time, infected_time) # (num_agents,)
 
         return {self.output_variables[0]: will_isolate}
