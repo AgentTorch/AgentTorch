@@ -10,6 +10,7 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langgraph.graph import END, StateGraph, START
 from pprint import pprint
 from IPython.display import Image, display
+from langchain_core.documents.base import Document
 
 class GraphState(TypedDict):
     """
@@ -62,9 +63,9 @@ class AgentRunner:
 
         # Final generation
         if output is not None:
-            pprint(output.get("generation", "No generation in output."))
+            return output.get("generation", "No generation in output.")
         else:
-            pprint("No output generated.")
+            return ("No output generated.")
 
 
 class SimulationGraph:
@@ -83,8 +84,7 @@ class SimulationGraph:
         self.workflow.add_node("decide_to_generate", decide_to_generate)
         self.workflow.add_node("run_simulation", run_simulation)
         
-        # Define the edges
-        self.workflow.add_edge(START, "transform_query")
+        # Define the
         self.workflow.add_edge("transform_query", "select_datasource")
         self.workflow.add_edge("retrieve_from_conversation_history", "grade_documents")
         self.workflow.add_edge("retrieve_from_state_trace", "grade_documents")
@@ -106,7 +106,6 @@ class SimulationGraph:
             {
                 "continue": "transform_query",
                 "run_simulation": "run_simulation",
-                "retry": "retry",
             },
             
         )
@@ -187,9 +186,11 @@ def retrieve_from_state_trace(state,config):
     documents = []
     agents_dict = initialize_agents_dict(config["configurable"]["retriever"].state_trace, config['configurable']['llm'])
     question_router_state_trace = generate_router_state_trace( config['configurable']['llm'], agents_dict)
+    question += "Don't display any plots, just give me the analysis."
     retrievers_list = question_router_state_trace.invoke({"question": question})
     for retriever in retrievers_list.datasource:
         documents.append(str(agents_dict[retriever].chat(question)))
+    # documents = Document(page_content=documents)
     pprint(documents)
     # Retrieve
     # documents = pandas_agent.chat(question)
@@ -236,7 +237,7 @@ def grade_documents(state,config):
         filtered_docs = []
         for d in documents:
             score = retrieval_grader.invoke(
-                {"question": question, "document": d.page_content}
+                {"question": question, "document": documents}
             )
             grade = score.binary_score
             grade = "yes"
@@ -433,7 +434,7 @@ def grade_generation_v_documents_and_question(state,config):
         print("---DECISION: GENERATION IS GROUNDED IN DOCUMENTS---")
         # Check question-answering
         print("---GRADE GENERATION vs QUESTION---")
-        score = hallucination_grader.invoke({"question": question, "generation": generation})
+        score = hallucination_grader.invoke({"documents": documents, "generation": generation})
         grade = score.binary_score
         if grade == "yes":
             print("---DECISION: GENERATION ADDRESSES QUESTION---")
@@ -495,9 +496,6 @@ def route_workflow(state,config):
     if decision.workflow == "run_simulation":
         print("---ROUTE TO RUN SIMULATION---")
         return "run_simulation"
-    elif decision == "continue":
+    else :
         print("---CONTINUE WORKFLOW---")
         return "continue"
-    else:
-        print("---ROUTE TO RETRY---")
-        return "retry"

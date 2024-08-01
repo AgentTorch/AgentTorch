@@ -77,7 +77,7 @@ def load_state_trace(sim_data_path,description):
 
 def get_pandas_agent(agent_prop_df_list, llm):
     # Create and return the PandasAI Agent instance
-    return Agent(agent_prop_df_list, config={"llm": llm},description="You are a data analysis agent. Your main goal is to help non-technical users to analyze data",memory_size=3)
+    return Agent(agent_prop_df_list, config={"llm": llm},description="You are a data analysis agent. Your main goal is to help non-technical users to analyze data. You have access to state data of a simulation that user ran. Give well explained and reasoned results. Don't display any image, give outputs as only string.",memory_size=3)
 
 def sentence_to_snake_case(sentence):
     # Split the sentence into words, strip any leading/trailing whitespace from each word
