@@ -128,17 +128,17 @@ class LangchainLLM(LLM):
 
     def langchain_query_and_get_answer(self, prompt_input):
         if type(prompt_input) is str:
-            agent_output = self.predictor.apply(
+            agent_output = self.predictor.invoke(
                 {"user_prompt": prompt_input, "chat_history": []}
             )
         else:
-            agent_output = self.predictor.apply(
+            agent_output = self.predictor.invoke(
                 {
                     "user_prompt": prompt_input["agent_query"],
                     "chat_history": prompt_input["chat_history"],
                 }
             )
-        return agent_output
+        return agent_output['text']
 
     def inspect_history(self, last_k, file_dir):
         raise NotImplementedError(
