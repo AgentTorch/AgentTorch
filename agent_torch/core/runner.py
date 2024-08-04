@@ -52,7 +52,7 @@ class Runner(nn.Module):
         """
 
         assert self.state is not None
-        self.reset_state_before_episode()
+        # self.reset_state_before_episode()
 
         if not num_steps:
             num_steps = self.config["simulation_metadata"]["num_steps_per_episode"]
@@ -86,17 +86,48 @@ class Runner(nn.Module):
                     to_cpu(self.state)
                 )  # move state in state trajectory to cpu
 
-    def _set_parameters(self, params):
-        print("_set_parameters CURRENTLY BREAKS GRADIENT! PLEASE DON'T USE")
-        for param in params:
-            mode, param_name = param.split("/")[0], param.split("/")[1]
-            self.state[mode][param_name].data.copy_(params[param])
-            self.state[mode][param_name].requires_grad = True
+    def _set_parameters(self, params_dict):
+        for param_name in params_dict:
+            tensor_func = self._map_and_replace_tensor(param_name)
+            param_value = params_dict[param_name]
+            new_tensor = tensor_func(self, param_value)
+
+    def _map_and_replace_tensor(self, input_string):
+        # Split the input string into its components
+        parts = input_string.split(".")
+
+        # Extract the relevant parts
+        function = parts[1]
+        index = parts[2]
+        sub_func = parts[3]
+        arg_type = parts[4]
+        var_name = parts[5]
+
+        def getter_and_setter(runner, new_value=None):
+            current = runner
+
+            substep_type = getattr(runner.initializer, function)
+            substep_function = getattr(substep_type[str(index)], sub_func)
+            current_tensor = getattr(substep_function, "calibrate_" + var_name)
+
+            if new_value is not None:
+                assert new_value.requires_grad == current_tensor.requires_grad
+                setvar_name = "calibrate_" + var_name
+                setattr(substep_function, setvar_name, new_value)
+                current_tensor = getattr(substep_function, "calibrate_" + var_name)
+                return current_tensor
+            else:
+                return current_tensor
+
+        return getter_and_setter
 
     def step_from_params(self, num_steps=None, params=None):
         r"""
         execute simulation episode with custom parameters
         """
+        if params is None:
+            print(" missing parameters!!! ")
+            return
         self._set_parameters(params)
         self.step(num_steps)
 

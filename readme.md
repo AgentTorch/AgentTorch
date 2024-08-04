@@ -55,11 +55,16 @@ https://github.com/AgentTorch/AgentTorch/assets/13482350/4c3f9fa9-8bce-4ddb-907c
 
 ## Installation
 
+The easiest way to install AgentTorch (v0.4.0) is from pypi:
+```
+> pip install agent-torch
+```
+
 > AgentTorch is meant to be used in a Python 3.9 environment. If you have not
 > installed Python 3.9, please do so first from
 > [python.org/downloads](https://www.python.org/downloads/).
 
-Install the framework using `pip`, like so:
+Install the most recent version from source using `pip`:
 
 ```sh
 > pip install git+https://github.com/agenttorch/agenttorch

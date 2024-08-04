@@ -12,3 +12,5 @@ nav:
   - Tutorials:
       - 'Creating a Model': 'tutorials/creating-a-model/index.md'
       - 'Using Models': 'tutorials/using-models/index.md'
+      - 'Processing a Population': 'tutorials/processing-a-population/index.md'
+      - 'Configuring AI Agent Behavior': 'tutorials/configure-behavior/index.md'

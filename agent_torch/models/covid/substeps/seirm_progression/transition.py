@@ -23,9 +23,7 @@ class SEIRMProgression(SubstepTransition):
         self.STAGE_SAME_VAR = 0
         self.STAGE_UPDATE_VAR = 1
 
-        self.external_M = torch.tensor(
-            self.learnable_args["M"], requires_grad=True
-        )  # we use this if calibration is external
+        self.calibration_mode = self.config["simulation_metadata"]["calibration"]
 
         self.INFINITY_TIME = (
             self.config["simulation_metadata"]["num_steps_per_episode"] + 20
@@ -51,7 +49,10 @@ class SEIRMProgression(SubstepTransition):
             current_stages * recovered_and_dead_mask / self.INFECTED_VAR
         )
 
-        num_dead_today = new_death_recovered_today.sum() * self.external_M
+        if self.calibration_mode:
+            num_dead_today = new_death_recovered_today.sum() * self.calibrate_M
+        else:
+            num_dead_today = new_death_recovered_today.sum() * self.learnable_args["M"]
 
         daily_dead = (
             daily_dead

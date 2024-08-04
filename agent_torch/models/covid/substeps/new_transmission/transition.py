@@ -27,8 +27,9 @@ class NewTransmission(SubstepTransitionMessagePassing):
         ]
 
         self.mode = self.config["simulation_metadata"]["EXECUTION_MODE"]
-
         self.st_bernoulli = StraightThroughBernoulli.apply
+
+        self.calibration_mode = self.config["simulation_metadata"]["calibration"]
 
     def _lam(
         self,
@@ -106,9 +107,9 @@ class NewTransmission(SubstepTransitionMessagePassing):
         updated_infected_times = torch.clone(agents_infected_times).to(
             agents_infected_times.device
         )
-        #         updated_infected_times = newly_exposed_today*t + (1 - newly_exposed_today)*agents_infected_times
+
         updated_infected_times[newly_exposed_today.bool()] = t
-        #         agents_infected_times[newly_exposed_today] = t
+
         return updated_infected_times
 
     def forward(self, state, action=None):
@@ -119,7 +120,10 @@ class NewTransmission(SubstepTransitionMessagePassing):
         week_id = int(t / 7)
         week_one_hot = self._generate_one_hot_tensor(week_id, self.num_weeks)
 
-        R_tensor = self.calibrate_R2  # tensor of size NUM_WEEK
+        if self.calibration_mode:
+            R_tensor = self.calibrate_R2
+        else:
+            R_tensor = self.learnable_args["R2"]  # tensor of size NUM_WEEK
         R = (R_tensor * week_one_hot).sum()
 
         SFSusceptibility = get_by_path(

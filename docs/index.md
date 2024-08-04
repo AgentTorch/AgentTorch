@@ -137,19 +137,3 @@ framework, creating new models, or by writing documentation for the project.
 Take a look at the [contributing guide](contributing.md) for instructions on how
 to setup your environment, make changes to the codebase, and contribute them
 back to the project.
-
-## Citation
-
-If you use this project or code in your work, please cite it using the following
-BibTex entry, which can also be found in
-[`citation.bib`](https://github.com/agenttorch/agenttorch/blob/master/citation.bib).
-
-```bib
-@inproceedings{chopra2024framework,
-  title = {A Framework for Learning in Agent-Based Models},
-  author = {Chopra, Ayush and Subramanian, Jayakumar and Krishnamurthy, Balaji and Raskar, Ramesh},
-  booktitle = {Proceedings of the 23rd International Conference on Autonomous Agents and Multi-agent Systems},
-  year = {2024},
-  organization = {International Foundation for Autonomous Agents and Multiagent Systems},
-}
-```

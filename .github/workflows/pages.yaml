@@ -1,6 +1,11 @@
 name: pages
 
-on: push
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - docs/**
 permissions:
   contents: write
 jobs:
