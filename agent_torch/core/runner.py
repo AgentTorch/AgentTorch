@@ -95,19 +95,44 @@ class Runner(nn.Module):
     def _map_and_replace_tensor(self, input_string):
         # Split the input string into its components
         parts = input_string.split('.')
-        
-        # Extract the relevant parts
+
         function = parts[1]
         index = parts[2]
-        sub_func = parts[3]
-        arg_type = parts[4]
-        var_name = parts[5]
+
+        if len(parts) == 6:
+            '''transition_function'''
+            delta_index = 0
+        elif len(parts) == 7:
+            '''observation_function and policy_function'''
+            delta_index = 1
+            agent_type = parts[3]
+
+        sub_func = parts[delta_index+3]
+        arg_type = parts[delta_index+4]
+        var_name = parts[delta_index+5]
+        
+        # Extract the relevant parts
+        # function = parts[1]
+        # index = parts[2]
+        # sub_func = parts[3]
+        # arg_type = parts[4]
+        # var_name = parts[5]
+
+        # initializer.transition_function.1.seirm_progression.learnable_args.M
+        # initializer.policy_function.0.citizens.make_isolation_decision.learnable_args.odeparams
 
         self.mode_calibrate = self.config['simulation_metadata']['calibration']
 
         def getter_and_setter(runner, new_value=None):
             substep_type = getattr(runner.initializer, function)
-            substep_function = getattr(substep_type[str(index)], sub_func)
+            if delta_index == 1:
+                '''observation and policy function'''
+                agent_substep = getattr(substep_type[str(index)], agent_type)
+                substep_function = getattr(agent_substep, sub_func)
+            else:
+                '''transition function'''
+                substep_function = getattr(substep_type[str(index)], sub_func)
+
 
             if self.mode_calibrate:
                 current_tensor = getattr(substep_function, 'calibrate_' + var_name)

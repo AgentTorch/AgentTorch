@@ -42,9 +42,13 @@ def direct_transmission_rate_prior():
 
 def ode_prior():
     # Make a simple prior centered here: dict(c=1., k=3., lam=0.2)), where all are positive. Return an OrderedDicct.
-    c = pyro.sample("c", dist.Uniform(0.9, 1.1))
-    k = pyro.sample("k", dist.Uniform(2.9, 3.1))
-    lam = pyro.sample("lam", dist.Uniform(0.1, 0.3))
+    # c = pyro.sample("c", dist.Uniform(0.9, 1.1))
+    # k = pyro.sample("k", dist.Uniform(2.9, 3.1))
+    # lam = pyro.sample("lam", dist.Uniform(0.1, 0.3))
+
+    c = pyro.sample("c", dist.Uniform(0.2, 2.))
+    k = pyro.sample("k", dist.Uniform(1., 5.))
+    lam = pyro.sample("lam", dist.Uniform(0.05, 0.5))
 
     return OrderedDict(
         c=c,
@@ -172,12 +176,12 @@ def main():
     # Plot samples from the true model.
     plot_predictive(true_model, num_samples=5)
 
-    return
+    # return
 
     # Condition model on
     observed_infected_count = Predictive(true_model, num_samples=1)()["observed_infected_count"].squeeze(0).detach().clone()
     conditioned_model = pyro.condition(ab_model, data={"observed_infected_count": observed_infected_count})
-    guide, losses = approximate_posterior(conditioned_model, 4e-3, n=2000)
+    guide, losses = approximate_posterior(conditioned_model, 2e-3, n=1000)
 
     plt.plot(losses)
     # Also plot a running average of the losses.
