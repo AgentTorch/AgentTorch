@@ -25,15 +25,9 @@
   </a>
 </p>
 
-Large Population Models (LPMs) help simulate million-size populations by
-designing realistic environments and capturing expressive indvidual behavior.
-Our goal is to "re-invent the census": built entirely in simulation, captured
-passively and used to protect country-scale populations. Our research is early
-but actively making an impact - winning awards at AI conferences and being
-deployed across the world. Learn more about LPMs
-[here](lpm.media.mit.edu/research.pdf).
+Many grand challenges like climate change and pandemics emerge from complex interactions of millions of individual decisions. While LLMs and AI agents excel at individual behavior, they can't model these intricate societal dynamics. Enter Large Population Models LPMs: a new AI paradigm simulating millions of interacting agents simultaneously, capturing collective behaviors at societal scale. It's like scaling up AI agents exponentially to understand the ripple effects of countless decisions.
 
-AgentTorch LPMs have four design principles:
+AgentTorch, our open-source platform, makes building and running these massive simulations accessible. It's optimized for GPUs, allowing efficient simulation of entire cities or countries. Think PyTorch, but for large-scale agent-based simulations. AgentTorch LPMs have four design principles:
 
 - **Scalability**: AgentTorch models can simulate country-size populations in
   seconds on commodity hardware.
@@ -48,8 +42,9 @@ AgentTorch LPMs have four design principles:
   geospatial worlds, cells in anatomical worlds, autonomous avatars in digital
   worlds.
 
-AgentTorch is building the future of decision engines - inside the body, around
-us and beyond!
+LPMs are already making real-world impact. They're being used to help immunize millions of people by optimizing vaccine distribution strategies, and to track billions of dollars in global supply chains, improving efficiency and reducing waste. Our long-term goal is to "re-invent the census": built entirely in simulation, captured passively and used to protect country-scale populations. Our research is early but actively making an impact - winning awards at AI conferences and being deployed across the world. Learn more about LPMs [here](https://lpm.media.mit.edu/research.pdf).
+
+AgentTorch is building the future of decision engines - inside the body, around us and beyond!
 
 https://github.com/AgentTorch/AgentTorch/assets/13482350/4c3f9fa9-8bce-4ddb-907c-3ee4d62e7148
 
