@@ -30,7 +30,7 @@ class LLM(ABC):
 
 
 class DspyLLM(LLM):
-    def __init__(self, openai_api_key, qa, cot, model="gpt-3.5-turbo"):
+    def __init__(self, openai_api_key, qa, cot, model="gpt-4o-mini"):
         super().__init__()
         self.qa = qa
         self.cot = cot
@@ -92,7 +92,7 @@ class LangchainLLM(LLM):
         self,
         openai_api_key,
         agent_profile,
-        model="gpt-3.5-turbo",
+        model="gpt-4o-mini",
     ):
         super().__init__()
         self.backend = "langchain"

@@ -9,8 +9,8 @@ class Behavior:
     def __init__(self, archetype, region):
         self.archetype = archetype
         self.population = LoadPopulation(region)
-        self.prompt_manager = PromptManager(self.archetype.user_prompt, self.population)
-        self.archetype.initialize_memory(num_agents=self.prompt_manager.distinct_groups)
+        self.prompt_manager = PromptManager(self.archetype[-1].user_prompt, self.population)
+        [archetype.initialize_memory(num_agents=self.prompt_manager.distinct_groups) for archetype in self.archetype]
 
     def sample(self, kwargs=None):
         print("Behavior: Decision")
@@ -25,11 +25,12 @@ class Behavior:
         masks = self.get_masks_for_each_group(
             self.prompt_manager.dict_variables_with_values
         )
-
+        agent_outputs = []
         for num_retries in range(10):
             try:
                 # last_k : Number of previous conversations to add in history
-                agent_output = self.archetype(prompt_list, last_k=3)
+                for n_arch in range(self.archetype[-1].n_arch):
+                    agent_outputs.append(self.archetype[n_arch](prompt_list, last_k=12))
                 break
 
             except Exception as e:
@@ -38,23 +39,26 @@ class Behavior:
                 continue
 
         sampled_behavior = self.get_sampled_behavior(
-            sampled_behavior, masks, agent_output
+            sampled_behavior, masks, agent_outputs
         )
 
         # Save current step's conversation history to file
         # file_dir : Path to export current step's conversation history
-        self.archetype.export_memory_to_file(
+        self.archetype[-1].export_memory_to_file(
             file_dir=kwargs["current_memory_dir"], last_k=len(prompt_list)
         )
 
         return sampled_behavior
 
-    def get_sampled_behavior(self, sampled_behavior, masks, agent_output):
-        for en, output_value in enumerate(agent_output):
-            value_for_group = float(output_value)
-            sampled_behavior_for_group = masks[en] * value_for_group
-            sampled_behavior = torch.add(sampled_behavior, sampled_behavior_for_group)
-        return sampled_behavior
+    def get_sampled_behavior(self, sampled_behavior, masks, agent_outputs):
+        for agent_output in agent_outputs:
+            for en, output_value in enumerate(agent_output):
+                value_for_group = float(output_value)
+                sampled_behavior_for_group = masks[en] * value_for_group
+                sampled_behavior = torch.add(sampled_behavior, sampled_behavior_for_group)
+        n = len(agent_outputs)
+        average_sampled_behavior = sampled_behavior / n
+        return average_sampled_behavior
 
     def get_masks_for_each_group(self, variables):
         masks = []
