@@ -28,10 +28,29 @@ agents that interact with each other.
 The following operations are simulated as substeps:
 
 1. a customer will `search` and `select` a provider
+
+- the customer selects the closest provider with the least price
+
 2. the customer will `order` from the provider
+
+- the customer orders basis their monthly energy demand
+- the provider only confirms the order if it has the capacity to
+
 3. the provider will `fulfill` the order
+
+- the provider's capacity is reduced for the given step (~= 30 real days)
+
 4. the customer will `pay` for the work done
+
+- the provider's revenue is incremented, while the customer's wallet is deducted the same
+  amount.
+- the amount to be paid is determined by the provider's price, multiplied by the amount of
+  energy supplied.
+
 5. the provider will `restock` their solar energy
+
+- the amount of energy replenished SHOULD BE (TODO) dependent on the season as well as the
+  weather.
 
 Each of the substeps' code (apart from #5) is taken as-is from the
 [AgentTorch Beckn integration](https://github.com/AgentTorch/agent-torch-beckn).
@@ -77,4 +96,6 @@ Then, open Jupyter Lab and open the `main.ipynb` notebook, and run all the cells
 
 - Add more visualizations (plots/graphs/heatmaps/etc.)
 - Improve the data used for the simulation, reduce the number of random values.
+- Add more detailed logic to the substeps, i.e., seasonal fluctuation in energy generation
+  and prices.
 - Include and run a sample beckn instance to pull fake data from.
