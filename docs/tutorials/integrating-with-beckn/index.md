@@ -27,27 +27,27 @@ agents that interact with each other.
 
 The following operations are simulated as substeps:
 
-1. a customer will `search` and `select` a provider
+##### 1. a customer will `search` and `select` a provider
 
 - the customer selects the closest provider with the least price
 
-2. the customer will `order` from the provider
+##### 2. the customer will `order` from the provider
 
 - the customer orders basis their monthly energy demand
 - the provider only confirms the order if it has the capacity to
 
-3. the provider will `fulfill` the order
+##### 3. the provider will `fulfill` the order
 
 - the provider's capacity is reduced for the given step (~= 30 real days)
 
-4. the customer will `pay` for the work done
+##### 4. the customer will `pay` for the work done
 
 - the provider's revenue is incremented, while the customer's wallet is deducted the same
   amount.
 - the amount to be paid is determined by the provider's price, multiplied by the amount of
   energy supplied.
 
-5. the provider will `restock` their solar energy
+##### 5. the provider will `restock` their solar energy
 
 - the amount of energy replenished SHOULD BE (TODO) dependent on the season as well as the
   weather.

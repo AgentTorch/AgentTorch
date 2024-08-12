@@ -14,19 +14,25 @@ class Archetype:
     def llm(self, llm, user_prompt):
         try:
             llm.initialize_llm()
-            return [LLMArchetype(llm, user_prompt, n_arch=self.n_arch) for _ in range(self.n_arch)]
+            return [
+                LLMArchetype(llm, user_prompt, n_arch=self.n_arch)
+                for _ in range(self.n_arch)
+            ]
         except Exception as e:
             print(
                 " 'initialize_llm' Not Implemented, make sure if it's the intended behaviour"
             )
-            return [LLMArchetype(llm, user_prompt, n_arch=self.n_arch) for _ in range(self.n_arch)]
+            return [
+                LLMArchetype(llm, user_prompt, n_arch=self.n_arch)
+                for _ in range(self.n_arch)
+            ]
 
     def rule_based(self):
         raise NotImplementedError
 
 
 class LLMArchetype:
-    def __init__(self, llm, user_prompt,n_arch=1):
+    def __init__(self, llm, user_prompt, n_arch=1):
         self.n_arch = n_arch
         self.llm = llm
         # self.predictor = self.llm.initialize_llm()

@@ -9,8 +9,13 @@ class Behavior:
     def __init__(self, archetype, region):
         self.archetype = archetype
         self.population = LoadPopulation(region)
-        self.prompt_manager = PromptManager(self.archetype[-1].user_prompt, self.population)
-        [archetype.initialize_memory(num_agents=self.prompt_manager.distinct_groups) for archetype in self.archetype]
+        self.prompt_manager = PromptManager(
+            self.archetype[-1].user_prompt, self.population
+        )
+        [
+            archetype.initialize_memory(num_agents=self.prompt_manager.distinct_groups)
+            for archetype in self.archetype
+        ]
 
     def sample(self, kwargs=None):
         print("Behavior: Decision")
@@ -55,7 +60,9 @@ class Behavior:
             for en, output_value in enumerate(agent_output):
                 value_for_group = float(output_value)
                 sampled_behavior_for_group = masks[en] * value_for_group
-                sampled_behavior = torch.add(sampled_behavior, sampled_behavior_for_group)
+                sampled_behavior = torch.add(
+                    sampled_behavior, sampled_behavior_for_group
+                )
         n = len(agent_outputs)
         average_sampled_behavior = sampled_behavior / n
         return average_sampled_behavior
