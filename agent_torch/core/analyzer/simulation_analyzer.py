@@ -1,4 +1,3 @@
-
 import asyncio
 from langchain_openai import ChatOpenAI
 import yaml
@@ -38,7 +37,7 @@ class SimulationAnalysisAgent:
     def speculate(self, query: str):
         pass
 
-    def append_simulation_id_if_not_present(self,metadata_field_info):
+    def append_simulation_id_if_not_present(self, metadata_field_info):
         # Check if 'simulation_id' is already present
         if not any(attr.name == "simulation_id" for attr in metadata_field_info):
             # Append 'simulation_id' if not present

@@ -138,7 +138,7 @@ class LangchainLLM(LLM):
                     "chat_history": prompt_input["chat_history"],
                 }
             )
-        return agent_output['text']
+        return agent_output["text"]
 
     def inspect_history(self, last_k, file_dir):
         raise NotImplementedError(
