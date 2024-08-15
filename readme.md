@@ -162,6 +162,12 @@ Take a look at the [contributing guide](docs/contributing.md) for instructions
 on how to setup your environment, make changes to the codebase, and contribute
 them back to the project.
 
+## License
+
+Copyright (c) 2023 Ayush Chopra
+
+This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License. This means you are free to share and adapt the material for non-commercial purposes, as long as you give appropriate credit and indicate if changes were made. For more details, see the [LICENSE.md](LICENSE.md) file in this repository.
+
 ## Impact
 
 > **AgentTorch models are being deployed across the globe.**
