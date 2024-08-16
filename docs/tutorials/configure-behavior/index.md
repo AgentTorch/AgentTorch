@@ -66,7 +66,7 @@ Now you have two AI agents ready to process prompts!
 
 ## 4. Creating LLM Agents
 
-##### We support using Langchain and Dspy backends to initialize LLM instances - for agent and archetypes. Using our LLMBackend class, you can integrate any framework of your choice.
+We support using Langchain and Dspy backends to initialize LLM instances - for agent and archetypes. Using our [LLMBackend class](https://github.com/AgentTorch/AgentTorch/blob/1b2a723aa8da4d47f30870af51e87a55cea838b8/agent_torch/core/llm/backend.py#L17), you can integrate any framework of your choice.
 
 ### Using DSPy
 
