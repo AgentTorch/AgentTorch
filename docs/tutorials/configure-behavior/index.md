@@ -1,4 +1,4 @@
-# Guide to AI Agent Behavior Generation
+# Guide to Prompting LLM as ABM Agents
 
 Welcome to this comprehensive tutorial on AI agent behavior generation! This
 guide is designed for newcomers who want to learn how to create AI agents and
@@ -65,6 +65,8 @@ various situations. It uses the AI agents to generate these behaviors.
 Now you have two AI agents ready to process prompts!
 
 ## 4. Creating LLM Agents
+
+##### We support using Langchain and Dspy backends to initialize LLM instances - for agent and archetypes. Using our LLMBackend class, you can integrate any framework of your choice.
 
 ### Using DSPy
 

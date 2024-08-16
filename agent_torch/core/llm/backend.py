@@ -14,7 +14,7 @@ from langchain.prompts import (
 from abc import ABC, abstractmethod
 
 
-class LLM(ABC):
+class LLMBackend(ABC):
     def __init__(self):
         pass
 
@@ -29,7 +29,7 @@ class LLM(ABC):
         raise NotImplementedError
 
 
-class DspyLLM(LLM):
+class DspyLLM(LLMBackend):
     def __init__(self, openai_api_key, qa, cot, model="gpt-4o-mini"):
         super().__init__()
         self.qa = qa
@@ -87,7 +87,7 @@ class DspyLLM(LLM):
         sys.stdout = original_stdout
 
 
-class LangchainLLM(LLM):
+class LangchainLLM(LLMBackend):
     def __init__(
         self,
         openai_api_key,
