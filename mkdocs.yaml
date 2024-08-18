@@ -11,7 +11,9 @@ nav:
   - 'contributing.md'
   - Tutorials:
       - 'Creating a Model': 'tutorials/creating-a-model/index.md'
-      - 'Using Models': 'tutorials/using-models/index.md'
-      - 'Processing a Population': 'tutorials/processing-a-population/index.md'
-      - 'Configuring AI Agent Behavior': 'tutorials/configure-behavior/index.md'
-      - 'Integrating with Beckn': 'tutorials/integrating-with-beckn/index.md'
+      - 'Creating a Population': 'tutorials/processing-a-population/index.md'
+      - 'Prompting LLM as ABM agents': 'tutorials/configure-behavior/index.md'
+      - 'Modeling with Archetypes': 'tutorials/creating-archetypes/index.md'
+      - 'Benchmarking Behaviors': 'tutorials/compare-llm-performance/index.md'
+      - 'Closing Sim2Real Gap': 'tutorials/integrating-with-beckn/index.md'
+
