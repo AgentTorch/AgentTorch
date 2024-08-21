@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - docs/**
+      - mkdocs.yaml
 permissions:
   contents: write
 jobs:
