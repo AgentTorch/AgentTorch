@@ -18,6 +18,7 @@ Given this scenario, you must estimate the person's actions based on
 Give a "Yes" or "No" answer, followed by a period. Give one sentence explaining your choice.
 """
 
+
 class AgeGroup(Enum):
     UNDER_19 = 0
     BETWEEN_20_29 = 1

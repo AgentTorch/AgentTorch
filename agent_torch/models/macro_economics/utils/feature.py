@@ -1,5 +1,6 @@
 from enum import Enum, auto
 
+
 class Feature(Enum):
     RETAIL_CHANGE = auto()
     GROCERY_CHANGE = auto()

@@ -1,8 +1,9 @@
-''' County and State Data Processing network'''
+""" County and State Data Processing network"""
 
 import numpy as np
 import torch
 import torch.nn as nn
+
 # from data_utils import get_state_train_data_flu, create_window_seqs, get_county_train_data, counties
 from sklearn.preprocessing import StandardScaler
 import torch.nn as nn
@@ -11,9 +12,10 @@ import torch
 import math
 import pandas as pd
 
-cuda = torch.device('cpu')
+cuda = torch.device("cpu")
 dtype = torch.float
 SMOOTH_WINDOW = 7
+
 
 class TransformerAttn(nn.Module):
     """
@@ -53,8 +55,7 @@ class TransformerAttn(nn.Module):
         keys = self.key_layer(seq_in)
         weights = (value @ query.transpose(1, 2)) / math.sqrt(seq.shape[-1])
         weights = torch.exp(weights)
-        weights = (weights.transpose(1, 2) * mask.transpose(1, 0)).transpose(
-            1, 2)
+        weights = (weights.transpose(1, 2) * mask.transpose(1, 0)).transpose(1, 2)
         weights = weights / (weights.sum(-1, keepdim=True))
         return (weights @ keys).transpose(1, 0) * mask
 
@@ -91,16 +92,16 @@ class EmbedAttenSeq(nn.Module):
 
         self.rnn = nn.GRU(
             input_size=self.dim_seq_in,
-            hidden_size=self.rnn_out //
-            2 if self.bidirectional else self.rnn_out,
+            hidden_size=self.rnn_out // 2 if self.bidirectional else self.rnn_out,
             bidirectional=bidirectional,
             num_layers=n_layers,
             dropout=dropout,
         )
         self.attn_layer = attn(self.rnn_out, self.rnn_out, self.rnn_out)
         self.out_layer = [
-            nn.Linear(in_features=self.rnn_out + self.dim_metadata,
-                      out_features=self.dim_out),
+            nn.Linear(
+                in_features=self.rnn_out + self.dim_metadata, out_features=self.dim_out
+            ),
             nn.Tanh(),
             nn.Dropout(dropout),
         ]
@@ -169,8 +170,7 @@ class DecodeSeq(nn.Module):
 
         self.rnn = nn.GRU(
             input_size=self.rnn_out,
-            hidden_size=self.rnn_out //
-            2 if self.bidirectional else self.rnn_out,
+            hidden_size=self.rnn_out // 2 if self.bidirectional else self.rnn_out,
             bidirectional=bidirectional,
             num_layers=n_layers,
             dropout=dropout,
@@ -212,19 +212,21 @@ class DecodeSeq(nn.Module):
         return latent_seqs
 
 
-''' smooth data with moving average (common with fitting mechanistic models) '''
+""" smooth data with moving average (common with fitting mechanistic models) """
+
 
 def moving_average(x, w):
     return pd.Series(x).rolling(w, min_periods=1).mean().values
 
-''' Specify which state '''
+
+""" Specify which state """
 # def fetch_county_data_covid(state='MA',
 #                             county_id='25005',
 #                             pred_week='202021',
 #                             batch_size=32,
 #                             noise_level=0):
-#     ''' Import COVID data for counties 
-        
+#     ''' Import COVID data for counties
+
 #         Processing:
 #             - Sequences input is scaled
 #             - one-hot encoding for region (county)
@@ -424,7 +426,7 @@ def moving_average(x, w):
 
 #     def step(self, t, values):
 #         """
-#         Computes ODE states via equations       
+#         Computes ODE states via equations
 #             state is the array of state value (S,E,I,R,M)
 #         """
 #         params = {
@@ -478,7 +480,7 @@ def moving_average(x, w):
 
 #     def step(self, t, values):
 #         """
-#         Computes ODE states via equations       
+#         Computes ODE states via equations
 #             state is the array of state value (S,I)
 #         """
 #         params = {
@@ -510,6 +512,6 @@ def moving_average(x, w):
 #         return NEW_INFECTIONS_TODAY, ILI
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("THIS SHOULD NOT EXECUTE!")
     """ Create model """

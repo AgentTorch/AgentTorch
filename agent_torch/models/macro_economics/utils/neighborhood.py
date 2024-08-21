@@ -1,12 +1,13 @@
 from enum import Enum
 
+
 class Neighborhood(Enum):
     ASTORIA = 0
     UPPER_WEST_SIDE = 1
     BAY_RIDGE = 2
     PELHAM_BAY = 3
     PORT_RICHMOND = 4
-    
+
     @property
     def name(self) -> str:
         return {
@@ -38,8 +39,7 @@ class Neighborhood(Enum):
             Neighborhood.PELHAM_BAY: 49097,
             Neighborhood.PORT_RICHMOND: 23441,
         }[self]
-    
+
     @property
     def text(self) -> str:
         return f"lives in {self.name}, New York, a neighborhood with a population of {self.population}"
-

@@ -8,6 +8,7 @@ from macro_economics.utils.feature import Feature
 from macro_economics.utils.misc import epiweek_to_week_num
 from macro_economics.utils.neighborhood import Neighborhood
 
+
 def initial_infection_ratio(neighborhood: Neighborhood, epiweek: Week):
     num_cases = get_data(neighborhood, epiweek - 1, 1, [Feature.CASES])[0, 0]
     return num_cases / neighborhood.population
@@ -32,7 +33,7 @@ def create_infection_csv(neighborhood: Neighborhood, epiweek: Week):
         )[:, 0]
         tensor_np = agent_stages.numpy().astype(int)
         tensor_np = np.array(tensor_np, dtype=np.uint8)
-        np.savetxt("temp_infections", tensor_np, delimiter='\n')
+        np.savetxt("temp_infections", tensor_np, delimiter="\n")
 
         # check if the generated file has the correct number of cases
         arr = np.loadtxt(f"temp_infections")
