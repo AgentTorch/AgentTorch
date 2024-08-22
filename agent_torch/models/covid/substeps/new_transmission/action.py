@@ -8,12 +8,15 @@ from agent_torch.core.substep import SubstepAction
 from agent_torch.core.llm.backend import LangchainLLM
 from agent_torch.core.distributions import StraightThroughBernoulli
 
+from agent_torch.core.decorators import with_behavior
+
 from ...calibration.utils.data import get_data, get_labels
 from ...calibration.utils.feature import Feature
 from ...calibration.utils.llm import AgeGroup, SYSTEM_PROMPT, construct_user_prompt
 from ...calibration.utils.misc import week_num_to_epiweek, name_to_neighborhood
 
 
+@with_behavior
 class MakeIsolationDecision(SubstepAction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -46,7 +49,13 @@ class MakeIsolationDecision(SubstepAction):
         return one_hot_tensor.to(self.device)
 
     def forward(self, state, observation):
-        # if in debug mode, return random values for isolation
-        will_isolate = torch.rand(self.num_agents, 1).to(self.device)
+        print("Action: MakeIsolationDecision with mode: ", self.mode)
+        # if in heuristic mode, return random values for isolation
+        if self.mode == 'heuristic':
+            will_isolate = torch.rand(self.num_agents, 1).to(self.device)
+        else:
+            breakpoint()
+            assert self.behavior is not None
+            breakpoint()
 
         return {self.output_variables[0]: will_isolate}

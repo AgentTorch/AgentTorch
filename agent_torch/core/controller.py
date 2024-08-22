@@ -72,20 +72,3 @@ class Controller(nn.Module):
 
         return next_state
 
-    def learn_after_episode(self, episode_traj, initializer, optimizer):
-        optimizer.zero_grad()
-        ret_episode_all = sum(
-            [i[0]["agents"]["consumers"]["Q_exp"] for i in episode_traj["states"]]
-        )
-        ret_episode_0 = ret_episode_all[0]
-        ret_episode = ret_episode_all.sum()
-        self.returns.append(ret_episode)
-        loss = -1e6 * ret_episode
-        loss.backward()
-        F_t_param = initializer.policy_function["0"]["consumers"][
-            "purchase_product"
-        ].learnable_args["F_t_params"]
-        print(
-            f"return is {ret_episode}, return for agent 0 is {ret_episode_0} and the F_t_param for agent 0 is {F_t_param[0]}"
-        )
-        optimizer.step()

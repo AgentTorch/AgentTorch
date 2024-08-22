@@ -1,29 +1,29 @@
-from typing import List, Any
+# File: agent_torch/core/decorators.py
+
 from functools import wraps
 
 def with_behavior(cls):
-    class_behavior = None
+    original_init = cls.__init__
 
-    @wraps(cls.__init__)
+    @wraps(original_init)
     def new_init(self, *args, **kwargs):
-        cls.__init__(self, *args, **kwargs)
-        self.behavior = None
+        original_init(self, *args, **kwargs)
+        self._behavior = None
 
     @classmethod
     def set_behavior(cls, behavior):
-        cls.class_behavior = behavior
+        cls._class_behavior = behavior
 
-    @property
-    def behavior(self):
-        return self._behavior if hasattr(self, '_behavior') else self.__class__.class_behavior
+    def get_behavior(self):
+        return self._behavior if hasattr(self, '_behavior') else getattr(self.__class__, '_class_behavior', None)
 
-    @behavior.setter
-    def behavior(self, value):
-        self._behavior = value
+    def set_instance_behavior(self, behavior):
+        self._behavior = behavior
 
     cls.__init__ = new_init
     cls.set_behavior = set_behavior
-    cls.behavior = behavior
+    cls.behavior = property(get_behavior, set_instance_behavior)
 
     return cls
 
+# You can add other decorators here if needed
