@@ -135,9 +135,7 @@ geoplot_template = """
 			}
 
 			// Example time-series GeoJSON data
-			const geoJsonData = $data
-
-			const timeSeriesData = processTimeSeriesData(geoJsonData)
+			const geoJsons = $data
 
 			const start = Cesium.JulianDate.fromIso8601('$startTime')
 			const stop = Cesium.JulianDate.fromIso8601('$stopTime')
@@ -150,7 +148,7 @@ geoplot_template = """
 
 			viewer.timeline.zoomTo(start, stop)
 
-			for (const geoJsonData of geoJsonDatas) {
+			for (const geoJsonData of geoJsons) {
 				const timeSeriesData = processTimeSeriesData(geoJsonData)
 				const dataSource = createTimeSeriesEntities(
 					timeSeriesData,
@@ -204,17 +202,19 @@ class GeoPlot:
         for i, coord in enumerate(coords):
             features = []
             for time, value_list in zip(timestamps, values):
-                for value in value_list:
-                    features.append(
-                        {
-                            "type": "Feature",
-                            "geometry": {
-                                "type": "Point",
-                                "coordinates": [coord[1], coord[0]],
-                            },
-                            "properties": {"value": value, "time": time.isoformat()},
-                        }
-                    )
+                features.append(
+                    {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [coord[1], coord[0]],
+                        },
+                        "properties": {
+                            "value": value_list[i],
+                            "time": time.isoformat(),
+                        },
+                    }
+                )
             geojsons.append({"type": "FeatureCollection", "features": features})
 
         with open("geodata.json", "w", encoding="utf-8") as f:
