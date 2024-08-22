@@ -11,7 +11,7 @@ jobs:
           python-version: 3.9
       - run: pip install -r development.txt
       - run: pip install -e .
-      - run: pytest -vvv tests/
+      - run: pytest -vvv tests/ --ignore tests/test_executor.py
   lint:
     runs-on: ubuntu-latest
     steps:

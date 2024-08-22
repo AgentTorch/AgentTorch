@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Chopra
+    given-names: Ayush
+    orcid: https://orcid.org/0000-0002-4070-4139
+title: "AgentTorch: Large Population Models"
+version: 0.4.0
+identifiers:
+  - type: doi
+    value: media.mit.edu/~ayushc/research/agency.pdf
+date-released: 2024-05-28

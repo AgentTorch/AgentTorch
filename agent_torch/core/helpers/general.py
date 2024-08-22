@@ -91,19 +91,32 @@ def register_resolver(name, resolver):
     OmegaConf.register_new_resolver(name, resolver)
 
 
-def read_config(config_file):
-    register_resolver("sum", lambda x, y: x + y)
-    register_resolver("multiply", lambda x, y: x * y)
-    register_resolver("divide", lambda x, y: x // y)
+def read_config(config_file, register_resolvers=True):
+    if register_resolvers:
+        resolvers = [
+            ("sum", lambda x, y: x + y),
+            ("multiply", lambda x, y: x * y),
+            ("divide", lambda x, y: x // y),
+        ]
+
+        for name, func in resolvers:
+            try:
+                OmegaConf.register_resolver(name, func)
+            except AssertionError as e:
+                if "is already registered" in str(e):
+                    continue
+                else:
+                    raise e
 
     if config_file[-5:] != ".yaml":
         raise ValueError("Config file type should be yaml")
+
     try:
         config = OmegaConf.load(config_file)
         config = OmegaConf.to_object(config)
     except Exception as e:
         raise ValueError(
-            f"Could not load config file. Please check path ad file type. Error message is {str(e)}"
+            f"Could not load config file. Please check path and file type. Error message is {str(e)}"
         )
 
     return config

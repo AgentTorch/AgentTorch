@@ -54,7 +54,7 @@ class DataLoader(DataLoaderBase):
         self.population_size = population.population_size
         self.set_input_data_dir(population.population_folder_path)
         self.set_population_size(population.population_size)
-
+        self.register_resolvers = True
         self._write_config()
 
     def _read_config(self):
@@ -70,7 +70,8 @@ class DataLoader(DataLoaderBase):
         return self.set_config_attribute("num_agents", population_size)
 
     def get_config(self):
-        omega_config = read_config(self.config_path)
+        omega_config = read_config(self.config_path, self.register_resolvers)
+        self.register_resolvers = False
         return omega_config
 
 

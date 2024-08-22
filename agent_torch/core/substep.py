@@ -70,7 +70,7 @@ class SubstepTransition(nn.Module, ABC):
             arguments["learnable"],
             arguments["fixed"],
         )
-        
+
         if self.learnable_args:
             self.learnable_args = nn.ParameterDict(self.learnable_args)
 

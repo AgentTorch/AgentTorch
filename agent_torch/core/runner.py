@@ -96,27 +96,27 @@ class Runner(nn.Module):
 
     def _map_and_replace_tensor(self, input_string):
         # Split the input string into its components
-        parts = input_string.split('.')
-        
+        parts = input_string.split(".")
+
         # Extract the relevant parts
         function = parts[1]
         index = parts[2]
         sub_func = parts[3]
         arg_type = parts[4]
         var_name = parts[5]
-        
+
         def getter_and_setter(runner, new_value=None):
             current = runner
 
             substep_type = getattr(runner.initializer, function)
             substep_function = getattr(substep_type[str(index)], sub_func)
-            current_tensor = getattr(substep_function, 'calibrate_' + var_name)
-            
+            current_tensor = getattr(substep_function, "calibrate_" + var_name)
+
             if new_value is not None:
                 assert new_value.requires_grad == current_tensor.requires_grad
-                setvar_name = 'calibrate_' + var_name
+                setvar_name = "calibrate_" + var_name
                 setattr(substep_function, setvar_name, new_value)
-                current_tensor = getattr(substep_function, 'calibrate_' + var_name)
+                current_tensor = getattr(substep_function, "calibrate_" + var_name)
                 return current_tensor
             else:
                 return current_tensor

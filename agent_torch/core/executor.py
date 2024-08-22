@@ -21,16 +21,17 @@ class BaseExecutor:
 class Executor(BaseExecutor):
     def __init__(self, model, data_loader=None, pop_loader=None) -> None:
         super().__init__(model)
+        self.model = model
         if pop_loader:
             self.pop_loader = pop_loader
             self.data_loader = DataLoader(model, self.pop_loader)
         else:
             self.data_loader = data_loader
-
         self.config = self.data_loader.get_config()
-        self.runner = self._get_runner(self.config)
 
     def init(self):
+        self.config = self.data_loader.get_config()
+        self.runner = self._get_runner(self.config)
         self.runner.init()
         # self.learnable_params = [
         #     param for param in self.runner.parameters() if param.requires_grad

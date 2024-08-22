@@ -14,7 +14,7 @@ from langchain.prompts import (
 from abc import ABC, abstractmethod
 
 
-class LLM(ABC):
+class LLMBackend(ABC):
     def __init__(self):
         pass
 
@@ -29,8 +29,8 @@ class LLM(ABC):
         raise NotImplementedError
 
 
-class DspyLLM(LLM):
-    def __init__(self, openai_api_key, qa, cot, model="gpt-3.5-turbo"):
+class DspyLLM(LLMBackend):
+    def __init__(self, openai_api_key, qa, cot, model="gpt-4o-mini"):
         super().__init__()
         self.qa = qa
         self.cot = cot
@@ -87,12 +87,12 @@ class DspyLLM(LLM):
         sys.stdout = original_stdout
 
 
-class LangchainLLM(LLM):
+class LangchainLLM(LLMBackend):
     def __init__(
         self,
         openai_api_key,
         agent_profile,
-        model="gpt-3.5-turbo",
+        model="gpt-4o-mini",
     ):
         super().__init__()
         self.backend = "langchain"
@@ -128,17 +128,17 @@ class LangchainLLM(LLM):
 
     def langchain_query_and_get_answer(self, prompt_input):
         if type(prompt_input) is str:
-            agent_output = self.predictor.apply(
+            agent_output = self.predictor.invoke(
                 {"user_prompt": prompt_input, "chat_history": []}
             )
         else:
-            agent_output = self.predictor.apply(
+            agent_output = self.predictor.invoke(
                 {
                     "user_prompt": prompt_input["agent_query"],
                     "chat_history": prompt_input["chat_history"],
                 }
             )
-        return agent_output
+        return agent_output["text"]
 
     def inspect_history(self, last_k, file_dir):
         raise NotImplementedError(

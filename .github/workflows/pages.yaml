@@ -1,6 +1,12 @@
 name: pages
 
-on: push
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - docs/**
+      - mkdocs.yaml
 permissions:
   contents: write
 jobs:

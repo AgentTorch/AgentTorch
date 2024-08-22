@@ -7,6 +7,7 @@ from agent_torch.core.substep import SubstepTransitionMessagePassing
 from agent_torch.core.helpers import get_by_path
 from agent_torch.core.distributions import StraightThroughBernoulli
 
+
 class NewTransmission(SubstepTransitionMessagePassing):
     def __init__(self, config, input_variables, output_variables, arguments):
         super().__init__(config, input_variables, output_variables, arguments)
@@ -28,7 +29,7 @@ class NewTransmission(SubstepTransitionMessagePassing):
         self.mode = self.config["simulation_metadata"]["EXECUTION_MODE"]
         self.st_bernoulli = StraightThroughBernoulli.apply
 
-        self.calibration_mode = self.config['simulation_metadata']['calibration']
+        self.calibration_mode = self.config["simulation_metadata"]["calibration"]
 
     def _lam(
         self,
