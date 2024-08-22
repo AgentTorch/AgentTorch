@@ -169,10 +169,9 @@ def read_var(state, var):
 
 
 class GeoPlot:
-    def __init__(self, config, state_trajectories, geo_file, cesium_token):
+    def __init__(self, config, state_trajectories, cesium_token):
         self.config = config
         self.state_trajectories = state_trajectories
-        self.geo_file = geo_file
         self.cesium_token = cesium_token
 
     def visualize(self, entity_position_path, entity_property_path):
