@@ -60,6 +60,8 @@ class Runner(nn.Module):
         for time_step in range(num_steps):
             self.state["current_step"] = time_step
 
+            self.state_trajectory.append([]) # track state after each substep
+
             for substep in self.config["substeps"].keys():
                 observation_profile, action_profile = {}, {}
 
