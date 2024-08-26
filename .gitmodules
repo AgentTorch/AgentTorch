@@ -1,3 +1,6 @@
 [submodule "agent_torch/visualize"]
 	path = agent_torch/visualize
 	url = git@github.com:AgentTorch/visualize
+[submodule "agent_torch/data/census"]
+	path = agent_torch/data/census
+	url = git@github.com:AgentTorch/census
