@@ -4,3 +4,6 @@
 [submodule "agent_torch/data/census"]
 	path = agent_torch/data/census
 	url = git@github.com:AgentTorch/census
+[submodule "agent_torch/populations"]
+	path = agent_torch/populations
+	url = git@github.com:AgentTorch/populations
