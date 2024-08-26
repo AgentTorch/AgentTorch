@@ -1,5 +1,0 @@
-osmnx==1.9.3
-torch_geometric==2.5.3
-contextily==1.6.0
-matplotlib==3.9.0
-imageio==2.34.2
