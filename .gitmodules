@@ -1,0 +1,3 @@
+[submodule "agent_torch/visualize"]
+	path = agent_torch/visualize
+	url = git@github.com:AgentTorch/visualize
