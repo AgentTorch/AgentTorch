@@ -97,7 +97,7 @@ from torch.optim import SGD
 loader = LoadPopulation(astoria)
 simulation = Executor(model=covid, pop_loader=loader)
 
-simulation.init(SGD)
+simulation.init()
 simulation.execute()
 ```
 
