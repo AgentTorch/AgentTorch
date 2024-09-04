@@ -37,7 +37,7 @@ simulation_metadata:
   num_episodes: 5
   num_steps_per_episode: 21
   num_substeps_per_step: 2
-  population_dir: /Users/arcaman07/Documents/Opensource/AgentTorch/agent_torch/populations/astoria
+  population_dir: /u/ayushc/projects/GradABM/systems/AgentTorch/agent_torch/populations/astoria
   quarantine_days: 12
   test_ineligible_days: 2
   test_result_delay_days: 3
