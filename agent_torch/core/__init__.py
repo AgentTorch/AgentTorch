@@ -8,3 +8,4 @@ from .version import __version__
 
 from .distributions import distributions
 from .helpers.soft import *
+from .template import *
