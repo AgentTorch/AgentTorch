@@ -25,8 +25,7 @@ class Simulator:
         num_steps_per_episode = metadata.get("num_steps_per_episode")
 
         print(":: preparing simulation...")
-        token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI2MzllOTJmMy01YmUzLTQwZDQtOGMyYy04NDdlODUyYjc1MzYiLCJpZCI6MjM1NDMxLCJpYXQiOjE3MjM5ODc4ODZ9.CxqymuvZilCWP8dv01j-4634W7PQhcI_DuT-gfRS3dc"
-        geoplot = GeoPlot(self.config, token)
+        geoplot = GeoPlot(self.config, metadata.get("cesium_token"))
 
         for episode in trange(num_episodes, desc=f":: running episode", ncols=108):
             self.runner.reset()
