@@ -85,10 +85,15 @@ def parse_entity(config, name, entities, data_dir):
     return config
 
 
-def get_model(metadata, data, agents, objects):
+def get_model(metadata, data, agents, objects, substeps):
     data_dir = Path(data)
 
     config = oc.load(metadata["config_path"])
+    for k, v in substeps.items():
+        if isinstance(v, str):
+            substep_config = oc.load(f"{v}/state.yaml")
+            config["substeps"][k] = oc.to_object(substep_config)
+
     config = parse_entity(config, "agents", agents, data_dir)
     config = parse_entity(config, "objects", objects, data_dir)
 
@@ -103,11 +108,11 @@ def get_model(metadata, data, agents, objects):
     return config, registry, runner
 
 
-def load_from_template(model, data, agents, objects):
+def load_from_template(model, data, agents, objects, substeps):
     module = load_module("model_template", f"{model}/__init__.py")
 
     metadata = module.get_model_metadata()
-    config, registry, runner = get_model(metadata, data, agents, objects)
+    config, registry, runner = get_model(metadata, data, agents, objects, substeps)
 
     simulator = Simulator(config, registry, runner)
     return simulator

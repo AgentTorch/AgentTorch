@@ -15,6 +15,9 @@ class Controller(nn.Module):
         observation = {}
         substep = state["current_substep"]
         try:
+            if self.config["substeps"][substep]["observation"][agent_type] is None:
+                return None
+
             for obs in self.config["substeps"][substep]["observation"][
                 agent_type
             ].keys():
@@ -23,6 +26,9 @@ class Controller(nn.Module):
                     **observation,
                 }
         except Exception as e:
+            print(
+                f"Error while running observation for {agent_type} in substep {substep}:"
+            )
             raise e
             observation = None
 
@@ -33,12 +39,18 @@ class Controller(nn.Module):
         substep, step = state["current_substep"], state["current_step"]
 
         try:
+            if self.config["substeps"][substep]["policy"][agent_type] is None:
+                return None
+
             for policy in self.config["substeps"][substep]["policy"][agent_type].keys():
                 action = {
                     **policy_function[substep][agent_type][policy](state, observation),
                     **action,
                 }
         except Exception as e:
+            print(
+                f"Error while running policy function for {agent_type} in substep {substep}:"
+            )
             raise e
             action = None
 
