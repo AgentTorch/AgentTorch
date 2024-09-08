@@ -13,10 +13,12 @@ from agent_torch.visualize import GeoPlot
 
 
 class Simulator:
-    def __init__(self, config, registry, runner):
+    def __init__(self, name, config, registry, runner):
+        self.name = name
         self.config = config
         self.registry = registry
         self.runner = runner
+        self.state_trajectories = []
 
     def execute(self):
         print(":: execution started")
@@ -25,21 +27,32 @@ class Simulator:
         num_steps_per_episode = metadata.get("num_steps_per_episode")
 
         print(":: preparing simulation...")
-        geoplot = GeoPlot(self.config, metadata.get("cesium_token"))
 
         for episode in trange(num_episodes, desc=f":: running episode", ncols=108):
             self.runner.reset()
             for _ in trange(num_steps_per_episode, desc=f":: running steps", ncols=72):
                 self.runner.step(1)
-
-            geoplot.visualize(
-                name=f"solar-network-{episode}",
-                state_trajectory=self.runner.state_trajectory,
-                entity_position="agents/bap/position",
-                entity_property="agents/bap/wallet",
-            )
+            self.state_trajectories.append(self.runner.state_trajectory)
 
         print(":: execution completed")
+
+    def visualize(self, entity_position, entity_property):
+        print(":: visualization started")
+        metadata = self.config.get("simulation_metadata")
+        num_episodes = metadata.get("num_episodes")
+
+        print(":: preparing visualization...")
+
+        geoplot = GeoPlot(self.config, metadata.get("cesium_token"))
+        for i in trange(num_episodes, desc=f":: visualizing {self.name}", ncols=108):
+            geoplot.visualize(
+                f"{self.name}-{i}",
+                self.state_trajectories[i],
+                entity_position,
+                entity_property,
+            )
+
+        print(":: visualization completed")
 
 
 def load_module(module_name, module_path):
@@ -108,11 +121,11 @@ def get_model(metadata, data, agents, objects, substeps):
     return config, registry, runner
 
 
-def load_from_template(model, data, agents, objects, substeps):
+def load_from_template(name, model, data, agents, objects, substeps):
     module = load_module("model_template", f"{model}/__init__.py")
 
     metadata = module.get_model_metadata()
     config, registry, runner = get_model(metadata, data, agents, objects, substeps)
 
-    simulator = Simulator(config, registry, runner)
+    simulator = Simulator(name, config, registry, runner)
     return simulator
