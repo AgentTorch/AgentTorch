@@ -57,7 +57,7 @@ class HuntPrey(SubstepTransition):
         nutrition = get_var(state, input_variables["nutritional_value"])
 
         # if there are no targets, skip the state modifications.
-        if len(action["predator"]["target_positions"]) < 1:
+        if (action["predator"] is None) or (len(action["predator"]["target_positions"]) < 1):
             return {}
 
         target_positions = torch.stack(action["predator"]["target_positions"], dim=0)
