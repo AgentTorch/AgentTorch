@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
-from model_utils import EmbedAttenSeq, DecodeSeq
+from calibration.model_utils import EmbedAttenSeq, DecodeSeq
+import torch.nn.functional as F
 
 MIN_VAL_PARAMS = {
     "abm-covid": [
@@ -261,3 +262,74 @@ class LearnableParams(nn.Module):
         """ bound output """
         out = self.min_values + (self.max_values - self.min_values) * self.sigmoid(out)
         return out
+
+
+class SimpleCovidPredictor(nn.Module):
+    def __init__(self, input_dim, hidden_dim=32, output_dim=1):
+        super().__init__()
+        self.lstm = nn.LSTM(input_dim, hidden_dim, batch_first=True)
+        self.fc = nn.Linear(hidden_dim, output_dim)
+    
+    def forward(self, x, meta):
+        # Ignore meta data for simplicity
+        lstm_out, _ = self.lstm(x)
+        # Use only the last time step's output
+        last_time_step = lstm_out[:, -1, :]
+        output = self.fc(last_time_step)
+        return output
+
+class SimpleCovidPredictorWithMeta(nn.Module):
+    def __init__(self, input_dim, meta_dim, hidden_dim=32, output_dim=1):
+        super().__init__()
+        self.meta_encoder = nn.Linear(meta_dim, hidden_dim)
+        self.lstm = nn.LSTM(input_dim + hidden_dim, hidden_dim, batch_first=True)
+        self.fc = nn.Linear(hidden_dim, output_dim)
+    
+    def forward(self, x, meta):
+        # Encode metadata
+        meta_encoded = self.meta_encoder(meta)
+        
+        # Expand metadata to match time series length
+        meta_expanded = meta_encoded.unsqueeze(1).expand(-1, x.size(1), -1)
+        
+        # Concatenate input and metadata
+        combined_input = torch.cat([x, meta_expanded], dim=-1)
+        
+        # Process through LSTM
+        lstm_out, _ = self.lstm(combined_input)
+        
+        # Use only the last time step's output
+        last_time_step = lstm_out[:, -1, :]
+        
+        # Final output
+        output = self.fc(last_time_step)
+        return output
+    
+class ImprovedCovidPredictor(nn.Module):
+    def __init__(self, input_dim, meta_dim, hidden_dim=64, output_dim=4, num_layers=2):
+        super().__init__()
+        self.meta_encoder = nn.Sequential(
+            nn.Linear(meta_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim)
+        )
+        self.lstm = nn.LSTM(input_dim + hidden_dim, hidden_dim, num_layers=num_layers, batch_first=True)
+        self.fc_layers = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, output_dim)
+        )
+        self.bn = nn.BatchNorm1d(hidden_dim)
+        
+    def forward(self, x, meta):
+        x = F.normalize(x, p=2, dim=2)
+        meta = F.normalize(meta, p=2, dim=1)
+        meta_encoded = self.meta_encoder(meta)
+        meta_expanded = meta_encoded.unsqueeze(1).expand(-1, x.size(1), -1)
+        combined_input = torch.cat([x, meta_expanded], dim=-1)
+        lstm_out, _ = self.lstm(combined_input)
+        lstm_out = self.bn(lstm_out.transpose(1, 2)).transpose(1, 2)
+        last_time_step = lstm_out[:, -1, :]
+        output = self.fc_layers(last_time_step)
+        
+        return output
