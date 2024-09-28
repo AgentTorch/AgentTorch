@@ -117,8 +117,8 @@ def read_config(config_file, register_resolvers=True):
 
         for k, v in config["substeps"].items():
             if isinstance(v, str):
-                substep_config = oc.load(f"{v}/state.yaml")
-                config["substeps"][k] = oc.to_object(substep_config)
+                substep_config = OmegaConf.load(f"{v}/state.yaml")
+                config["substeps"][k] = OmegaConf.to_object(substep_config)
     except Exception as e:
         raise ValueError(
             f"Could not load config file. Please check path and file type. Error message is {str(e)}"
