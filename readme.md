@@ -44,7 +44,7 @@ AgentTorch, our open-source platform, makes building and running these massive s
   geospatial worlds, cells in anatomical worlds, autonomous avatars in digital
   worlds.
 
-LPMs are already making real-world impact. They're being used to help immunize millions of people by optimizing vaccine distribution strategies, and to track billions of dollars in global supply chains, improving efficiency and reducing waste. Our long-term goal is to "re-invent the census": built entirely in simulation, captured passively and used to protect country-scale populations. Our research is early but actively making an impact - winning awards at AI conferences and being deployed across the world. Learn more about LPMs [here](https://lpm.media.mit.edu/research.pdf).
+LPMs are already making real-world impact. They're being used to help immunize millions of people by optimizing vaccine distribution strategies, and to track billions of dollars in global supply chains, improving efficiency and reducing waste. Our long-term goal is to "re-invent the census": built entirely in simulation, captured passively and used to protect country-scale populations. Our research is early but actively making an impact - winning awards at AI conferences and being deployed across the world. Learn more about our vision [here](https://lpm.media.mit.edu/vision.pdf).
 
 AgentTorch is building the future of decision engines - inside the body, around us and beyond!
 
@@ -97,7 +97,7 @@ from torch.optim import SGD
 loader = LoadPopulation(astoria)
 simulation = Executor(model=covid, pop_loader=loader)
 
-simulation.init(SGD)
+simulation.init()
 simulation.execute()
 ```
 
@@ -125,7 +125,7 @@ user_prompt_template = "Your age is {age} {gender},{unemployment_rate} the numbe
 
 # Using Langchain to build LLM Agents
 agent_profile = "You are a person living in NYC. Given some info about you and your surroundings, decide your willingness to work. Give answer as a single number between 0 and 1, only."
-llm_langchian = LangchainLLM(
+llm_langchain = LangchainLLM(
     openai_api_key=OPENAI_API_KEY, agent_profile=agent_profile, model="gpt-3.5-turbo"
 )
 
@@ -137,7 +137,7 @@ archetype = Archetype(n_arch=7)
 # You have options to pass any of the above created llm objects to the behavior class
 # Specify the region for which the behavior is to be generated. This should be the name of any of the regions available in the populations folder.
 earning_behavior = Behavior(
-    archetype=archetype.llm(llm=llm_langchian, user_prompt=user_prompt_template), region=NYC
+    archetype=archetype.llm(llm=llm_langchain, user_prompt=user_prompt_template), region=NYC
 )
 
 kwargs = {
