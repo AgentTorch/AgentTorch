@@ -9,7 +9,6 @@ from omegaconf import OmegaConf as oc
 from tqdm import trange
 from agent_torch.core import Runner, Registry
 from agent_torch.core.helpers import read_config, read_from_file
-from agent_torch.visualize import GeoPlot
 
 
 class Simulator:
@@ -36,21 +35,21 @@ class Simulator:
 
         print(":: execution completed")
 
-    def visualize(self, entity_position, entity_property):
+    def visualize(self, engine):
+        metadata = self.config.get("simulation_metadata")
+        if not metadata.get("visualize"):
+            print(":: visualization disabled")
+            return
+
         print(":: visualization started")
+
         metadata = self.config.get("simulation_metadata")
         num_episodes = metadata.get("num_episodes")
 
         print(":: preparing visualization...")
 
-        geoplot = GeoPlot(self.config, metadata.get("cesium_token"))
         for i in trange(num_episodes, desc=f":: visualizing {self.name}", ncols=108):
-            geoplot.visualize(
-                f"{self.name}-{i}",
-                self.state_trajectories[i],
-                entity_position,
-                entity_property,
-            )
+            engine.render(self.state_trajectories[i])
 
         print(":: visualization completed")
 
