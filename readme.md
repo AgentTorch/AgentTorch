@@ -51,16 +51,6 @@ AgentTorch is building the future of decision engines - inside the body, around 
 https://github.com/AgentTorch/AgentTorch/assets/13482350/4c3f9fa9-8bce-4ddb-907c-3ee4d62e7148
 
 ## Installation
-
-The easiest way to install AgentTorch (v0.4.0) is from pypi:
-```
-> pip install agent-torch
-```
-
-> AgentTorch is meant to be used in a Python 3.9 environment. If you have not
-> installed Python 3.9, please do so first from
-> [python.org/downloads](https://www.python.org/downloads/).
-
 Install the most recent version from source using `pip`:
 
 ```sh
@@ -70,6 +60,15 @@ Install the most recent version from source using `pip`:
 > Some models require extra dependencies that have to be installed separately.
 > For more information regarding this, as well as the hardware the project has
 > been run on, please see [`docs/install.md`](docs/install.md).
+
+The easiest way to install AgentTorch (v0.4.0) is from pypi:
+```
+> pip install agent-torch
+```
+
+> AgentTorch is meant to be used in a Python 3.9 environment. If you have not
+> installed Python 3.9, please do so first from
+> [python.org/downloads](https://www.python.org/downloads/).
 
 ## Getting Started
 
