@@ -176,7 +176,7 @@ def create_household_composition_v3_remote(
 
 
 def create_household_composition_v3(
-    proc_houshold_dataset: DataFrame,
+    proc_household_dataset: DataFrame,
     proc_base_pop: DataFrame,
     proc_area: int or str,
     adult_list: list,
@@ -185,7 +185,7 @@ def create_household_composition_v3(
     """Create household composition (V3)
 
     Args:
-        proc_houshold_dataset (DataFrame): Household dataset
+        proc_household_dataset (DataFrame): Household dataset
         proc_base_pop (DataFrame): Base population dataset
         proc_area (intorstr): Area to use
 
@@ -194,28 +194,29 @@ def create_household_composition_v3(
     """
     print("Starting create_household_composition_v3...")
 
-    sorted_proc_houshold_dataset = proc_houshold_dataset.sort_values(
+    sorted_proc_household_dataset = proc_household_dataset.sort_values(
         by="household_num", ascending=False, inplace=False
     )
 
-    household_types = proc_houshold_dataset[
+    household_types = proc_household_dataset[
         ["family_households", "nonfamily_households"]
     ]
     household_types["family_households_prob"] = (
-        household_types["family_households"] / proc_houshold_dataset["household_num"]
+        household_types["family_households"] / proc_household_dataset["household_num"]
     )
     household_types["nonfamily_households_prob"] = (
-        household_types["nonfamily_households"] / proc_houshold_dataset["household_num"]
+        household_types["nonfamily_households"] / proc_household_dataset["household_num"]
     )
     household_proportions = household_types[
         ["family_households_prob", "nonfamily_households_prob"]
     ]
+    living_alone = proc_household_dataset["living_alone"].iloc[0]
 
     # Calculate average number of children per family
     avg_children_per_family = (
-        proc_houshold_dataset["children_num"] / proc_houshold_dataset["household_num"]
+        proc_household_dataset["children_num"] / proc_household_dataset["household_num"]
     )  # Only for NZ data
-    num_households = proc_houshold_dataset["household_num"].iloc[0]
+    num_households = proc_household_dataset["household_num"].iloc[0]
 
     print(f"Number of households: {num_households}")
 
@@ -223,33 +224,54 @@ def create_household_composition_v3(
     unassigned_children = proc_base_pop[proc_base_pop["age"].isin(children_list)].copy()
     household_types_choices = ["Family", "Nonfamily"]
     household_id = 0
-    for _, row in sorted_proc_houshold_dataset.iterrows():
+    for _, row in sorted_proc_household_dataset.iterrows():
         for num in tqdm(range(num_households), desc="Processing"):
             household_type = random.choices(
                 household_types_choices, weights=household_proportions.values.flatten()
             )[0]
 
-            print(f"Household type: {household_type}")
+            print(f"Household type: {household_type}")            
 
-            # Simulate family composition (if family household)
-            if household_type == "Family":
-                children_num = (
-                    int(random.randint(0, 2) * avg_children_per_family)
-                    if proc_houshold_dataset["children_num"].iloc[0] > 0
-                    else 0
-                )
-            else:
+            # Nonfamily, people living alone still need to be allocated
+            if household_type == "Nonfamily" and living_alone > 0:
+                # Prioritize single-person households for living_alone
+                total_individuals = 1
+                adults_num = 1
                 children_num = 0
-            # Simulate number of individuals
-            total_individuals = int(
-                random.randint(0, 2)
-                * proc_houshold_dataset["average_household_size"].iloc[0]
-            )
-            if (total_individuals - children_num) <= 0:
+
+                living_alone -= 1
+
+            # Nonfamily, people living alone have been allocated
+            elif household_type == "Nonfamily" and living_alone == 0:
+                total_individuals = int(
+                    random.gauss(
+                        proc_household_dataset["average_household_size"].iloc[0], 
+                        0.5  # standard deviation to control variability
+                    )
+                )
+                
                 adults_num = total_individuals
                 children_num = 0
-            else:
-                adults_num = total_individuals - children_num
+            
+            # Family
+            elif household_type == "Family":
+                children_num = (
+                    int(random.randint(0, 2) * avg_children_per_family)
+                    if proc_household_dataset["children_num"].iloc[0] > 0
+                    else 0
+                )
+                total_individuals = int(
+                    random.gauss(
+                        proc_household_dataset["average_household_size"].iloc[0], 
+                        0.5  # standard deviation to control variability
+                    )
+                )
+                
+                if (total_individuals - children_num) <= 0:
+                    adults_num = total_individuals
+                    children_num = 0
+                else:
+                    adults_num = total_individuals - children_num
 
             print(f"Number of adults: {adults_num}, Number of children: {children_num}")
 
