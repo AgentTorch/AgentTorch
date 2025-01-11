@@ -53,7 +53,11 @@ class Executor(BaseExecutor):
             self.simulation_values = self.runner.get_simulation_values(key)
 
     def get_simulation_values(self, key, key_type="environment"):
-        self.simulation_values = self.runner.state_trajectory[-1][-1][key_type][
-            key
-        ]  # List containing values for each step
-        return self.simulation_values
+            # Handle Dask DataFrame if needed
+            if isinstance(self.runner.state_trajectory, dd.DataFrame):
+                self.runner.state_trajectory = self.runner.state_trajectory.compute()
+            
+            self.simulation_values = self.runner.state_trajectory[-1][-1][key_type][
+                key
+            ]  # List containing values for each step
+            return self.simulation_values

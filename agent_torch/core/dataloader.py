@@ -5,6 +5,7 @@ import pandas as pd
 import torch
 import yaml
 import pdb
+import dask.dataframe as dd
 from agent_torch.core.helpers import read_config
 
 
@@ -81,14 +82,33 @@ class LoadPopulation:
         self.population_size = 0
         self.load_population()
 
+    def convert_to_parquet(self, pickle_file):
+        parquet_file = pickle_file.replace(".pickle", ".parquet")
+        if not os.path.exists(parquet_file):
+            data = pd.read_pickle(pickle_file)
+
+            if isinstance(data, pd.Series):
+                data = data.to_frame(name="value")  
+
+            data.to_parquet(parquet_file, index=False)
+
     def load_population(self):
         pickle_files = glob.glob(
             f"{self.population_folder_path}/*.pickle", recursive=False
         )
-        for file in pickle_files:
+
+        for pickle_file in pickle_files:
+            self.convert_to_parquet(pickle_file)
+
+        parquet_files = glob.glob(
+            f"{self.population_folder_path}/*.parquet", recursive=False
+        )
+
+        for file in parquet_files:
             with open(file, "rb") as f:
                 key = os.path.splitext(os.path.basename(file))[0]
-                df = pd.read_pickle(file)
+                df = dd.read_parquet(file)
+                df = df.compute()
                 setattr(self, key, torch.from_numpy(df.values).float())
         self.population_size = len(df)
 
@@ -99,13 +119,31 @@ class LinkPopulation(DataLoader):
         self.population_size = 0
         self.load_population()
 
+    def convert_to_parquet(self, pickle_file):
+        parquet_file = pickle_file.replace(".pickle", ".parquet")
+        if not os.path.exists(parquet_file):
+            data = pd.read_pickle(pickle_file)
+
+            if isinstance(data, pd.Series):
+                data = data.to_frame(name="value") 
+
+            data.to_parquet(parquet_file, index=False)
+
     def load_population(self):
         pickle_files = glob.glob(
             f"{self.population_folder_path}/*.pickle", recursive=False
         )
-        for file in pickle_files:
+
+        for pickle_file in pickle_files:
+            self.convert_pickle_to_parquet(pickle_file)
+
+        parquet_files = glob.glob(
+            f"{self.population_folder_path}/*.parquet", recursive=False
+        )
+
+        for file in parquet_files:
             with open(file, "rb") as f:
                 key = os.path.splitext(os.path.basename(file))[0]
-                df = pd.read_pickle(file)
+                df = dd.read_parquet(file)
                 setattr(self, key, torch.from_numpy(df.values).float())
         self.population_size = len(df)
