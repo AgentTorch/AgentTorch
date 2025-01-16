@@ -83,7 +83,7 @@ class LoadPopulation:
         self.load_population()
 
     def convert_to_parquet(self, pickle_file):
-        parquet_file = pickle_file.replace(".pickle", ".parquet")
+        parquet_file = pickle_file.replace(".pickle", ".parquet").replace(".pkl", ".parquet")
         if not os.path.exists(parquet_file):
             data = pd.read_pickle(pickle_file)
 
@@ -95,6 +95,8 @@ class LoadPopulation:
     def load_population(self):
         pickle_files = glob.glob(
             f"{self.population_folder_path}/*.pickle", recursive=False
+        ) + glob.glob(
+            f"{self.population_folder_path}/*.pkl", recursive=False
         )
 
         for pickle_file in pickle_files:
@@ -120,7 +122,7 @@ class LinkPopulation(DataLoader):
         self.load_population()
 
     def convert_to_parquet(self, pickle_file):
-        parquet_file = pickle_file.replace(".pickle", ".parquet")
+        parquet_file = pickle_file.replace(".pickle", ".parquet").replace(".pkl", ".parquet")
         if not os.path.exists(parquet_file):
             data = pd.read_pickle(pickle_file)
 
@@ -132,6 +134,8 @@ class LinkPopulation(DataLoader):
     def load_population(self):
         pickle_files = glob.glob(
             f"{self.population_folder_path}/*.pickle", recursive=False
+        )+ glob.glob(
+            f"{self.population_folder_path}/*.pkl", recursive=False
         )
 
         for pickle_file in pickle_files:
