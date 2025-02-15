@@ -104,7 +104,7 @@ simulation.execute()
 
 Copyright (c) 2023 Ayush Chopra
 
-This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License. This means you are free to share and adapt the material for **non-commercial purposes**, as long as you give appropriate credit and indicate if changes were made. For more details, see the [LICENSE.md](license.md) file in this repository. For commercial enterprises, please reach out to request a license.
+This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License. This means you are free to share and adapt the material for **non-commercial purposes**, as long as you give appropriate credit and indicate if changes were made. For more details, see the [LICENSE.md](license.md) file in this repository. If you want to use for commercial purposes, please reach out to request a license wavier.
 
 ## Guides and Tutorials
 
