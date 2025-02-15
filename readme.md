@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/AgentTorch/AgentTorch/blob/master/license.md" target="_blank">
-    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="Released under the MIT license." />
+    <img src="https://licensebuttons.net/l/by-nc/4.0/80x15.png" alt="Released under the CCBY-NC license." />
   </a>
 
   <a href="https://agenttorch.github.io/AgentTorch/" target="_blank">
