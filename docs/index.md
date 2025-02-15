@@ -10,10 +10,6 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/AgentTorch/AgentTorch/blob/master/license.md" target="_blank">
-    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="Released under the MIT license." />
-  </a>
-
   <a href="https://agenttorch.github.io/AgentTorch/" target="_blank">
     <img src="https://img.shields.io/badge/Quick%20Introduction-green" alt="Documentation" />
   </a>
