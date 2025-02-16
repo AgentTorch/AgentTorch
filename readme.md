@@ -98,10 +98,16 @@ simulation.execute()
 ```
 
 ## License
+Copyright (c) 2023-2025 Ayush Chopra
 
-Copyright (c) 2023 Ayush Chopra
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). This means:
+- You can freely use, modify, and distribute this software
+- If you use this software to provide services over a network, you must make your source code available to users
+- Any modifications or derivative works must also be licensed under AGPL-3.0
+- You must give appropriate credit and indicate any changes made
+- For full terms, see [LICENSE.md](LICENSE.md) file in this repository
 
-This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License. This means you are free to share and adapt the material for **non-commercial purposes**, as long as you give appropriate credit and indicate if changes were made. For more details, see the [LICENSE.md](license.md) file in this repository. If you want to use for commercial purposes, please reach out to request a license wavier.
+For commercial licensing options or inquiries about using this software in a proprietary product, please reach out to request a license wavier.
 
 ## Guides and Tutorials
 
