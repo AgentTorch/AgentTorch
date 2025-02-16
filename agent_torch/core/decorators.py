@@ -8,7 +8,13 @@ def with_behavior(cls):
     @wraps(original_init)
     def new_init(self, *args, **kwargs):
         original_init(self, *args, **kwargs)
-        self._behavior = None
+
+        # Instead of setting to None, initialize with class behavior if it exists
+        self._behavior = getattr(cls, '_class_behavior', None)
+        # print(f"Initialized {cls.__name__} with behavior: {self._behavior}")
+        # print(f"Class behavior exists: {hasattr(cls, '_class_behavior')}")
+        # if hasattr(cls, '_class_behavior'):
+        #     print(f"Class behavior value: {cls._class_behavior}")
 
     @classmethod
     def set_behavior(cls, behavior):

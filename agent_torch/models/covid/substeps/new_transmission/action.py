@@ -49,13 +49,10 @@ class MakeIsolationDecision(SubstepAction):
         return one_hot_tensor.to(self.device)
 
     def forward(self, state, observation):
-        print("Action: MakeIsolationDecision with mode: ", self.mode)
         # if in heuristic mode, return random values for isolation
         if self.mode == 'heuristic':
             will_isolate = torch.rand(self.num_agents, 1).to(self.device)
         else:
-            breakpoint()
             assert self.behavior is not None
-            breakpoint()
 
         return {self.output_variables[0]: will_isolate}

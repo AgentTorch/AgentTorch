@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings('ignore')
+
 from agent_torch.core.environment import envs
 
 from agent_torch.models import covid
@@ -30,6 +33,7 @@ runner = envs.create(
         population=astoria,
         archetypes={'make_isolation_decision': isolation_archetype})
 
+runner.step(1)
 
 '''
 runner.init()
