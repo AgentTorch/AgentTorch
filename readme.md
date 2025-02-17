@@ -24,7 +24,7 @@
 
 ## Overview
 
-Many grand challenges like climate change and pandemics emerge from complex interactions of millions of individual decisions. While LLMs and AI agents excel at individual behavior, they can't model these intricate societal dynamics. Enter Large Population Models LPMs: a new AI paradigm simulating millions of interacting agents simultaneously, capturing collective behaviors at societal scale. It's like scaling up AI agents exponentially to understand the ripple effects of countless decisions. While LLMs are building "digital humans", LPMs are the path to "digital nations"!
+Many grand challenges like climate change and pandemics emerge from complex interactions of millions of individual decisions. While LLMs and AI agents excel at individual behavior, they can't model these intricate societal dynamics. Enter Large Population Models (LPMs): a new AI paradigm to simulate millions of interacting agents simultaneously, capturing collective behaviors at societal scale. It's like scaling up AI agents exponentially to understand the ripple effects of countless decisions. What LLMs are to "digital humans", LPMs are to "digital nations".
 
 AgentTorch, our open-source platform, makes building and running massive LPMs accessible. It's optimized for GPUs, allowing efficient simulation of entire cities or countries. Think PyTorch, but for large-scale agent-based simulations. AgentTorch LPMs have four design principles:
 
