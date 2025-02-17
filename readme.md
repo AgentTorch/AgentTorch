@@ -41,7 +41,7 @@ AgentTorch, our open-source platform, makes building and running massive LPMs ac
   geospatial worlds, cells in anatomical worlds, autonomous avatars in digital
   worlds.
 
-LPMs are already making real-world impact. They're being used to help immunize millions of people by optimizing vaccine distribution strategies, and to track billions of dollars in global supply chains, improving efficiency and reducing waste. Our long-term goal is to "re-invent the census": built entirely in simulation, captured passively and used to protect country-scale populations. Our research is early but actively making an impact - winning awards at AI conferences and being deployed across the world.
+LPMs are already making real-world impact. They're being used to help immunize millions of people by optimizing vaccine distribution strategies, and to track billions of dollars in global supply chains, improving efficiency and reducing waste. Our long-term goal is to "re-invent the census": built entirely in simulation, captured passively and used to protect country-scale populations. Our research is making an impact - winning awards at AI conferences and being deployed across the world.
 Learn more about our [research](https://lpm.media.mit.edu/contribution.pdf) and [vision](https://lpm.media.mit.edu/vision.pdf).
 
 AgentTorch is building the future of decision engines - inside the body, around us and beyond!
