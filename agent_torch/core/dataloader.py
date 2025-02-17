@@ -8,7 +8,6 @@ import pdb
 import dask.dataframe as dd
 from agent_torch.core.helpers import read_config
 
-
 class DataLoaderBase(ABC):
     @abstractmethod
     def __init__(self, data_dir, model):
@@ -95,22 +94,11 @@ class LoadPopulation:
     def load_population(self):
         pickle_files = glob.glob(
             f"{self.population_folder_path}/*.pickle", recursive=False
-        ) + glob.glob(
-            f"{self.population_folder_path}/*.pkl", recursive=False
         )
-
-        for pickle_file in pickle_files:
-            self.convert_to_parquet(pickle_file)
-
-        parquet_files = glob.glob(
-            f"{self.population_folder_path}/*.parquet", recursive=False
-        )
-
-        for file in parquet_files:
+        for file in pickle_files:
             with open(file, "rb") as f:
                 key = os.path.splitext(os.path.basename(file))[0]
-                df = dd.read_parquet(file)
-                df = df.compute()
+                df = pd.read_pickle(file)
                 setattr(self, key, torch.from_numpy(df.values).float())
         self.population_size = len(df)
 

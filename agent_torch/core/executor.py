@@ -5,7 +5,6 @@ import dask.dataframe as dd
 from agent_torch.core.dataloader import DataLoader
 from agent_torch.core.runner import Runner
 
-
 class BaseExecutor:
     def __init__(self, model):
         self.model = model
@@ -27,7 +26,9 @@ class Executor(BaseExecutor):
             self.data_loader = DataLoader(model, self.pop_loader)
         else:
             self.data_loader = data_loader
+
         self.config = self.data_loader.get_config()
+        self.runner = self._get_runner(self.config)
 
     def init(self):
         self.config = self.data_loader.get_config()
