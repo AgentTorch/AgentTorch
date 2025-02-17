@@ -8,6 +8,7 @@ import pdb
 import dask.dataframe as dd
 from agent_torch.core.helpers import read_config
 
+
 class DataLoaderBase(ABC):
     @abstractmethod
     def __init__(self, data_dir, model):
@@ -82,12 +83,14 @@ class LoadPopulation:
         self.load_population()
 
     def convert_to_parquet(self, pickle_file):
-        parquet_file = pickle_file.replace(".pickle", ".parquet").replace(".pkl", ".parquet")
+        parquet_file = pickle_file.replace(".pickle", ".parquet").replace(
+            ".pkl", ".parquet"
+        )
         if not os.path.exists(parquet_file):
             data = pd.read_pickle(pickle_file)
 
             if isinstance(data, pd.Series):
-                data = data.to_frame(name="value")  
+                data = data.to_frame(name="value")
 
             data.to_parquet(parquet_file, index=False)
 
@@ -110,21 +113,21 @@ class LinkPopulation(DataLoader):
         self.load_population()
 
     def convert_to_parquet(self, pickle_file):
-        parquet_file = pickle_file.replace(".pickle", ".parquet").replace(".pkl", ".parquet")
+        parquet_file = pickle_file.replace(".pickle", ".parquet").replace(
+            ".pkl", ".parquet"
+        )
         if not os.path.exists(parquet_file):
             data = pd.read_pickle(pickle_file)
 
             if isinstance(data, pd.Series):
-                data = data.to_frame(name="value") 
+                data = data.to_frame(name="value")
 
             data.to_parquet(parquet_file, index=False)
 
     def load_population(self):
         pickle_files = glob.glob(
             f"{self.population_folder_path}/*.pickle", recursive=False
-        )+ glob.glob(
-            f"{self.population_folder_path}/*.pkl", recursive=False
-        )
+        ) + glob.glob(f"{self.population_folder_path}/*.pkl", recursive=False)
 
         for pickle_file in pickle_files:
             self.convert_pickle_to_parquet(pickle_file)

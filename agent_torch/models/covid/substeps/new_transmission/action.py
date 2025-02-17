@@ -50,7 +50,7 @@ class MakeIsolationDecision(SubstepAction):
 
     def forward(self, state, observation):
         # if in heuristic mode, return random values for isolation decision
-        if self.mode == 'heuristic':
+        if self.mode == "heuristic":
             will_isolate = torch.rand(self.num_agents, 1).to(self.device)
         else:
             assert self.behavior is not None

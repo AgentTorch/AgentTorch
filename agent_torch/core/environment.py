@@ -5,13 +5,14 @@ from agent_torch.core.executor import Executor
 from agent_torch.core.dataloader import LoadPopulation
 from agent_torch.core.llm.behavior import Behavior
 
+
 class envs:
     @staticmethod
     def create(
         model: Type,
         population: Any,
         parameters: Optional[Dict[str, Any]] = None,
-        archetypes: Optional[Dict[str, Any]] = None
+        archetypes: Optional[Dict[str, Any]] = None,
     ) -> Any:
         try:
             # 1. Create loader and simulation without initialization
@@ -32,7 +33,7 @@ class envs:
                 for substep_name, archetype in archetypes.items():
                     if substep_name in substep_func_dict:
                         substep_class = substep_func_dict[substep_name]
-                        if hasattr(substep_class, 'set_behavior'):
+                        if hasattr(substep_class, "set_behavior"):
                             behavior = Behavior(archetype=archetype, region=population)
                             substep_class.set_behavior(behavior)
 

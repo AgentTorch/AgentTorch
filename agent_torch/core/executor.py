@@ -5,6 +5,7 @@ import dask.dataframe as dd
 from agent_torch.core.dataloader import DataLoader
 from agent_torch.core.runner import Runner
 
+
 class BaseExecutor:
     def __init__(self, model):
         self.model = model
@@ -54,10 +55,8 @@ class Executor(BaseExecutor):
             self.simulation_values = self.runner.get_simulation_values(key)
 
     def get_simulation_values(self, key, key_type="environment"):
-            if isinstance(self.runner.state_trajectory, dd.DataFrame):
-                self.runner.state_trajectory = self.runner.state_trajectory.compute()
-            
-            self.simulation_values = self.runner.state_trajectory[-1][-1][key_type][
-                key
-            ]  
-            return self.simulation_values
+        if isinstance(self.runner.state_trajectory, dd.DataFrame):
+            self.runner.state_trajectory = self.runner.state_trajectory.compute()
+
+        self.simulation_values = self.runner.state_trajectory[-1][-1][key_type][key]
+        return self.simulation_values
