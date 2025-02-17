@@ -205,7 +205,8 @@ def create_household_composition_v3(
         household_types["family_households"] / proc_household_dataset["household_num"]
     )
     household_types["nonfamily_households_prob"] = (
-        household_types["nonfamily_households"] / proc_household_dataset["household_num"]
+        household_types["nonfamily_households"]
+        / proc_household_dataset["household_num"]
     )
     household_proportions = household_types[
         ["family_households_prob", "nonfamily_households_prob"]
@@ -230,7 +231,7 @@ def create_household_composition_v3(
                 household_types_choices, weights=household_proportions.values.flatten()
             )[0]
 
-            print(f"Household type: {household_type}")            
+            print(f"Household type: {household_type}")
 
             # Nonfamily, people living alone still need to be allocated
             if household_type == "Nonfamily" and living_alone > 0:
@@ -245,14 +246,14 @@ def create_household_composition_v3(
             elif household_type == "Nonfamily" and living_alone == 0:
                 total_individuals = int(
                     random.gauss(
-                        proc_household_dataset["average_household_size"].iloc[0], 
-                        0.5  # standard deviation to control variability
+                        proc_household_dataset["average_household_size"].iloc[0],
+                        0.5,  # standard deviation to control variability
                     )
                 )
-                
+
                 adults_num = total_individuals
                 children_num = 0
-            
+
             # Family
             elif household_type == "Family":
                 children_num = (
@@ -262,11 +263,11 @@ def create_household_composition_v3(
                 )
                 total_individuals = int(
                     random.gauss(
-                        proc_household_dataset["average_household_size"].iloc[0], 
-                        0.5  # standard deviation to control variability
+                        proc_household_dataset["average_household_size"].iloc[0],
+                        0.5,  # standard deviation to control variability
                     )
                 )
-                
+
                 if (total_individuals - children_num) <= 0:
                     adults_num = total_individuals
                     children_num = 0

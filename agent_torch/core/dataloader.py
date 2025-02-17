@@ -83,34 +83,25 @@ class LoadPopulation:
         self.load_population()
 
     def convert_to_parquet(self, pickle_file):
-        parquet_file = pickle_file.replace(".pickle", ".parquet").replace(".pkl", ".parquet")
+        parquet_file = pickle_file.replace(".pickle", ".parquet").replace(
+            ".pkl", ".parquet"
+        )
         if not os.path.exists(parquet_file):
             data = pd.read_pickle(pickle_file)
 
             if isinstance(data, pd.Series):
-                data = data.to_frame(name="value")  
+                data = data.to_frame(name="value")
 
             data.to_parquet(parquet_file, index=False)
 
     def load_population(self):
         pickle_files = glob.glob(
             f"{self.population_folder_path}/*.pickle", recursive=False
-        ) + glob.glob(
-            f"{self.population_folder_path}/*.pkl", recursive=False
         )
-
-        for pickle_file in pickle_files:
-            self.convert_to_parquet(pickle_file)
-
-        parquet_files = glob.glob(
-            f"{self.population_folder_path}/*.parquet", recursive=False
-        )
-
-        for file in parquet_files:
+        for file in pickle_files:
             with open(file, "rb") as f:
                 key = os.path.splitext(os.path.basename(file))[0]
-                df = dd.read_parquet(file)
-                df = df.compute()
+                df = pd.read_pickle(file)
                 setattr(self, key, torch.from_numpy(df.values).float())
         self.population_size = len(df)
 
@@ -122,21 +113,21 @@ class LinkPopulation(DataLoader):
         self.load_population()
 
     def convert_to_parquet(self, pickle_file):
-        parquet_file = pickle_file.replace(".pickle", ".parquet").replace(".pkl", ".parquet")
+        parquet_file = pickle_file.replace(".pickle", ".parquet").replace(
+            ".pkl", ".parquet"
+        )
         if not os.path.exists(parquet_file):
             data = pd.read_pickle(pickle_file)
 
             if isinstance(data, pd.Series):
-                data = data.to_frame(name="value") 
+                data = data.to_frame(name="value")
 
             data.to_parquet(parquet_file, index=False)
 
     def load_population(self):
         pickle_files = glob.glob(
             f"{self.population_folder_path}/*.pickle", recursive=False
-        )+ glob.glob(
-            f"{self.population_folder_path}/*.pkl", recursive=False
-        )
+        ) + glob.glob(f"{self.population_folder_path}/*.pkl", recursive=False)
 
         for pickle_file in pickle_files:
             self.convert_pickle_to_parquet(pickle_file)
