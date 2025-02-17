@@ -1,5 +1,4 @@
 import pytest
-
 from agent_torch.core.config import Configurator
 
 
