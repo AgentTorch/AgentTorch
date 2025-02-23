@@ -101,7 +101,7 @@ def read_config(config_file, register_resolvers=True):
 
         for name, func in resolvers:
             try:
-                OmegaConf.register_new_resolver(name, func)
+                OmegaConf.register_new_resolver(name, func, replace=True)
             except AssertionError as e:
                 if "is already registered" in str(e):
                     continue
