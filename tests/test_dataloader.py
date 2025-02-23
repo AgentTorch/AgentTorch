@@ -58,7 +58,7 @@ def test_load_demographic_data(sample_parquet_files):
         "count",
         "region",
     }
-    assert len(df_age_gender) == 88  # 2 areas * 2 genders * 22 age groups
+    assert len(df_age_gender) == 24  # 2 areas * 2 genders * 6 age groups
 
 
 def test_load_specific_columns(sample_parquet_files):

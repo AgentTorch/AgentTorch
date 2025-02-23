@@ -15,5 +15,5 @@ def not_raises():
 
 def test_executor(executor):
     with not_raises():
-        executor.init(opt=SGD)
+        executor.init()
         executor.execute()
