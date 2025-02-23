@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
-import dask.dataframe as dd
+
+# import dask.dataframe as dd
 from agent_torch.core.helpers.general import *
 
 
@@ -30,8 +31,8 @@ class Initializer(nn.Module):
 
         if type(src_val) == list:
             init_value = torch.tensor(src_val)
-        elif isinstance(src_val, (dd.Series, dd.DataFrame)):  # If Dask data is passed
-            init_value = torch.tensor(src_val.compute().to_numpy())
+        # elif isinstance(src_val, (dd.Series, dd.DataFrame)):  # If Dask data is passed
+        #     init_value = torch.tensor(src_val.compute().to_numpy())
         else:
             init_value = src_val * torch.ones(size=processed_shape)
 
@@ -131,8 +132,8 @@ class Initializer(nn.Module):
 
             for prop in instance_properties.keys():
                 property_object = instance_properties[prop]
-                if isinstance(property_object.get("value"), (dd.Series, dd.DataFrame)):
-                    property_object["value"] = property_object["value"].compute().to_numpy()
+                # if isinstance(property_object.get("value"), (dd.Series, dd.DataFrame)):
+                #     property_object["value"] = property_object["value"].compute().to_numpy()
                 property_value, property_is_learnable = self._initialize_property(
                     property_object, property_key=f"{key}_{instance_type}_{prop}"
                 )
