@@ -104,7 +104,7 @@ making changes to them. To preview the generated documentation, run:
 > mkdocs serve
 ```
 
-> Rememeber to add any new pages to the sidebar by editing `mkdocs.yaml`.
+> Remember to add any new pages to the sidebar by editing `mkdocs.yaml`.
 
 If you wish to write a tutorial, write it in a Jupyter Notebook, and then
 convert it to a markdown file using `nbconvert`:
@@ -115,7 +115,7 @@ convert it to a markdown file using `nbconvert`:
 > mv <file>.md index.md
 ```
 
-> Rememeber to move any files that it generates to the `docs/media` folder, and
+> Remember to move any files that it generates to the `docs/media` folder, and
 > update the hyperlinks in the generated markdown file.
 
 ## Saving Changes
