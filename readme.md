@@ -59,7 +59,7 @@ Install the most recent version from source using `pip`:
 > For more information regarding this, as well as the hardware the project has
 > been run on, please see [`docs/install.md`](docs/install.md).
 
-The easiest way to install AgentTorch (v0.4.0) is from pypi:
+Alternately, the easiest way to install AgentTorch (v0.4.0) is from pypi:
 ```
 > pip install agent-torch
 ```
