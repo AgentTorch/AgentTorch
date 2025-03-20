@@ -64,7 +64,7 @@ The easiest way to install AgentTorch (v0.4.0) is from pypi:
 > pip install agent-torch
 ```
 
-> AgentTorch is meant to be used in a Python 3.9 environment. If you have not
+> AgentTorch is meant to be used in a Python >=3.9 environment. If you have not
 > installed Python 3.9, please do so first from
 > [python.org/downloads](https://www.python.org/downloads/).
 
@@ -74,10 +74,7 @@ The following section depicts the usage of existing models and population data
 to run simulations on your machine. It also acts as a showcase of the Agent
 Torch API.
 
-A Jupyter Notebook containing the below examples can be found
-[here](docs/tutorials/using-models/walkthrough.ipynb).
-
-### Executing a Simulation with Gradient Based Learning
+### Executing a Simulation
 
 ```py
 # re-use existing models and population data easily
