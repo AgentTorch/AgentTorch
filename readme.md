@@ -119,7 +119,7 @@ found [here](docs/architecture.md).
 A tutorial on how to create a simple predator-prey model can be found in the
 [`tutorials/`](docs/tutorials/) folder.
 
-### Prompting Collective Behavior with LLM Archetypes
+### Prompting Agent Behavior with LLM Archetypes
 ```py
 from agent_torch.core.llm.archetype import Archetype
 from agent_torch.core.llm.behavior import Behavior
