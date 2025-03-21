@@ -76,7 +76,7 @@ Torch API.
 A Jupyter Notebook containing the below examples can be found
 [here](docs/tutorials/using-models/walkthrough.ipynb).
 
-### Executing a Simulation with Gradient Based Learning
+### Executing a Simulation
 
 ```py
 # re-use existing models and population data easily
