@@ -5,10 +5,10 @@ description = "large population models"
 readme = "readme.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Ayush Chopra"},
+    {name = "Ayush Chopra"}
 ]
 maintainers = [
-    {name = "Ayush Chopra"}
+    {name = "Ayush Chopra"},
     {name = "Vedant Kulkarni"}
 ]
 requires-python = ">= 3.8"
