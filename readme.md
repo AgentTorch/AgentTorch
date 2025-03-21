@@ -46,7 +46,7 @@ Learn more about our [research](https://media.mit.edu/projects/ai-lpm) and [visi
 
 AgentTorch is building the future of decision engines - inside the body, around us and beyond!
 
-https://github.com/AgentTorch/AgentTorch/assets/13482350/4c3f9fa9-8bce-4ddb-907c-3ee4d62e7148
+https://github.com/user-attachments/assets/6c02de1a-7385-4deb-9f72-f02eec4174ec
 
 ## Installation
 Install the most recent version from source using `pip`:
