@@ -1,6 +1,6 @@
 simulation_metadata:
   ALIGN_LLM: true
-  EXECUTION_MODE: llm
+  EXECUTION_MODE: heuristic # llm
   EXPOSED_TO_INFECTED_TIME: 5
   EXPOSED_VAR: 1
   INCLUDE_WEEK_COUNT: true

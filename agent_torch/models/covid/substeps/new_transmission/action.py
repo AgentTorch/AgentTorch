@@ -53,7 +53,10 @@ class MakeIsolationDecision(SubstepAction):
         if self.mode == "heuristic":
             will_isolate = torch.rand(self.num_agents, 1).to(self.device)
         else:
-            assert self.behavior is not None
-            will_isolate = torch.rand(self.num_agents, 1).to(self.device)
+            if self.behavior is None:
+                will_isolate = torch.rand(self.num_agents, 1).to(self.device)
+            else:
+                assert self.behavior is not None
+                will_isolate = self.behavior(observation)
 
         return {self.output_variables[0]: will_isolate}
