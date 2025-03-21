@@ -8,7 +8,7 @@ authors = [
     {name = "Ayush Chopra"},
 ]
 maintainers = [
-    {name = "Ayush Chopra"}
+    {name = "Ayush Chopra"},
     {name = "Vedant Kulkarni"}
 ]
 requires-python = ">= 3.8"
