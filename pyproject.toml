@@ -1,31 +1,30 @@
 [project]
 name = "agent_torch"
-version = "0.4.0"
+version = "0.6.0"
 description = "large population models"
 readme = "readme.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Ayush Chopra"},
-    {name = "Shashank Kumar"},
-    {name = "Jayakumar Subramanian"},
-    {name = "Balaji Krishnamurthy"},
-    {name = "Ramesh Raskar"}
+    {name = "Ayush Chopra"}
 ]
 maintainers = [
+    {name = "Ayush Chopra"},
     {name = "Vedant Kulkarni"}
 ]
 requires-python = ">= 3.8"
 dependencies = [
-    "numpy",
-    "pandas",
-    "torch",
-    "torch_geometric",
-    "omegaconf",
-    "asyncio",
-    "langchain",
-    "langchain-openai",
-    "networkx",
-    "dspy"
+    "numpy>=1.24.3",
+    "pandas>=1.5.0",
+    "torch>=2.1.2",
+    "torch_geometric>=2.5.3",
+    "omegaconf>=2.3.0",
+    "asyncio>=3.4.3",
+    "langchain>=0.2.3",
+    "langchain-openai>=0.1.8",
+    "networkx>=3.0",
+    "tqdm>=4.66.4",
+    "dspy>=0.1.5",
+    "dask>=2024.12.1"
 ]
 
 [project.urls]
@@ -43,7 +42,7 @@ distribution = true
 excludes = ["populations", "models"]
 
 [tool.bumpver]
-current_version = "0.4.0"
+current_version = "0.6.0"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "chore: {old_version} -> {new_version}"
 tag_scope = "default"

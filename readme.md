@@ -1,5 +1,5 @@
 <h1 align="center">
-  <a href="https://lpm.media.mit.edu/" target="_blank">
+  <a href="https://media.mit.edu/projects/ai-lpm" target="_blank">
     Large Population Models
   </a>
 </h1>
@@ -42,7 +42,7 @@ AgentTorch, our open-source platform, makes building and running massive LPMs ac
   worlds.
 
 LPMs are already making real-world impact. They're being used to help immunize millions of people by optimizing vaccine distribution strategies, and to track billions of dollars in global supply chains, improving efficiency and reducing waste. Our long-term goal is to "re-invent the census": built entirely in simulation, captured passively and used to protect country-scale populations. Our research is making an impact - winning awards at AI conferences and being deployed across the world.
-Learn more about our [research](https://lpm.media.mit.edu/contribution.pdf) and [vision](https://lpm.media.mit.edu/vision.pdf).
+Learn more about our [research](https://media.mit.edu/projects/ai-lpm) and [vision](https://lpm.media.mit.edu/vision.pdf).
 
 AgentTorch is building the future of decision engines - inside the body, around us and beyond!
 
@@ -59,12 +59,12 @@ Install the most recent version from source using `pip`:
 > For more information regarding this, as well as the hardware the project has
 > been run on, please see [`docs/install.md`](docs/install.md).
 
-The easiest way to install AgentTorch (v0.4.0) is from pypi:
+Alternately, the easiest way to install AgentTorch (v0.6.0) is from pypi:
 ```
 > pip install agent-torch
 ```
 
-> AgentTorch is meant to be used in a Python 3.9 environment. If you have not
+> AgentTorch is meant to be used in a Python >=3.9 environment. If you have not
 > installed Python 3.9, please do so first from
 > [python.org/downloads](https://www.python.org/downloads/).
 
@@ -74,10 +74,7 @@ The following section depicts the usage of existing models and population data
 to run simulations on your machine. It also acts as a showcase of the Agent
 Torch API.
 
-A Jupyter Notebook containing the below examples can be found
-[here](docs/tutorials/using-models/walkthrough.ipynb).
-
-### Executing a Simulation with Gradient Based Learning
+### Executing a Simulation
 
 ```py
 # re-use existing models and population data easily
@@ -122,7 +119,7 @@ found [here](docs/architecture.md).
 A tutorial on how to create a simple predator-prey model can be found in the
 [`tutorials/`](docs/tutorials/) folder.
 
-### Prompting Collective Behavior with LLM Archetypes
+### Prompting Agent Behavior with LLM Archetypes
 ```py
 from agent_torch.core.llm.archetype import Archetype
 from agent_torch.core.llm.behavior import Behavior
