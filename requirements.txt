@@ -10,3 +10,5 @@ networkx>=3.0
 tqdm>=4.66.4
 dspy>=0.1.5
 dask>=2024.12.1
+epiweeks
+scipy
