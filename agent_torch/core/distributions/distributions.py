@@ -104,3 +104,27 @@ class Geometric(torch.autograd.Function):
             w_plus_cont + w_minus_cont
         ) / 2.0  # average weights for unbiased gradientn
         return grad_output * ws
+
+
+class Categorical(torch.autograd.Function):
+    generate_vmap_rule = True  # for functorch if needed
+
+    @staticmethod
+    def forward(ctx, p):
+        # p is assumed to be of shape (..., k) representing a categorical distribution.
+        result = torch.multinomial(p, num_samples=1)  # shape (..., 1)
+        ctx.save_for_backward(result, p)
+        return result
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        result, p = ctx.saved_tensors
+        one_hot = torch.zeros_like(p)
+        one_hot.scatter_(-1, result, 1.0)
+        # For the chosen category, analogous to a "jump-down" weight.
+        w_chosen = (1.0 / p) / 2  
+        # For non-chosen categories, analogous to a "jump-up" weight.
+        w_non_chosen = (1.0 / (1.0 - p)) / 2  
+        ws = one_hot * w_chosen + (1 - one_hot) * w_non_chosen
+        grad_output_expanded = grad_output.expand_as(p)
+        return grad_output_expanded * ws

@@ -17,3 +17,4 @@ nav:
       - 'From Simulation to Reality': 'tutorials/integrating-with-beckn/index.md'
       - 'Benchmark: Modeling with Archetypes': 'tutorials/creating-archetypes/index.md'
       - 'Benchmark: Sensitivity to Agent Behaviors': 'tutorials/compare-llm-performance/index.md'
+      - 'Differentiable Discrete Sampling': 'tutorials/differentiable-discrete-sampling/index.md'
