@@ -1,0 +1,368 @@
+# config_vmap.yaml
+# Configuration for the predator-prey model with vectorized substeps.
+
+simulation_metadata:
+  device: 'cpu'
+  num_episodes: 3
+  num_steps_per_episode: 20
+  num_substeps_per_step: 4
+  calibration: false
+  visualize: false
+
+  max_x: 18
+  max_y: 25
+  num_predators: 40
+  num_prey: 80
+  num_grass: 450
+
+  predator_coords_file: 'data/18x25/predator-coords.csv'
+  prey_coords_file: 'data/18x25/prey-coords.csv'
+  grass_coords_file: 'data/18x25/grass-coords.csv'
+  grass_growth_stage_file: 'data/18x25/growth-stage.csv'
+  grass_growth_countdown_file: 'data/18x25/growth-countdown.csv'
+
+state:
+  environment:
+    bounds:
+      name: 'Bounds'
+      learnable: false
+      shape: 2
+      dtype: 'int'
+      value:
+        - ${simulation_metadata.max_x}
+        - ${simulation_metadata.max_y}
+      initialization_function: null
+
+  agents:
+    predator:
+      number: ${simulation_metadata.num_predators}
+      properties:
+        coordinates:
+          name: 'Position'
+          learnable: false
+          shape:
+            - ${state.agents.predator.number}
+            - 2
+          dtype: 'int'
+          initialization_function:
+            generator: 'read_from_file'
+            arguments:
+              file_path:
+                name: 'Predator Coordinates File'
+                learnable: false
+                shape: null
+                value: ${simulation_metadata.predator_coords_file}
+                initialization_function: null
+        energy:
+          name: 'Energy'
+          learnable: false
+          shape:
+            - ${state.agents.predator.number}
+            - 1
+          dtype: 'float'
+          initialization_function:
+            generator: 'random_float'
+            arguments:
+              lower_limit:
+                name: 'Lower Bound'
+                learnable: false
+                shape:
+                  - 1
+                value: 30
+                initialization_function: null
+              upper_limit:
+                name: 'Upper Bound'
+                learnable: false
+                shape:
+                  - 1
+                value: 100
+                initialization_function: null
+        stride_work:
+          name: 'Energy Lost in Taking One Step'
+          learnable: true
+          shape:
+            - 1
+          dtype: 'float'
+          value: 1
+          initialization_function: null
+    prey:
+      number: ${simulation_metadata.num_prey}
+      properties:
+        coordinates:
+          name: 'Position'
+          learnable: false
+          shape:
+            - ${state.agents.prey.number}
+            - 2
+          dtype: 'int'
+          initialization_function:
+            generator: 'read_from_file'
+            arguments:
+              file_path:
+                name: 'Prey Coordinates File'
+                learnable: false
+                shape: null
+                value: ${simulation_metadata.prey_coords_file}
+                initialization_function: null
+        energy:
+          name: 'Energy'
+          learnable: false
+          shape:
+            - ${state.agents.prey.number}
+            - 1
+          dtype: 'float'
+          initialization_function:
+            generator: 'random_float'
+            arguments:
+              lower_limit:
+                name: 'Lower Bound'
+                learnable: false
+                shape:
+                  - 1
+                value: 40
+                initialization_function: null
+              upper_limit:
+                name: 'Upper Bound'
+                learnable: false
+                shape:
+                  - 1
+                value: 100
+                initialization_function: null
+        stride_work:
+          name: 'Energy Lost in Taking One Step'
+          learnable: true
+          shape:
+            - 1
+          dtype: 'float'
+          value: 5
+          initialization_function: null
+        nutritional_value:
+          name: 'Energy Gained Upon Consuming Prey'
+          learnable: true
+          shape:
+            - 1
+          dtype: 'float'
+          value: 20
+          initialization_function: null
+
+  objects:
+    grass:
+      number: ${simulation_metadata.num_grass}
+      properties:
+        coordinates:
+          name: 'Position'
+          learnable: false
+          shape:
+            - ${state.objects.grass.number}
+            - 2
+          dtype: 'int'
+          initialization_function:
+            generator: 'read_from_file'
+            arguments:
+              file_path:
+                name: 'Grass Coordinates File'
+                learnable: false
+                shape: null
+                value: ${simulation_metadata.grass_coords_file}
+                initialization_function: null
+        growth_stage:
+          name: 'The Grass Growth Stage'
+          learnable: false
+          shape:
+            - ${state.objects.grass.number}
+            - 1
+          dtype: 'int'
+          initialization_function:
+            generator: 'read_from_file'
+            arguments:
+              file_path:
+                name: 'Grass Growth Stage File'
+                learnable: false
+                shape: null
+                value: ${simulation_metadata.grass_growth_stage_file}
+                initialization_function: null
+        regrowth_time:
+          name: 'Time for Grass to Regrow Completely'
+          learnable: true
+          shape:
+            - 1
+          dtype: 'float'
+          value: 100 # steps
+          initialization_function: null
+        growth_countdown:
+          name: 'Time for Grass to Grow Fully'
+          learnable: false
+          shape:
+            - ${state.objects.grass.number}
+            - 1
+          dtype: 'float'
+          initialization_function:
+            generator: 'read_from_file'
+            arguments:
+              file_path:
+                name: 'Grass Growth Countdown File'
+                learnable: false
+                shape: null
+                value: ${simulation_metadata.grass_growth_countdown_file}
+                initialization_function: null
+        nutritional_value:
+          name: 'Energy Gained Upon Consuming Grass at Max Growth Stage'
+          learnable: true
+          shape:
+            - 1
+          dtype: 'float'
+          value: 7
+          initialization_function: null
+
+  network:
+    agent_agent:
+      predator_prey:
+        type: 'map'
+        arguments: null
+
+substeps:
+  '0':
+    name: 'Move'
+    description: 'Moving'
+    active_agents:
+      - 'predator'
+      - 'prey'
+    observation:
+      predator:
+        find_neighbors:
+          generator: 'FindNeighborsVmap'
+          arguments: null
+          input_variables:
+            bounds: 'environment/bounds'
+            adj_grid: 'network/agent_agent/predator_prey/adjacency_matrix'
+            positions: 'agents/predator/coordinates'
+          output_variables:
+            - possible_neighbors
+      prey:
+        find_neighbors:
+          generator: 'FindNeighborsVmap'
+          arguments: null
+          input_variables:
+            bounds: 'environment/bounds'
+            adj_grid: 'network/agent_agent/predator_prey/adjacency_matrix'
+            positions: 'agents/prey/coordinates'
+          output_variables:
+            - possible_neighbors
+    policy:
+      predator:
+        decide_movement:
+          generator: 'DecideMovementVmap'
+          arguments: null
+          input_variables:
+            positions: 'agents/predator/coordinates'
+            energy: 'agents/predator/energy'
+          output_variables:
+            - next_positions
+      prey:
+        decide_movement:
+          generator: 'DecideMovementVmap'
+          arguments: null
+          input_variables:
+            positions: 'agents/prey/coordinates'
+            energy: 'agents/prey/energy'
+          output_variables:
+            - next_positions
+    transition:
+      update_positions:
+        generator: 'UpdatePositionsVmap'
+        arguments: null
+        input_variables:
+          prey_pos: 'agents/prey/coordinates'
+          prey_energy: 'agents/prey/energy'
+          pred_pos: 'agents/predator/coordinates'
+          pred_energy: 'agents/predator/energy'
+          prey_work: 'agents/prey/stride_work'
+          pred_work: 'agents/predator/stride_work'
+        output_variables:
+          - prey_pos
+          - prey_energy
+          - pred_pos
+          - pred_energy
+  '1':
+    name: 'Eat'
+    description: 'Eating Grass'
+    active_agents:
+      - 'prey'
+    observation:
+      prey: null
+    policy:
+      prey:
+        find_eatable_grass:
+          generator: 'FindEatableGrassVmap'
+          arguments: null
+          input_variables:
+            bounds: 'environment/bounds'
+            positions: 'agents/prey/coordinates'
+            grass_growth: 'objects/grass/growth_stage'
+          output_variables:
+            - eatable_grass_positions
+    transition:
+      eat_grass:
+        generator: 'EatGrassVmap'
+        arguments: null
+        input_variables:
+          energy: 'agents/prey/energy'
+          grass_growth: 'objects/grass/growth_stage'
+          growth_countdown: 'objects/grass/growth_countdown'
+          bounds: 'environment/bounds'
+          prey_pos: 'agents/prey/coordinates'
+          nutrition: 'objects/grass/nutritional_value'
+          regrowth_time: 'objects/grass/regrowth_time'
+        output_variables:
+          - energy
+          - grass_growth
+          - growth_countdown
+  '2':
+    name: 'Hunt'
+    description: 'Hunting Prey'
+    active_agents:
+      - 'predator'
+    observation:
+      predator: null
+    policy:
+      predator:
+        find_targets:
+          generator: 'FindTargetsVmap'
+          arguments: null
+          input_variables:
+            prey_pos: 'agents/prey/coordinates'
+            pred_pos: 'agents/predator/coordinates'
+          output_variables:
+            - target_positions
+    transition:
+      hunt_prey:
+        generator: 'HuntPreyVmap'
+        arguments: null
+        input_variables:
+          prey_energy: 'agents/prey/energy'
+          pred_energy: 'agents/predator/energy'
+          nutritional_value: 'agents/prey/nutritional_value'
+          prey_pos: 'agents/prey/coordinates'
+          pred_pos: 'agents/predator/coordinates'
+        output_variables:
+          - prey_energy
+          - pred_energy
+  '3':
+    name: 'Grow'
+    description: 'Grow Grass'
+    active_agents:
+      - 'prey'
+    observation:
+      prey: null
+    policy:
+      prey: null
+    transition:
+      grow_grass:
+        generator: 'GrowGrassVmap'
+        arguments: null
+        input_variables:
+          grass_growth: 'objects/grass/growth_stage'
+          growth_countdown: 'objects/grass/growth_countdown'
+        output_variables:
+          - grass_growth
+          - growth_countdown
