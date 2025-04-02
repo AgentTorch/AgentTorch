@@ -1,5 +1,4 @@
-# This should also use relative imports
-from .move import *
-from .eat import *
-from .hunt import *
-from .grow import *
+from .vmap_move import *
+from .vmap_eat import *
+from .vmap_hunt import *
+from .vmap_grow import *

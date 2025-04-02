@@ -1,31 +1,55 @@
 #!/usr/bin/env python
 """
-Run the predator-prey simulation using vectorized operations.
+Vectorized Predator-Prey Model Demo
 
-This script provides a command-line interface to run the predator-prey simulation
-with the vectorized implementation, allowing you to set parameters and visualize results.
+This standalone script demonstrates a predator-prey ecological simulation
+using vectorized PyTorch operations for improved performance.
+
+The simulation models three entity types:
+- Predators: Hunt and consume prey to gain energy
+- Prey: Consume grass and try to avoid predators
+- Grass: Grows over time and provides energy to prey
+
+Usage:
+  python run_vectorized_predator_prey.py [options]
+
+Options:
+  --config FILE     Path to YAML config file (default: config_vmap.yaml)
+  --episodes NUM    Number of episodes to run
+  --steps NUM       Number of steps per episode
+  --predators NUM   Number of predators
+  --prey NUM        Number of prey
+  --visualize       Enable visualization
+  --output DIR      Output directory for visualizations
+  --device {cpu,cuda} Device to run the simulation on
 """
 import os
 import sys
-import argparse
 import time
+import argparse
 import torch
 import numpy as np
-from tqdm import trange
 import matplotlib.pyplot as plt
+from tqdm import trange
+import pandas as pd
+import re
 
-# Add the parent directory to sys.path if needed
+# Ensure imports work regardless of where script is run from
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(os.path.dirname(current_dir))
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
-from agent_torch.core import Registry, Runner, VectorizedRunner
-from agent_torch.core.helpers import read_config, read_from_file, grid_network
+# Import core components
+from agent_torch.core.helpers.general import get_by_path, read_config
+from agent_torch.core.registry import Registry
+from agent_torch.core.vectorized_runner import VectorizedRunner
 
-# Import both standard and vectorized substeps with absolute paths
-from agent_torch.models.predator_prey.substeps import *
-from agent_torch.models.predator_prey.vmap_substeps import *
+# These imports register the vectorized implementations
+import agent_torch.models.predator_prey.vmap_substeps.vmap_move
+import agent_torch.models.predator_prey.vmap_substeps.vmap_eat
+import agent_torch.models.predator_prey.vmap_substeps.vmap_hunt
+import agent_torch.models.predator_prey.vmap_substeps.vmap_grow
 from agent_torch.models.predator_prey.helpers.map import map_network
 from agent_torch.models.predator_prey.helpers.random import random_float, random_int
 
@@ -69,7 +93,6 @@ def custom_read_from_file(shape, params):
     print(f"Reading file: {file_path}")
     
     if file_path.endswith("csv"):
-        import pandas as pd
         data = pd.read_csv(file_path)
     
     data_values = data.values
@@ -82,7 +105,6 @@ def setup_registry():
     """Set up the registry with all necessary functions."""
     registry = Registry()
     registry.register(custom_read_from_file, "read_from_file", "initialization")
-    registry.register(grid_network, "grid", key="network")
     registry.register(map_network, "map", key="network")
     registry.register(random_float, "random_float", "initialization")
     registry.register(random_int, "random_int", "initialization")
@@ -90,6 +112,8 @@ def setup_registry():
 
 def run_simulation(config_path, args):
     """Run the simulation with the given config and args."""
+    start_time = time.time()
+    
     # Read configuration file
     if not os.path.isabs(config_path):
         config_path = os.path.join(current_dir, config_path)
@@ -124,8 +148,11 @@ def run_simulation(config_path, args):
     print(":: initializing vectorized runner")
     
     # Create and initialize runner
+    init_start = time.time()
     runner = VectorizedRunner(config, registry)
     runner.init()
+    init_time = time.time() - init_start
+    print(f":: initialization completed in {init_time:.2f} seconds")
     
     print(":: simulation started")
     
@@ -153,6 +180,7 @@ def run_simulation(config_path, args):
     }
     
     # Run simulation episodes
+    sim_start = time.time()
     for episode in range(num_episodes):
         print(f":: starting episode {episode+1}/{num_episodes}")
         runner.reset()
@@ -160,7 +188,7 @@ def run_simulation(config_path, args):
         # Run steps in each episode
         for step in trange(num_steps_per_episode, desc=f"Episode {episode+1}/{num_episodes}"):
             # Track step time
-            start_time = time.time()
+            step_start = time.time()
             
             # Run simulation step
             runner.step(1)
@@ -179,7 +207,7 @@ def run_simulation(config_path, args):
             stats["predators_alive"].append(pred_alive)
             stats["prey_alive"].append(prey_alive)
             stats["grass_grown"].append(grass_grown)
-            stats["time"].append(time.time() - start_time)
+            stats["time"].append(time.time() - step_start)
             
             # Visualize if enabled
             if visualize and visual:
@@ -189,7 +217,11 @@ def run_simulation(config_path, args):
         if visualize and visual:
             visual.compile(episode)
     
-    print(":: simulation completed")
+    sim_time = time.time() - sim_start
+    total_time = time.time() - start_time
+    
+    print(f":: simulation completed in {sim_time:.2f} seconds")
+    print(f":: total execution time: {total_time:.2f} seconds")
     
     # Plot final statistics
     plot_statistics(stats, output_dir=os.path.join(current_dir, args.output))
@@ -208,7 +240,7 @@ def plot_statistics(stats, output_dir="results"):
     # Plot population counts
     episodes = np.array(stats["episode"])
     steps = np.array(stats["step"])
-    step_numbers = episodes * max(steps) + steps
+    step_numbers = episodes * max(steps+1) + steps
     
     # Population over time
     axs[0, 0].plot(step_numbers, stats["predators_alive"], 'r-', label='Predators')
@@ -258,6 +290,49 @@ def plot_statistics(stats, output_dir="results"):
     
     print(f"Statistics saved to {output_dir}")
 
+def print_summary(stats):
+    """Print a summary of the simulation results."""
+    # Calculate averages
+    avg_step_time = np.mean(stats["time"])
+    total_steps = len(stats["time"])
+    
+    # Get initial and final counts
+    initial_pred = stats["predators_alive"][0]
+    initial_prey = stats["prey_alive"][0]
+    final_pred = stats["predators_alive"][-1]
+    final_prey = stats["prey_alive"][-1]
+    
+    # Print summary
+    print("\n=== Simulation Summary ===")
+    print(f"Total Steps: {total_steps}")
+    print(f"Average Step Time: {avg_step_time*1000:.2f} ms")
+    print(f"Population Change:")
+    print(f"  Predators: {initial_pred} → {final_pred} ({(final_pred-initial_pred)/initial_pred*100:.1f}%)")
+    print(f"  Prey: {initial_prey} → {final_prey} ({(final_prey-initial_prey)/initial_prey*100:.1f}%)")
+    
+    # Find population peaks and crashes
+    max_pred_idx = np.argmax(stats["predators_alive"])
+    min_pred_idx = np.argmin(stats["predators_alive"][10:]) + 10  # Skip initial steps
+    max_prey_idx = np.argmax(stats["prey_alive"])
+    min_prey_idx = np.argmin(stats["prey_alive"][10:]) + 10  # Skip initial steps
+    
+    print(f"Population Peaks:")
+    print(f"  Predators: {stats['predators_alive'][max_pred_idx]} at step {max_pred_idx}")
+    print(f"  Prey: {stats['prey_alive'][max_prey_idx]} at step {max_prey_idx}")
+    
+    print(f"Population Crashes:")
+    print(f"  Predators: {stats['predators_alive'][min_pred_idx]} at step {min_pred_idx}")
+    print(f"  Prey: {stats['prey_alive'][min_prey_idx]} at step {min_prey_idx}")
+
 if __name__ == "__main__":
+    # Enable PyTorch optimizations
+    torch.set_float32_matmul_precision('high')
+    
+    # Parse command-line arguments
     args = parse_args()
+    
+    # Run the simulation
     runner, stats = run_simulation(args.config, args)
+    
+    # Print summary
+    print_summary(stats)
