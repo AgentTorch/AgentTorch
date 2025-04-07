@@ -1,15 +1,26 @@
 # Differentiable Discrete Sampling using AgentTorch     
 ## Introduction
-Traditional neural networks excel at continuous computations but struggle with discrete sampling operations because the sampling process is inherently non-differentiable. This tutorial demonstrates how to use AgentTorch to implement differentiable discrete sampling, enabling gradient-based optimization through stochastic discrete operations.
+Discrete sampling poses significant challenges in gradient-based optimization due to its non-differentiable nature, which prevents effective backpropagation. Operations like argmax disrupt gradient flow, leading to high-variance or biased gradient estimates. The Gumbel-Softmax technique addresses this by using a reparameterization trick that adds Gumbel noise to logits and applies a temperature-controlled softmax, enabling differentiable approximations of discrete samples. As the temperature approaches zero, the method produces near-discrete outputs while maintaining gradient flow, making it suitable for integrating discrete sampling into neural networks.
 
-**Key Concepts:**
+## Rethinking Discrete Sampling
+It was assumed that Gumbel softmax solves this problem. However, Gumbel-Softmax has its own limitations. The temperature parameter introduces a bias-variance tradeoff: higher temperatures smooth gradients but deviate from true categorical distributions, while lower temperatures yield near-discrete samples with unstable gradients. Additionally, its continuous approximations may require straight-through estimators, which can introduce bias during backpropagation. These issues make Gumbel-Softmax less effective in tasks requiring precise distribution matching or structured outputs, highlighting the need for further improvements in discrete sampling techniques.
 
-- **Discrete Sampling**: Operations that produce discrete outcomes (e.g., Bernoulli trials, categorical choices)
-- **Differentiable Relaxations**: Techniques to estimate gradients through non-differentiable operations
-- **Straight-Through Estimator**: A simple gradient approximation that copies gradients from output to input
-- **Stochastic Triples Method**: More sophisticated gradient estimation using probability-aware weightings
+So we introduce a new method for discrete sampling using the `agent_torch.core.distribution.Categorical` class. This class provides a differentiable approximation to discrete sampling, allowing for gradient-based optimization while maintaining the integrity of the categorical distribution.
 
-## Experiment 1: Markovian Random Walk 
+This estimator can simply be used as follows:
+
+```python
+import torch
+from agent_torch.core.distributions import Categorical
+# Define the probabilities for each category
+probs = torch.tensor([0.2, 0.5, 0.3], dtype=torch.float32)
+# Create a Categorical distribution
+sample = Categorical.apply(probs)
+# The sample will be a tensor containing the sampled category
+print(sample)
+```
+Let's discuss more about this by seeing its application in various experiments.
+## Experiment 1: Random Walk
 Let's implement a 1D markovian random walk X0, X1, ...., Xn using the `agent_torch.core.distribution.Categorical` sampling method. The agent can move left or right with probabilites:
 
 - Xn+1 = Xn + 1 with probability e^(-Xn/p)
