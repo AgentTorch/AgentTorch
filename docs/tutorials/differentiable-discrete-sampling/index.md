@@ -87,6 +87,10 @@ These results will further become clear when we plot these random walks. It can 
 ![image](rwalk.png)
 ![image](rwalk1.png)
 
+First, we run the experiment for 100 time-steps and calibrate theta values for both methods. Among the methods, `agent_torch.core.distribution.Categorical` stays relatively close to the baseline, while the Gumbel-based approach begins to drift early and deviates substantially in the testing region. This suggests that the Categorical method generalizes better across regions and is more stable under extended evaluation.
+
+Second, we extend the experiment to 1000 steps to examine long-term behavior. Over this longer horizon, the difference becomes even more pronounced. Gumbel's trajectory continues to diverge and accumulates a large positional error, confirming its poor generalization performance. In contrast, `agent_torch.core.distribution.Categorical` remains much more aligned with the baseline throughout.
+
 ## Experiment 2: Neural Relational Inference
 
 ## Conclusion
