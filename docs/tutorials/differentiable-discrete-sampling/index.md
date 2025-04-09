@@ -92,6 +92,25 @@ First, we run the experiment for 100 time-steps and calibrate theta values for b
 Second, we extend the experiment to 1000 steps to examine long-term behavior. Over this longer horizon, the difference becomes even more pronounced. Gumbel's trajectory continues to diverge and accumulates a large positional error, confirming its poor generalization performance. In contrast, `agent_torch.core.distribution.Categorical` remains much more aligned with the baseline throughout.
 
 ## Experiment 2: Neural Relational Inference
+The neural relational inference experiment is designed to infer and model latent interactions among entities in a dynamic system. In this experiment, a graph-based neural architecture is employed in which a factor graph CNN encoder extracts relational features from observed data, while a learned recurrent interaction net decoder predicts future states by modeling interactions between nodes (or atoms). The goal is to simultaneously learn the underlying relations and use these learned interactions to improve prediction accuracy and interpretability of the system’s dynamics.
+
+#### Experiment Setup
+
+The NRI experiment specifically focuses on learning to infer interactions in physical systems without supervision. The model is structured as a variational auto-encoder where the latent code represents the underlying interaction graph and the reconstruction is based on graph neural networks. The researchers conducted experiments on simulated physical systems including springs and charged particles. The model is evaluated on its ability to recover ground-truth interactions in these simulated environments, as well as its capacity to find interpretable structure and predict complex dynamics in real-world data such as motion capture and sports tracking data
+
+Initially, the experiment employed a Gumbel-Softmax approach for discrete sampling. In this setup, the addition of Gumbel noise and a temperature-controlled softmax allowed for differentiable approximations of categorical samples. However, the inherent bias-variance tradeoff—where higher temperatures yield smoother but less discrete gradients, and lower temperatures produce near-discrete but unstable gradients—limits the method's effectiveness. While the negative log-likelihood decreases over epochs, the KL divergence remains relatively low, suggesting insufficient regularization of the discrete structure .
+
+Recognizing these limitations, the experiment was repeated using our `agent_torch.core.distribution.Categorical` class. This new estimator directly provides a differentiable approximation for discrete sampling, bypassing some of the drawbacks inherent in the Gumbel-Softmax method. Notably, by more tightly coupling the sampling process to the categorical distribution, the estimator mitigates the bias-variance issue and improves gradient stability during training.
+
+#### Results
+![acc](acc_nri.png)
+![kl](kl_nri.png)
+
+The training logs for the categorical estimator experiment reveal several improvements:
+
+- Stable KL Divergence: The KL divergence values remained consistent from early epochs into convergence. This higher and stable KL value suggests that the model is enforcing a stronger regularization on the inferred discrete relations, leading to a more consistent latent structure.
+- Lower Negative Log-Likelihood: While both methods converge to low nll_train values as training proceeds, the categorical estimator maintains comparably low loss values alongside improved training accuracy. 
+- Improved Predictive Accuracy: The accuracy trends in the logs show that the categorical estimator experiment reaches and sustains higher accuracy levels. The results point to a model that not only fits the data better but also generalizes more effectively—an essential trait when dealing with structured, relational data.
 
 ## Conclusion
 This tutorial demonstrated how to implement and use differentiable discrete sampling operations using AgentTorch.
