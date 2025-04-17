@@ -34,6 +34,11 @@ class Behavior:
         for num_retries in range(10):
             try:
                 # last_k : Number of previous conversations to add in history
+                '''
+                for i in range(self.archetype[-1].n_arch):
+                    agent_outputs.append(self.archetype[i](prompt_list, last_k=12))
+                break
+                '''
                 for n_arch in range(self.archetype[-1].n_arch):
                     agent_outputs.append(self.archetype[n_arch](prompt_list, last_k=12))
                 break
@@ -84,3 +89,14 @@ class Behavior:
             masks.append(float_mask)
 
         return masks
+
+class GroupBehavior:
+    def __init__(self, archetypes, region, group_size):
+        self.behavior = Behavior(archetype=archetypes, region=region)
+        self.group_size = group_size 
+
+    def sample(self, kwargs=None):
+        output = self.behavior.sample(kwargs)
+        output = output.view(-1, self.group_size, 1)
+        group_output = output.mean(dim=1)
+        return group_output
