@@ -154,8 +154,7 @@ output = earning_behavior.sample(kwargs)
 ### Contributing to Agent Torch
 
 Thank you for your interest in contributing! You can contribute by reporting and
-fixing bugs in the framework or models, working on new features for the
-framework, creating new models, or by writing documentation for the project.
+fixing bugs in the framework or models, working on new features, creating new models, or by writing documentation for the project.
 
 Take a look at the [contributing guide](docs/contributing.md) for instructions
 on how to setup your environment, make changes to the codebase, and contribute
