@@ -1,0 +1,137 @@
+simulation_metadata:
+  ALIGN_LLM: true
+  EXECUTION_MODE: heuristic
+  EXPOSED_TO_INFECTED_TIME: 5
+  EXPOSED_VAR: 1
+  INCLUDE_WEEK_COUNT: true
+  INFECTED_TO_RECOVERED_TIME: 5
+  INFECTED_VAR: 2
+  INFINITY_TIME: 130
+  MORTALITY_VAR: 4
+  NEIGHBORHOOD: Astoria
+  NUM_TRAIN_WEEKS: 2
+  NUM_WEEKS: 3
+  OPENAI_API_KEY: null
+  RECOVERED_TO_SUSCEPTIBLE_TIME: 100
+  RECOVERED_VAR: 3
+  RESCALE_CONFIG: 0
+  START_WEEK: 202048
+  SUSCEPTIBLE_VAR: 0
+  age_group_file: ${simulation_metadata.population_dir}/age.pickle
+  calibration: false
+  device: cpu
+  disease_stage_file: ${simulation_metadata.population_dir}/disease_stages.csv
+  infection_network_file: ${simulation_metadata.population_dir}/mobility_networks/0.csv
+  num_agents: 1000
+  num_episodes: 5
+  num_steps_per_episode: 21
+  num_substeps_per_step: 2
+  population_dir: /u/ayushc/projects/GradABM/systems/AgentTorch/agent_torch/populations/sample2
+state:
+  agents:
+    citizens:
+      number: 1000
+      properties:
+        age:
+          dtype: int
+          initialization_function: null
+          learnable: false
+          name: age
+          shape:
+          - 1000
+          - 1
+          value: 20
+        disease_stage:
+          dtype: int
+          initialization_function: null
+          learnable: false
+          name: disease_stage
+          shape:
+          - 1000
+          - 1
+          value: 0
+  environment:
+    SFInfector:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: SFInfector
+      shape:
+      - 5
+      value:
+      - 0.0
+      - 0.33
+      - 0.72
+      - 0.0
+      - 0.0
+  network: {}
+  objects: null
+substeps:
+  '0':
+    active_agents:
+    - citizens
+    description: Disease transmission including isolation decisions
+    name: Transmission
+    observation:
+      citizens: null
+    policy:
+      citizens:
+        make_isolation_decision:
+          arguments:
+            align_vector:
+              dtype: float
+              initialization_function: null
+              learnable: true
+              name: align LLM agents to the populations
+              shape:
+              - 6
+              value: 0.3
+          generator: MakeIsolationDecision
+          input_variables:
+            age: agents/citizens/age
+          output_variables:
+          - isolation_decision
+    reward: null
+    transition:
+      new_transmission:
+        arguments:
+          R2:
+            dtype: float
+            initialization_function: null
+            learnable: true
+            name: R2 parameter
+            shape:
+            - 1
+            value: 4.75
+        generator: NewTransmission
+        input_variables:
+          age: agents/citizens/age
+          disease_stage: agents/citizens/disease_stage
+        output_variables:
+        - disease_stage
+  '1':
+    active_agents:
+    - citizens
+    description: SEIRM disease stage progression
+    name: DiseaseProgression
+    observation:
+      citizens: null
+    policy:
+      citizens: null
+    reward: null
+    transition:
+      seirm_progression:
+        arguments:
+          mortality_rate:
+            dtype: float
+            initialization_function: null
+            learnable: true
+            name: Mortality rate parameter
+            shape:
+            - 1
+            value: 0.01
+        generator: SEIRMProgression
+        input_variables:
+          disease_stage: agents/citizens/disease_stage
+        output_variables:
+        - disease_stage
