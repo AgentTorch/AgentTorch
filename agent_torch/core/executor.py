@@ -5,18 +5,18 @@ import dask.dataframe as dd
 from agent_torch.core.dataloader import DataLoader
 from agent_torch.core.runner import Runner
 
-
 class BaseExecutor:
     def __init__(self, model):
         self.model = model
 
     def _get_runner(self, config):
-        module_name = f"{self.model.__name__}.simulator"
+        module_name = self.model.__name__
         module = importlib.import_module(module_name)
-        registry = module.get_registry()
+                
+        registry = module.registry
+        print("Registry: ", registry)
         runner = Runner(config, registry)
         return runner
-
 
 class Executor(BaseExecutor):
     def __init__(self, model, data_loader=None, pop_loader=None) -> None:

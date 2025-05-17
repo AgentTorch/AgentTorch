@@ -1,10 +1,9 @@
 from functools import wraps
 from typing import List, Any, Type, Dict, Optional
 
-from agent_torch.core.executor import Executor
-from agent_torch.core.dataloader import LoadPopulation
-from agent_torch.core.llm.behavior import Behavior
-
+from .executor import Executor
+from .dataloader import LoadPopulation
+from .llm.behavior import Behavior
 
 class envs:
     @staticmethod

@@ -4,10 +4,7 @@ import os
 import pandas as pd
 import torch
 import yaml
-import pdb
-import dask.dataframe as dd
 from agent_torch.core.helpers import read_config
-
 
 class DataLoaderBase(ABC):
     @abstractmethod
@@ -135,6 +132,8 @@ class LinkPopulation(DataLoader):
         parquet_files = glob.glob(
             f"{self.population_folder_path}/*.parquet", recursive=False
         )
+
+        import dask.dataframe as dd
 
         for file in parquet_files:
             with open(file, "rb") as f:
