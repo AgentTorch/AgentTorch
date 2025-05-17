@@ -1,0 +1,99 @@
+simulation_metadata:
+  ALIGN_LLM: true
+  EXECUTION_MODE: heuristic
+  NUM_TRAIN_WEEKS: 2
+  NUM_WEEKS: 3
+  num_agents: 1000
+  population_dir: /path/to/population
+state:
+  agents:
+    citizens:
+      number: 1000
+      properties:
+        age:
+          dtype: int
+          initialization_function:
+            arguments:
+              attribute:
+                value: age
+              file_path:
+                value: ${simulation_metadata.age_group_file}
+            generator: load_population_attribute
+          learnable: false
+          name: age
+          shape:
+          - 1000
+          - 1
+          value: null
+        disease_stage:
+          dtype: int
+          initialization_function:
+            arguments:
+              file_path:
+                value: ${simulation_metadata.disease_stage_file}
+            generator: read_from_file
+          learnable: false
+          name: disease_stage
+          shape:
+          - 1000
+          - 1
+          value: null
+  environment:
+    SFInfector:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: SFInfector
+      shape:
+      - 5
+      value:
+      - 0.0
+      - 0.33
+      - 0.72
+      - 0.0
+      - 0.0
+  network:
+    agent_agent:
+      infection_network:
+        arguments:
+          file_path: ${simulation_metadata.infection_network_file}
+        type: network_from_file
+    objects: null
+  objects: null
+substeps:
+  '0':
+    active_agents:
+    - citizens
+    description: Transmission of new infections
+    name: Transmission
+    observation: {}
+    policy:
+      citizens:
+        make_isolation_decision:
+          arguments:
+            align_vector:
+              dtype: float
+              shape:
+              - 6
+              value: 0.3
+          generator: MakeIsolationDecision
+          input_variables:
+            age: agents/citizens/age
+          output_variables:
+          - isolation_decision
+    reward: null
+    transition:
+      new_transmission:
+        arguments:
+          R2:
+            learnable: true
+            value: 4.75
+        generator: NewTransmission
+        input_variables:
+          age: agents/citizens/age
+          disease_stage: agents/citizens/disease_stage
+        output_variables:
+        - disease_stage
+        - next_stage_time
+        - infected_time
+        - daily_infected
