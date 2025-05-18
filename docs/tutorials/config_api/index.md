@@ -5,9 +5,8 @@ This tutorial will guide you through using AgentTorch's Configuration API to bui
 ## Prerequisites
 
 Before starting this tutorial, make sure you have:
-- AgentTorch installed (`pip install agent-torch`)
-- Basic understanding of agent-based modeling concepts
-- Python 3.10 or higher
+- AgentTorch installed
+- Basic understanding of agent-based simulation concepts
 
 ## Project Structure
 
