@@ -11,6 +11,7 @@ nav:
   - 'contributing.md'
   - Tutorials:
       - 'Creating a Model': 'tutorials/creating-a-model/index.md'
+      - 'Using the Config API': 'tutorials/config_api/index.md'
       - 'Customizing the Population': 'tutorials/processing-a-population/index.md'
       - 'Prompting LLM as LPM agents': 'tutorials/configure-behavior/index.md'
       - 'Gradient-based Calibration': 'tutorials/calibrating-a-model/index.md' 
