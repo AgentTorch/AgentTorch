@@ -1,0 +1,81 @@
+simulation_metadata:
+  calibration: false
+  device: cpu
+  num_agents: 1000
+  num_episodes: 10
+  num_steps_per_episode: 20
+  num_substeps_per_step: 1
+  population_dir: /u/ayushc/projects/GradABM/systems/AgentTorch/agent_torch/populations/sample2
+state:
+  agents:
+    citizens:
+      number: 1000
+      properties:
+        position:
+          dtype: float
+          initialization_function: null
+          learnable: false
+          name: position
+          shape:
+          - 100
+          - 2
+          value:
+          - 0.0
+          - 0.0
+  environment:
+    bounds:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: bounds
+      shape:
+      - 2
+      value:
+      - 100.0
+      - 100.0
+  network: {}
+  objects: null
+substeps:
+  '0':
+    active_agents:
+    - citizens
+    description: Agent movement simulation
+    name: Movement
+    observation:
+      citizens: null
+    policy:
+      citizens:
+        move:
+          arguments:
+            step_size:
+              dtype: float
+              initialization_function: null
+              learnable: true
+              name: Step size parameter
+              shape:
+              - 1
+              value: 1.0
+          generator: RandomMove
+          input_variables:
+            position: agents/citizens/position
+          output_variables:
+          - direction
+    reward: null
+    transition:
+      update_position:
+        arguments:
+          bounds:
+            dtype: float
+            initialization_function: null
+            learnable: true
+            name: Environment bounds
+            shape:
+            - 2
+            value:
+            - 100.0
+            - 100.0
+        generator: UpdatePosition
+        input_variables:
+          position: agents/citizens/position
+        output_variables:
+        - position
