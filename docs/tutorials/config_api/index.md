@@ -213,12 +213,4 @@ state_builder.set_network(network_builder)
 ## Next Steps
 
 - Check out the [COVID-19 simulation example](../../examples/models/covid/) for a more complex implementation
-- Learn about [vectorized operations](../vectorized_operations/) for performance optimization
-- Explore [LLM integration](../llm_integration/) for agent behavior
-
-## Reference
-
-For detailed API documentation, see:
-- [ConfigBuilder API Reference](../../api/config_builder.md)
-- [StateBuilder API Reference](../../api/state_builder.md)
-- [SubstepBuilder API Reference](../../api/substep_builder.md) 
+- Explore [LLM integration](../creating-archetypes/) for agent behavior
