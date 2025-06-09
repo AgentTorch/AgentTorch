@@ -159,9 +159,3 @@ fixing bugs in the framework or models, working on new features, creating new mo
 Take a look at the [contributing guide](docs/contributing.md) for instructions
 on how to setup your environment, make changes to the codebase, and contribute
 them back to the project.
-
-## Impact
-
-> **AgentTorch models are being deployed across the globe.**
-
-![Impact](docs/media/impact_lpm.png)
