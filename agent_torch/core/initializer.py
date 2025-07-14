@@ -30,7 +30,31 @@ class Initializer(nn.Module):
             return src_val
 
         if type(src_val) == list:
-            init_value = torch.tensor(src_val)
+            # Convert list to tensor
+            src_tensor = torch.tensor(src_val)
+            
+            # If shape is specified and different from the source tensor shape,
+            # create a tensor of the desired shape and fill it appropriately
+            if processed_shape and list(src_tensor.shape) != processed_shape:
+                # Create tensor of desired shape
+                init_value = torch.zeros(size=processed_shape)
+                
+                # Fill the tensor by broadcasting the source values
+                # For example: [0.0, 0.0] with shape [1000, 2] becomes a 1000x2 tensor filled with zeros
+                if len(src_tensor.shape) == 1 and len(processed_shape) >= 2:
+                    # If source is 1D and target is multi-dimensional, broadcast along the last dimension
+                    if src_tensor.shape[0] == processed_shape[-1]:
+                        # Source matches last dimension, broadcast across all other dimensions
+                        init_value = src_tensor.unsqueeze(0).expand(processed_shape)
+                    else:
+                        # Use first value of source to fill entire tensor
+                        init_value.fill_(src_tensor[0].item())
+                else:
+                    # For other cases, use first value to fill the tensor
+                    init_value.fill_(src_tensor.flatten()[0].item())
+            else:
+                # Shape matches or no shape specified, use tensor as-is
+                init_value = src_tensor
         # elif isinstance(src_val, (dd.Series, dd.DataFrame)):  # If Dask data is passed
         #     init_value = torch.tensor(src_val.compute().to_numpy())
         else:
