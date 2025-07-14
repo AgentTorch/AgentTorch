@@ -8,3 +8,4 @@ black==24.4.2
 mkdocs==1.6.0
 bumpver==2023.1129
 twine==5.1.0
+scipy

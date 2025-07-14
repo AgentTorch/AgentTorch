@@ -12,3 +12,4 @@ dspy>=0.1.5
 dask>=2024.12.1
 epiweeks
 scipy
+omegaconf
