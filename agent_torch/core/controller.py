@@ -4,6 +4,7 @@ import re
 from agent_torch.core.helpers import get_by_path, set_by_path, copy_module
 from agent_torch.core.utils import is_async_method
 
+
 class Controller(nn.Module):
     def __init__(self, config):
         super().__init__()

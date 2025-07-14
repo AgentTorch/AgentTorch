@@ -1,1 +1,1 @@
-"""Example model implementations for AgentTorch.""" 
+"""Example model implementations for AgentTorch."""

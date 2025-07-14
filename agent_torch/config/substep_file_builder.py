@@ -1,7 +1,13 @@
 import os
 from typing import Dict, Any, List
 from dataclasses import dataclass
-from agent_torch.config.substep_builder import SubstepBuilder, PolicyBuilder, TransitionBuilder, ObservationBuilder
+from agent_torch.config.substep_builder import (
+    SubstepBuilder,
+    PolicyBuilder,
+    TransitionBuilder,
+    ObservationBuilder,
+)
+
 
 @dataclass
 class SubstepImplementation:
@@ -14,17 +20,18 @@ class SubstepImplementation:
     @property
     def class_name(self) -> str:
         """Convert snake_case name to PascalCase class name."""
-        return ''.join(word.title() for word in self.name.split('_'))
+        return "".join(word.title() for word in self.name.split("_"))
+
 
 def generate_substep_file(substep: SubstepImplementation, output_dir: str):
     """Generate a Python file implementing the substep."""
-    
+
     # Create the substeps directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
-    
+
     # Determine parent class based on type
     parent_class = "SubstepAction" if substep.type == "policy" else "SubstepTransition"
-    
+
     # Generate the file content
     content = f"""from typing import Dict, Any
 import torch
@@ -63,26 +70,29 @@ class {substep.class_name}({parent_class}):
             {chr(10).join(f"            self.output_variables[{i}]: None,  # {var}" for i, var in enumerate(substep.output_vars))}
         }}
 """
-    
+
     # Write the file - use original snake_case name
     output_file = os.path.join(output_dir, f"{substep.name}.py")
-    with open(output_file, 'w') as f:
+    with open(output_file, "w") as f:
         f.write(content)
-    
+
     return output_file
+
 
 class SubstepBuilderWithImpl(SubstepBuilder):
     """Extended SubstepBuilder that also generates implementation files."""
-    
+
     def __init__(self, name: str, description: str, output_dir: str):
         super().__init__(name, description)
         self.output_dir = output_dir
         self.implementations = []
-    
-    def add_observation(self, agent_type: str, observation_builder: ObservationBuilder) -> 'SubstepBuilderWithImpl':
+
+    def add_observation(
+        self, agent_type: str, observation_builder: ObservationBuilder
+    ) -> "SubstepBuilderWithImpl":
         """Add observation and generate implementation files."""
         super().set_observation(agent_type, observation_builder)
-        
+
         # Extract observations to generate implementations
         for obs_name, obs in observation_builder.config.items():
             impl = SubstepImplementation(
@@ -90,16 +100,18 @@ class SubstepBuilderWithImpl(SubstepBuilder):
                 type="observation",
                 input_vars=obs["input_variables"],
                 output_vars=obs["output_variables"],
-                arguments=obs["arguments"]
+                arguments=obs["arguments"],
             )
             self.implementations.append(impl)
-        
+
         return self
 
-    def add_policy(self, agent_type: str, policy_builder: PolicyBuilder) -> 'SubstepBuilderWithImpl':
+    def add_policy(
+        self, agent_type: str, policy_builder: PolicyBuilder
+    ) -> "SubstepBuilderWithImpl":
         """Add policy and generate implementation files."""
         super().set_policy(agent_type, policy_builder)
-        
+
         # Extract policies to generate implementations
         for policy_name, policy in policy_builder.config.items():
             impl = SubstepImplementation(
@@ -107,16 +119,18 @@ class SubstepBuilderWithImpl(SubstepBuilder):
                 type="policy",
                 input_vars=policy["input_variables"],
                 output_vars=policy["output_variables"],
-                arguments=policy["arguments"]
+                arguments=policy["arguments"],
             )
             self.implementations.append(impl)
-        
+
         return self
-    
-    def set_transition(self, transition_builder: TransitionBuilder) -> 'SubstepBuilderWithImpl':
+
+    def set_transition(
+        self, transition_builder: TransitionBuilder
+    ) -> "SubstepBuilderWithImpl":
         """Set transition and generate implementation files."""
         super().set_transition(transition_builder)
-        
+
         # Extract transitions to generate implementations
         for trans_name, trans in transition_builder.config.items():
             impl = SubstepImplementation(
@@ -124,16 +138,16 @@ class SubstepBuilderWithImpl(SubstepBuilder):
                 type="transition",
                 input_vars=trans["input_variables"],
                 output_vars=trans["output_variables"],
-                arguments=trans["arguments"]
+                arguments=trans["arguments"],
             )
             self.implementations.append(impl)
-        
+
         return self
-    
+
     def generate_implementations(self):
         """Generate all implementation files."""
         generated_files = []
         for impl in self.implementations:
             file_path = generate_substep_file(impl, self.output_dir)
             generated_files.append(file_path)
-        return generated_files 
+        return generated_files

@@ -121,11 +121,11 @@ class Categorical(torch.autograd.Function):
         result, p = ctx.saved_tensors
         one_hot = torch.zeros_like(p)
         one_hot.scatter_(-1, result, 1.0)
-        eps = 1e-8 # small value to avoid division by zero
+        eps = 1e-8  # small value to avoid division by zero
         # For the chosen category, analogous to a "jump-down" weight.
-        w_chosen = (1.0 / (p + eps)) / 2  
+        w_chosen = (1.0 / (p + eps)) / 2
         # For non-chosen categories, analogous to a "jump-up" weight.
-        w_non_chosen = (1.0 / (1.0 - p + eps)) / 2  
+        w_non_chosen = (1.0 / (1.0 - p + eps)) / 2
         ws = one_hot * w_chosen + (1 - one_hot) * w_non_chosen
         grad_output_expanded = grad_output.expand_as(p)
         return grad_output_expanded * ws

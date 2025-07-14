@@ -1,5 +1,6 @@
 from agent_torch.core import Runner, Registry
 
+
 def get_registry():
     reg = Registry()
 
@@ -39,7 +40,9 @@ def get_registry():
 
     return reg
 
+
 registry = get_registry()
+
 
 def get_runner(config, registry):
     CovidRunner = Runner(config, registry)

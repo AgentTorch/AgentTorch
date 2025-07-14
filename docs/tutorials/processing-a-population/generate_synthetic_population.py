@@ -11,8 +11,12 @@ AGE_GROUP_MAPPING = {
     "adult_list": ["20t29", "30t39", "40t49", "50t64", "65A"],  # Age ranges for adults.
     "children_list": ["U19"],  # Age range for children.
 }
-HOUSEHOLD_DATA_PATH = "docs/tutorials/processing-a-population/sample_data/NYC/household.pkl"
-POPULATION_DATA_PATH = "docs/tutorials/processing-a-population/sample_data/NYC/population.pkl"
+HOUSEHOLD_DATA_PATH = (
+    "docs/tutorials/processing-a-population/sample_data/NYC/household.pkl"
+)
+POPULATION_DATA_PATH = (
+    "docs/tutorials/processing-a-population/sample_data/NYC/population.pkl"
+)
 
 # Load household data from the specified path. Ensure the path is correctly set before loading.
 HOUSEHOLD_DATA = pd.read_pickle(HOUSEHOLD_DATA_PATH)

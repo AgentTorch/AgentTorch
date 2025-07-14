@@ -6,6 +6,7 @@ import torch
 import yaml
 from agent_torch.core.helpers import read_config
 
+
 class DataLoaderBase(ABC):
     @abstractmethod
     def __init__(self, data_dir, model):
