@@ -80,19 +80,18 @@ Torch API.
 # re-use existing models and population data easily
 from agent_torch.models import covid
 from agent_torch.populations import astoria
+from agent_torch.core.environment import envs
 
-# use the executor to plug-n-play
-from agent_torch.core.executor import Executor
-from agent_torch.core.dataloader import LoadPopulation
+runner = envs.create(model=covid, population=astoria) # create simulation and init runner
 
-# agent_"torch" works seamlessly with the pytorch API
-from torch.optim import SGD
+sim_steps = runner.config["simulation_metadata"]["num_steps_per_episode"]
+num_episodes = runner.config["simulation_metadata"]["num_episodes"]
 
-loader = LoadPopulation(astoria)
-simulation = Executor(model=covid, pop_loader=loader)
+for epi in range(num_episodes):
+  runner.step(sim_steps)
 
-simulation.init()
-simulation.execute()
+  runner.reset() # re-initializes the sim parameters for new episode
+
 ```
 
 ## License
