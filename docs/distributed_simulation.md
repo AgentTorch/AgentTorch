@@ -28,18 +28,6 @@ final_state = launch_distributed_simulation(
 )
 ```
 
-## 📊 Performance Benchmarks
-
-### Expected Speedups
-- **2 GPUs**: 1.7-1.9x speedup
-- **4 GPUs**: 3.2-3.8x speedup  
-- **8 GPUs**: 6.0-7.5x speedup
-
-### Memory Scaling
-- **Single GPU**: ~1M agents max
-- **4 GPUs**: ~4M agents
-- **8 GPUs**: ~8M agents
-
 ## 🔧 Configuration Options
 
 ### Partitioning Strategies
