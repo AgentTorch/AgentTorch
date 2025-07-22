@@ -15,11 +15,12 @@ class RandomMove(SubstepAction):
         # Get current positions
         positions = get_var(state, self.input_variables["position"])
         num_agents = positions.shape[0]
+        device = positions.device  # Get device from positions
 
         self.step_size = self.learnable_args["step_size"]
 
-        # Generate random angles
-        angles = torch.rand(num_agents) * 2 * torch.pi
+        # Generate random angles - ensure on same device as positions
+        angles = torch.rand(num_agents, device=device) * 2 * torch.pi
 
         # Convert to direction vectors
         direction = torch.stack(
