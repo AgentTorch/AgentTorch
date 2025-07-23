@@ -2,7 +2,7 @@
 
 AgentTorch supports distributed simulation across multiple GPUs with **minimal code changes**.
 
-## 🚀 Quick Start: Only 2 Lines Changed!
+## Quick Start: Only 2 Lines Changed!
 
 Convert any existing AgentTorch simulation to distributed execution:
 
@@ -35,7 +35,7 @@ runner.step(20)  # Same as before
 
 That's it! Your simulation now runs across 4 GPUs automatically.
 
-## ✨ Key Features
+## Key Features
 
 - **No config files needed** - just change 2 parameters in `envs.create()`
 - **Automatic agent partitioning** across GPUs
@@ -44,15 +44,9 @@ That's it! Your simulation now runs across 4 GPUs automatically.
 - **Auto-fallback** to single GPU if needed
 - **Same API** - `.init()`, `.step()`, `.reset()` work identically
 
-## 📈 Performance
-
-- **2 GPUs**: ~1.8x speedup
-- **4 GPUs**: ~3.5x speedup  
-- **8 GPUs**: ~6.5x speedup
-
 Scale to **hundreds of** millions of agents seamlessly.
 
-## 🔧 Usage Examples
+## Usage Examples
 
 ### Basic Distributed Simulation
 ```python
