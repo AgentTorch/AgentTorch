@@ -1,0 +1,201 @@
+simulation_metadata:
+  calibration: false
+  device: cpu
+  num_agents: 1000
+  num_episodes: 1
+  num_steps_per_episode: 500
+  num_substeps_per_step: 2
+  population_dir: /u/ayushc/projects/GradABM/systems/AgentTorch/agent_torch/populations/sample2
+state:
+  agents:
+    boids:
+      number: 100
+      properties:
+        position:
+          dtype: float
+          initialization_function: null
+          learnable: false
+          name: position
+          shape:
+          - 100
+          - 2
+          value:
+          - 400.0
+          - 300.0
+        velocity:
+          dtype: float
+          initialization_function: null
+          learnable: false
+          name: velocity
+          shape:
+          - 100
+          - 2
+          value:
+          - 1.0
+          - 0.0
+  environment:
+    bounds:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: bounds
+      shape:
+      - 2
+      value:
+      - 800.0
+      - 600.0
+    max_force:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: max_force
+      shape: []
+      value: 0.1
+    max_speed:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: max_speed
+      shape: []
+      value: 4.0
+    perception_radius:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: perception_radius
+      shape: []
+      value: 50.0
+    separation_distance:
+      dtype: float
+      initialization_function: null
+      learnable: false
+      name: separation_distance
+      shape: []
+      value: 25.0
+  network: {}
+  objects: null
+substeps:
+  '0':
+    active_agents:
+    - boids
+    description: Calculate flocking forces (separation, alignment, cohesion)
+    name: FlockingBehavior
+    observation:
+      boids: null
+    policy:
+      boids:
+        calculate_flocking_forces:
+          arguments:
+            alignment_weight:
+              dtype: float
+              initialization_function: null
+              learnable: true
+              name: Alignment weight
+              shape:
+              - 1
+              value: 1.0
+            cohesion_weight:
+              dtype: float
+              initialization_function: null
+              learnable: true
+              name: Cohesion weight
+              shape:
+              - 1
+              value: 1.0
+            position_margin:
+              dtype: float
+              initialization_function: null
+              learnable: true
+              name: Margin from boundaries for positions
+              shape:
+              - 1
+              value: 50.0
+            separation_weight:
+              dtype: float
+              initialization_function: null
+              learnable: true
+              name: Separation weight
+              shape:
+              - 1
+              value: 1.5
+            speed_range:
+              dtype: float
+              initialization_function: null
+              learnable: true
+              name: Speed range for random velocities
+              shape:
+              - 2
+              value:
+              - 0.5
+              - 1.5
+          generator: CalculateFlockingForces
+          input_variables:
+            perception_radius: environment/perception_radius
+            position: agents/boids/position
+            separation_distance: environment/separation_distance
+            velocity: agents/boids/velocity
+          output_variables:
+          - steering_force
+    reward: null
+    transition:
+      update_velocity:
+        arguments:
+          max_force:
+            dtype: float
+            initialization_function: null
+            learnable: true
+            name: Maximum steering force
+            shape:
+            - 1
+            value: 0.1
+        generator: UpdateVelocity
+        input_variables:
+          max_force: environment/max_force
+          velocity: agents/boids/velocity
+        output_variables:
+        - velocity
+  '1':
+    active_agents:
+    - boids
+    description: Update positions and handle boundaries
+    name: MovementUpdate
+    observation:
+      boids: null
+    policy:
+      boids:
+        limit_speed:
+          arguments:
+            max_speed:
+              dtype: float
+              initialization_function: null
+              learnable: true
+              name: Maximum speed
+              shape:
+              - 1
+              value: 4.0
+          generator: LimitSpeed
+          input_variables:
+            max_speed: environment/max_speed
+            velocity: agents/boids/velocity
+          output_variables:
+          - limited_velocity
+    reward: null
+    transition:
+      update_position:
+        arguments:
+          bounds:
+            dtype: float
+            initialization_function: null
+            learnable: false
+            name: World boundaries
+            shape:
+            - 2
+            value:
+            - 800.0
+            - 600.0
+        generator: UpdatePosition
+        input_variables:
+          bounds: environment/bounds
+          position: agents/boids/position
+        output_variables:
+        - position
