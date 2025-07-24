@@ -1,6 +1,22 @@
 #!/usr/bin/env python3
 """
-Script to create the boids flocking simulation configuration and generate substep implementations.
+Boids Model Configuration Generator
+
+This script generates the boids model configuration using AgentTorch's Config API.
+It creates both the YAML configuration file and substep implementation templates.
+
+Usage:
+    python create_boids_config.py
+
+Generated files:
+    - yamls/config.yaml: Model configuration
+    - substeps/*.py: Substep implementation templates (if they don't exist)
+
+The configuration includes:
+    - 100 boids with position/velocity properties
+    - Environment bounds and flocking parameters
+    - Two main substeps: FlockingBehavior and MovementUpdate
+    - Learnable parameters for customization
 """
 
 from agent_torch.config import (
@@ -16,6 +32,7 @@ from agent_torch.config import (
 
 def create_boids_config():
     """Create the boids flocking simulation configuration."""
+    print("Creating boids model configuration...")
     
     # Initialize config builder
     config = ConfigBuilder()

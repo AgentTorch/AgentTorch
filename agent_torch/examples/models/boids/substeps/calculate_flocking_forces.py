@@ -111,8 +111,8 @@ class CalculateFlockingForces(SubstepAction):
         device = position.device
         
         # Convert learnable parameters to tensors on correct device
-        speed_range = torch.tensor(self.speed_range, device=device)
-        margin = torch.tensor(self.position_margin, device=device)
+        speed_range = torch.as_tensor(self.speed_range, device=device)
+        margin = torch.as_tensor(self.position_margin, device=device)
         bounds_tensor = bounds.to(device)
         
         # Random positions within bounds with margin
