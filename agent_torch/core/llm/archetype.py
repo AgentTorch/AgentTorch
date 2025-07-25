@@ -1,10 +1,10 @@
 import sys
 import os
-
 from agent_torch.core.llm.agent_memory import DSPYMemoryHandler, LangchainMemoryHandler
 
 os.environ["DSP_CACHEBOOL"] = "False"
 from langchain.memory import ConversationBufferMemory
+from typing import List
 
 
 class Archetype:
@@ -29,7 +29,28 @@ class Archetype:
 
     def rule_based(self):
         raise NotImplementedError
+    
+class GroupArchetype:
+    def __init__(self, archetypes: List[Archetype], n_arch=1):
+        self.archetypes = archetypes
+        self.n_arch = n_arch
 
+    def llm(self, llm, user_prompts: List[str]):
+        try:
+            llm.initialize_llm()
+            return [
+                LLMArchetype(llm, user_prompts[i % len(self.archetypes)], n_arch=1)
+                for i in range(self.n_arch * len(self.archetypes))
+            ]
+        except Exception as e:
+            print(" 'initialize_llm' Not Implemented, make sure if it's the intended behaviour")
+            return [
+                LLMArchetype(llm, user_prompts[i % len(self.archetypes)], n_arch=1)
+                for i in range(self.n_arch * len(self.archetypes))
+            ]
+
+    def rule_based(self):
+        raise NotImplementedError
 
 class LLMArchetype:
     def __init__(self, llm, user_prompt, n_arch=1):
