@@ -24,15 +24,15 @@
 
 ## Overview
 
-Many grand challenges like climate change and pandemics emerge from complex interactions of millions of individual decisions. While LLMs and AI agents excel at individual behavior, they can't model these intricate societal dynamics. Enter Large Population Models (LPMs): a new AI paradigm to simulate millions of interacting agents, capturing collective behaviors at societal scale. It's like scaling up AI agents exponentially to understand the ripple effects of countless decisions. While LLMs enable "digital humans", LPMs unlock "digital nations".
+Many grand challenges like climate change and pandemics emerge from complex interactions of millions of individual decisions. While LLMs and agent simulations excel at individual behavior, they can't model these intricate societal dynamics. Enter Large Population Models (LPMs): a new paradigm to simulate millions of interacting entities, capturing behaviors at collective scale. It   exponentially to understand the ripple effects of countless decisions. 
 
-AgentTorch, our open-source platform, makes building and running massive LPMs accessible. It's optimized for GPUs, allowing efficient simulation of entire cities or countries. Think PyTorch, but for large-scale agent-based simulations. AgentTorch LPMs have four design principles:
+AgentTorch, our open-source platform, makes building and running massive LPMs accessible. It's optimized for GPUs, allowing efficient simulation of large-scale systems. Think PyTorch, but for large-scale agent-based simulations. AgentTorch LPMs have four design principles:
 
-- **Scalability**: AgentTorch models can simulate country-size populations in
+- **Scalability**: AgentTorch models can simulate large-scale populations in
   seconds on commodity hardware.
 - **Differentiability**: AgentTorch models can differentiate through simulations
   with stochastic dynamics and conditional interventions, enabling
-  gradient-based learning.
+  gradient-based optimization.
 - **Composition**: AgentTorch models can compose with deep neural networks (eg:
   LLMs), mechanistic simulators (eg: mitsuba) or other LPMs. This helps describe
   agent behavior using LLMs, calibrate simulation parameters and specify
@@ -41,10 +41,8 @@ AgentTorch, our open-source platform, makes building and running massive LPMs ac
   geospatial worlds, cells in anatomical worlds, autonomous avatars in digital
   worlds.
 
-LPMs are already making real-world impact. They're being used to help immunize millions of people by optimizing vaccine distribution strategies, and to track billions of dollars in global supply chains, improving efficiency and reducing waste. Our long-term goal is to "re-invent the census": built entirely in simulation, captured passively and used to protect country-scale populations. Our research is making an impact - winning awards at AI conferences and being deployed across the world.
-Learn more about our [research](https://media.mit.edu/projects/ai-lpm) and [vision](https://lpm.media.mit.edu/perspective.pdf).
-
-AgentTorch is building the future of decision engines - inside the body, around us and beyond!
+Our research is making an impact - winning awards at AI conferences and being used in real-world applications.
+Learn more about our [research](https://media.mit.edu/projects/ai-lpm).
 
 https://github.com/AgentTorch/AgentTorch/assets/13482350/4c3f9fa9-8bce-4ddb-907c-3ee4d62e7148
 
