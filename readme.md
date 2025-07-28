@@ -42,7 +42,7 @@ AgentTorch, our open-source platform, makes building and running massive LPMs ac
   worlds.
 
 Our research is making an impact - winning awards at AI conferences and being used in real-world applications.
-Learn more about our [research](https://media.mit.edu/projects/ai-lpm).
+Learn more [here](https://media.mit.edu/projects/ai-lpm).
 
 https://github.com/AgentTorch/AgentTorch/assets/13482350/4c3f9fa9-8bce-4ddb-907c-3ee4d62e7148
 
