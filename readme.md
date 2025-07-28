@@ -76,7 +76,7 @@ Torch API.
 
 ```py
 # re-use existing models and population data easily
-from agent_torch.models import covid
+from agent_torch.examples.models import movement
 from agent_torch.populations import astoria
 from agent_torch.core.environment import envs
 
