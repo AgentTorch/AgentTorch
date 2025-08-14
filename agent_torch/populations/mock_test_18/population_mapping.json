@@ -1,0 +1,77 @@
+{
+  "population_size": 18,
+  "created_by": "create_mock_18_population_fixed.py",
+  "description": "Mock 18-agent population for P3O testing - numeric encoded",
+  "encoding": {
+    "area": [
+      "urban",
+      "suburban",
+      "rural"
+    ],
+    "ethnicity": [
+      "other",
+      "white",
+      "hispanic",
+      "black",
+      "asian"
+    ],
+    "gender": [
+      "male",
+      "female"
+    ],
+    "region": [
+      "Northeast",
+      "Southeast",
+      "Midwest",
+      "West"
+    ],
+    "soc_code": [
+      "15-1211.00",
+      "29-1141.00",
+      "35-2014.00",
+      "41-2031.00",
+      "43-4051.00",
+      "25-2021.00",
+      "47-2061.00",
+      "53-3032.00"
+    ]
+  },
+  "age_range": [
+    19,
+    60
+  ],
+  "demographic_summary": {
+    "age_range": "19-60",
+    "areas": [
+      "urban",
+      "suburban",
+      "rural"
+    ],
+    "ethnicities": [
+      "other",
+      "white",
+      "hispanic",
+      "black",
+      "asian"
+    ],
+    "genders": [
+      "male",
+      "female"
+    ],
+    "regions": [
+      "Northeast",
+      "Southeast",
+      "Midwest",
+      "West"
+    ],
+    "soc_codes": [
+      "47-2061.00",
+      "53-3032.00",
+      "43-4051.00",
+      "25-2021.00",
+      "41-2031.00",
+      "15-1211.00",
+      "35-2014.00"
+    ]
+  }
+}
