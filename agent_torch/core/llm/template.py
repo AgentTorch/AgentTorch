@@ -1,592 +1,472 @@
-#!/usr/bin/env python3
 """
-AgentTorch P3O Template System
-==============================
+Template System for AgentTorch
+=============================
 
-Centralized template management for P3O prompt optimization.
-Provides built-in templates and utilities for creating custom templates.
+Clean, single-responsibility template system for organizing prompts with external data sources.
+Users have full control over prompt text with {placeholder, learnable=True/False} syntax.
 
-Design Principles:
-- Templates focus on DECISION-MAKING, not model-specific context
-- Model-agnostic templates work across COVID, economics, social models
-- System automatically injects model-specific context
-- Easy for users to create and customize templates
-
-Usage Examples:
---------------
-
-# Use built-in template
-template = Template.COVID_WILLINGNESS
-
-# Create custom template
-my_template = Template.create_custom(
-    name="my_decision", 
-    template="{{context}}\n\n{{decision}}",
-    placeholders={
-        "context": ["You are {job_name}...", "As {job_name}..."],
-        "decision": ["How willing are you? (0.0-1.0)", "Rate willingness:"]
-    }
-)
-
-# Validate template
-Template.validate(my_template)
+Single Public API: Template.render(agent_id, population, mapping, config_kwargs)
 """
 
-from typing import Dict, List, Any, Optional, Union, Set
-from dataclasses import dataclass
-import json
+import os
+import pandas as pd
+import pickle
 import re
+import torch
+from typing import Dict, Any, Optional, Union, List, Tuple, Literal
+from dataclasses import dataclass
+
+# Import Slot class
+from agent_torch.core.llm.slot import Slot
 
 
 @dataclass
-class TemplateDefinition:
-    """
-    Structure for a P3O template definition.
-    
-    Attributes:
-        name: Template identifier
-        template: Template string with {{placeholder}} markers
-        placeholders: Dict mapping placeholder names to lists of variations
-        description: Human-readable description of template purpose
-        output_format: Expected output format configuration
-    """
-    name: str
-    template: str
-    placeholders: Dict[str, List[str]]
-    description: str = ""
-    output_format: Dict[str, Any] = None
-    
-    def __post_init__(self):
-        """Set default output format if not provided."""
-        if self.output_format is None:
-            self.output_format = {
-                "type": "float",
-                "range": [0.0, 1.0],
-                "patterns": [
-                    r'\(([0-9]*\.?[0-9]+)\)',  # (0.45)
-                    r'([0-9]*\.?[0-9]+)$',     # Final number
-                    r'([0-9]*\.?[0-9]+)'       # Any decimal
-                ]
-            }
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary format for P3O backend."""
-        return {
-            "template": self.template,
-            "placeholders": self.placeholders,
-            "output_format": self.output_format
-        }
-    
-    def extract_required_fields(self) -> Dict[str, Set[str]]:
-        """
-        Smart field extraction based on standardized 3-section structure.
-        
-        Maps template sections to their corresponding data sources:
-        - personal_context → population_fields (from mapping.json)
-        - agent_context → external_fields (from mapping.json external_sources)
-        - decision_prompt → context_fields (from simulation/environment)
-        
-        Returns:
-            Dictionary with categorized field sets:
-            {
-                'population_fields': set(['age', 'gender', 'ethnicity', ...]),
-                'external_fields': set(['job_name', 'Skills', 'hobby_name', ...]),
-                'context_fields': set(['covid_cases', 'unemployment_rate', ...])
-            }
-        """
-        field_categories = {
-            'population_fields': set(),
-            'external_fields': set(), 
-            'context_fields': set()
-        }
-        
-        # Smart mapping: Template sections to data sources (no hardcoding)
-        section_mapping = {
-            'personal_context': 'population_fields',
-            'agent_context': 'external_fields', 
-            'decision_prompt': 'context_fields'
-        }
-        
-        # Extract fields from each template section
-        for placeholder_name, variations in self.placeholders.items():
-            if placeholder_name in section_mapping:
-                category = section_mapping[placeholder_name]
-                for variation in variations:
-                    fields = re.findall(r'\{(\w+)(?:[^}]*)?\}', variation)
-                    field_categories[category].update(fields)
-        
-        return field_categories
-    
-    def validate_template_structure(self) -> None:
-        """
-        Structure validation: Ensure template follows required 3-section structure.
-        
-        Raises:
-            ValueError: If template is missing required sections
-        """
-        required_sections = {'personal_context', 'agent_context', 'decision_prompt'}
-        template_sections = set(self.placeholders.keys())
-        
-        if not required_sections.issubset(template_sections):
-            missing = required_sections - template_sections
-            raise ValueError(
-                f"Template '{self.name}' missing required sections: {missing}. "
-                f"All templates must have: personal_context, agent_context, decision_prompt"
-            )
-    
-    def assemble_agent_data(self, agent_idx: int, mapping_manager, simulation_context: Dict[str, Any], 
-                           environment_context: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Assemble all data needed for this agent's prompt from multiple sources.
-        
-        🧠 SMART ASSEMBLY: Uses template structure to guide data resolution
-        1. Validates template structure (3-section requirement)
-        2. Extracts categorized field requirements
-        3. Delegates to MappingManager for smart assembly
-        
-        Args:
-            agent_idx: Agent index
-            mapping_manager: MappingManager instance for all data resolution
-            simulation_context: Model-specific simulation state data
-            environment_context: Model-specific environment data
-            
-        Returns:
-            Complete agent data dictionary for prompt generation
-        """
-        try:
-            # Validate template structure first
-            self.validate_template_structure()
-            
-            # Delegate to MappingManager for smart, categorized assembly
-            return mapping_manager.get_template_data(
-                agent_id=agent_idx,
-                template=self,
-                simulation_context=simulation_context,
-                environment_context=environment_context
-            )
-        except Exception as e:
-            print(f"Error: Template: Error assembling data for agent {agent_idx}: {e}")
-            raise
-    
-    def extract_output_score(self, text: str) -> float:
-        """
-        Extract numerical score from LLM text output based on template's output format.
-        
-        Args:
-            text: LLM response text
-            
-        Returns:
-            Extracted numerical score normalized to [0.0, 1.0] range
-        """
-        import re
-        
-        patterns = self.output_format.get("patterns", [r'([0-9]*\.?[0-9]+)'])
-        output_range = self.output_format.get("range", [0.0, 1.0])
-        output_type = self.output_format.get("type", "float")
-        
-        # Try each pattern to find a valid score
-        for pattern in patterns:
-            matches = re.findall(pattern, text, re.IGNORECASE)
-            if matches:
-                for match in matches:
-                    try:
-                        if output_type == "int":
-                            score = int(match)
-                        else:
-                            score = float(match)
-                        
-                        # Normalize to [0.0, 1.0] range
-                        min_val, max_val = output_range
-                        if min_val <= score <= max_val:
-                            # Normalize to 0-1 range for internal use
-                            normalized = (score - min_val) / (max_val - min_val)
-                            return float(normalized)
-                    except (ValueError, IndexError, ZeroDivisionError):
-                        continue
-        
-        # Fallback: return neutral score if no valid score found
-        return 0.5
-
-
 class Template:
     """
-    Central template registry and management system.
+    Template structure for organizing prompt data sources.
     
-    Stores built-in templates and provides utilities for creating,
-    validating, and managing custom templates for P3O optimization.
-    """
-    
-    # ========================================================================
-    # BUILT-IN TEMPLATES
-    # ========================================================================
-    
-    COVID_WILLINGNESS = TemplateDefinition(
-        name="covid_willingness",
-        template="{{personal_context}} {{agent_context}} {{decision_prompt}}",
-        placeholders={
-            "personal_context": [
-                # Index 0: Default/primary personal context (P3O will select this with uniform probabilities)
-                "You are a {age}-year-old {gender} {ethnicity} living in {area} with a household of {household_size}.",
-                # Additional variations for optimization
-                "As a {age}-year-old {ethnicity} {gender} in {area} ({household_size} in household), you consider your personal risk factors.", 
-                "Your personal profile: {age} years old, {gender}, {ethnicity} background, living in {area} with {household_size} people.",
-                "You are {age} years old ({gender}, {ethnicity}) living in {area} with {household_size} household members."
-            ],
-            "agent_context": [
-                # Job context (external data sources only)
-                "You work as a {job_name} with key skills: {Skills}. Your main tasks: {Tasks}.",
-                "As a {job_name}, your daily work involves {Tasks} and requires {Abilities} in {WorkContext}.",
-                "Your profession: {job_name}. Skills: {Skills}. Work environment: {WorkContext}.",
-                "Working as a {job_name}, you have expertise in {Skills} and work in {WorkContext} conditions."
-            ],
-            "decision_prompt": [
-                # Only context fields (simulation/environment data)
-                "Given COVID-19 cases at {covid_cases:,} and {unemployment_rate:.1%} unemployment, how willing are you to continue working outside your home? (0.0-1.0)",
-                "With current conditions (COVID: {covid_cases:,} cases, unemployment: {unemployment_rate:.1%}), rate your willingness to keep working (0.0-1.0):",
-                "Considering the pandemic (COVID cases: {covid_cases:,}, unemployment: {unemployment_rate:.1%}), what's your work willingness? (0.0-1.0)",
-                "Given health/economic conditions (COVID: {covid_cases:,}, unemployment: {unemployment_rate:.1%}), how willing are you to maintain work? (0.0-1.0)"
-            ]
-        },
-        description="COVID work willingness template - follows 3-section structure for clear data source separation"
-    )
-
-    COVID_HOBBY_WILLINGNESS = TemplateDefinition(
-        name="covid_hobby_willingness",
-        template="{{personal_context}} {{agent_context}} {{decision_prompt}}",
-        placeholders={
-            "personal_context": [
-                # Index 0: Default/primary personal context (P3O will select this with uniform probabilities)
-                "You are a {age}-year-old {gender} {ethnicity} living in {area} with a household of {household_size}.",
-                "As a {age}-year-old {ethnicity} {gender} in {area} ({household_size} in household), you consider your personal risk factors.", 
-                "Your personal profile: {age} years old, {gender}, {ethnicity} background, living in {area} with {household_size} people.",
-                "You are {age} years old ({gender}, {ethnicity}) living in {area} with {household_size} household members."
-            ],
-            "agent_context": [
-                "You work as a {job_name} with key skills: {Skills}. Your main tasks: {Tasks}. Outside of work, you enjoy {hobby_name} as your hobby, which involves {HobbyActivities} and requires {HobbySkills}.",
-                "As a {job_name}, your daily work involves {Tasks} and requires {Abilities} in {WorkContext}. Your hobby is {hobby_name}, a {Time_Commitment} activity that involves {HobbyActivities} and uses {Equipment}.",
-                "Your profession: {job_name}. Skills: {Skills}. Work environment: {WorkContext}. You practice {hobby_name} as a hobby, which is a {Cost_Level} cost activity with {Social_Aspect} social aspects.",
-                "Working as a {job_name}, you have expertise in {Skills} and work in {WorkContext} conditions. In your free time, you do {hobby_name}, a {Indoor_Outdoor} activity that involves {HobbyActivities}."
-            ],
-            "decision_prompt": [
-                "Given COVID-19 cases at {covid_cases:,} and {unemployment_rate:.1%} unemployment, how willing are you to continue working outside your home? (0.0-1.0)",
-                "With current conditions (COVID: {covid_cases:,} cases, unemployment: {unemployment_rate:.1%}), rate your willingness to keep working (0.0-1.0):",
-                "Considering the pandemic (COVID cases: {covid_cases:,}, unemployment: {unemployment_rate:.1%}), what's your work willingness? (0.0-1.0)",
-                "Given health/economic conditions (COVID: {covid_cases:,}, unemployment: {unemployment_rate:.1%}), how willing are you to maintain work? (0.0-1.0)"
-            ]
-        },
-        description="COVID work willingness template - follows 3-section structure for clear data source separation"
-    )
-    
-    ECONOMIC_DECISION = TemplateDefinition(
-        name="economic_decision", 
-        template="{{personal_context}} {{agent_context}} {{decision_prompt}}",
-        placeholders={
-            "personal_context": [
-                "You are a {age}-year-old {gender} {ethnicity} living in {area} with {household_size} household members.",
-                "As a {age}-year-old {ethnicity} {gender} in {area}, you manage household finances for {household_size} people.",
-                "Your personal profile: {age} years old, {gender}, {ethnicity} background, residing in {area}."
-            ],
-            "agent_context": [
-                "You work as a {job_name} with key skills in {Skills}. Your main professional tasks include {Tasks}.",
-                "As a {job_name}, you have expertise in {Skills} and work in {WorkContext} conditions.",
-                "Your profession: {job_name}. Skills: {Skills}. Work environment: {WorkContext}."
-            ],
-            "decision_prompt": [
-                "Given current market conditions with {inflation_rate:.1%} inflation and {interest_rate:.1%} interest rates, how confident are you in making major economic decisions? (0.0-1.0)",
-                "With economic indicators showing {gdp_growth:.1%} GDP growth and {unemployment_rate:.1%} unemployment, rate your comfort level with financial decision-making (0.0-1.0):",
-                "Considering current economic conditions (inflation: {inflation_rate:.1%}, unemployment: {unemployment_rate:.1%}), what's your confidence in economic choices? (0.0-1.0)"
-            ]
-        },
-        description="Economic decision confidence template following 3-section structure for clear data source separation"
-    )
-    
-    SOCIAL_BEHAVIOR = TemplateDefinition(
-        name="social_behavior",
-        template="{{personal_context}} {{agent_context}} {{decision_prompt}}",
-        placeholders={
-            "personal_context": [
-                "You are a {age}-year-old {gender} {ethnicity} living in {area} with {household_size} household members.",
-                "As a {age}-year-old {ethnicity} {gender} in {area}, you are part of a {household_size}-person household.",
-                "Your personal background: {age} years old, {gender}, {ethnicity}, residing in {area}."
-            ],
-            "agent_context": [
-                "You work as a {job_name} with expertise in {Skills}. Your main tasks involve {Tasks}.",
-                "As a {job_name}, your daily work requires {Abilities} in {WorkContext} environments.",
-                "Your profession: {job_name}. Skills: {Skills}. Work setting: {WorkContext}."
-            ],
-            "decision_prompt": [
-                "Given current community conditions with {community_events} upcoming events and {social_restrictions} social guidelines, how likely are you to participate in community activities? (0.0-1.0)",
-                "With {volunteer_opportunities} volunteer opportunities and {social_safety_level} safety measures in place, rate your willingness to engage in social community events (0.0-1.0):",
-                "Considering current social conditions (events: {community_events}, safety: {social_safety_level}), what's your motivation for community participation? (0.0-1.0)"
-            ]
-        },
-        description="Social engagement and participation template following 3-section structure for clear data source separation"
-    )
-    
-    RISK_ASSESSMENT = TemplateDefinition(
-        name="risk_assessment",
-        template="{{personal_context}} {{agent_context}} {{decision_prompt}}",
-        placeholders={
-            "personal_context": [
-                "You are a {age}-year-old {gender} {ethnicity} living in {area} with {household_size} household members.",
-                "As a {age}-year-old {ethnicity} {gender} in {area}, you support a household of {household_size} people.",
-                "Your personal situation: {age} years old, {gender}, {ethnicity}, residing in {area}."
-            ],
-            "agent_context": [
-                "You work as a {job_name} with specialized skills in {Skills}. Your main responsibilities include {Tasks}.",
-                "As a {job_name}, your work requires {Abilities} and takes place in {WorkContext} conditions.",
-                "Your professional expertise: {job_name}. Key skills: {Skills}. Work environment: {WorkContext}."
-            ],
-            "decision_prompt": [
-                "Given current risk factors with {safety_incidents} recent safety incidents and {risk_level} risk assessments, how comfortable are you proceeding with work activities? (0.0-1.0)",
-                "With workplace conditions showing {hazard_reports} hazard reports and {safety_measures} safety protocols in place, rate your confidence in safely performing your job duties (0.0-1.0):",
-                "Considering current risk environment (incidents: {safety_incidents}, measures: {safety_measures}), what's your willingness to engage in work tasks? (0.0-1.0)"
-            ]
-        },
-        description="Risk-based decision making template following 3-section structure for clear data source separation"
-    )
-    
-    BIRD_MIGRATION_DECISION = TemplateDefinition(
-        name="bird_migration_decision",
-        template="{{personal_context}} {{agent_context}} {{decision_prompt}}",
-        placeholders={
-            "personal_context": [
-                "You are a {age_class} {species} located in the {region} region.",
-                "As a {age_class} member of the {species} species from the {region}, you are considering migration.",
-                "This {age_class} {species} resides in {region} and is assessing environmental cues."
-            ],
-            "agent_context": [
-                "You have been tracking seasonal patterns and food availability in your territory.",
-                "Your migration experience includes knowledge of routes and timing for your species.",
-                "You possess instinctual knowledge about optimal migration conditions and pathways."
-            ],
-            "decision_prompt": [
-                "Current conditions: daylength {daylength_hr} hours, temperature {air_temp_c}°C, fat reserves {fat_score}/5, food availability {food_avail_index}, wind speed {wind_speed_ms} m/s. Based on these environmental cues, should you begin migration? (0.0 - 1.0)",
-                "Environmental assessment: {daylength_hr} hr daylight, {air_temp_c}°C temperature, fat score {fat_score}/5, food index {food_avail_index}, wind {wind_speed_ms} m/s. Rate the likelihood of initiating migration now. (0.0 to 1.0)",
-                "Migration decision factors: daylight {daylength_hr}hr, temperature {air_temp_c}°C, energy reserves {fat_score}/5, food {food_avail_index}, wind conditions {wind_speed_ms} m/s. Should you migrate at this point? Provide a probability (0.0 to 1.0)."
-            ]
-        },
-        description="Bird migration decision template following 3-section structure for clear data source separation"
-    )
-    
-    # Example template with different output format (0-100 scale)
-    CONFIDENCE_PERCENTAGE = TemplateDefinition(
-        name="confidence_percentage",
-        template="{{personal_context}} {{agent_context}} {{decision_prompt}}",
-        placeholders={
-            "personal_context": [
-                "You are a {age}-year-old {gender} {ethnicity} living in {area} with {household_size} household members.",
-                "As a {age}-year-old {ethnicity} {gender} in {area}, you consider your personal situation.",
-                "Your profile: {age} years old, {gender}, {ethnicity}, residing in {area}."
-            ],
-            "agent_context": [
-                "You work as a {job_name} with expertise in {Skills}. Your main tasks include {Tasks}.",
-                "As a {job_name}, you have skills in {Skills} and work in {WorkContext} conditions.",
-                "Your profession: {job_name}. Key abilities: {Abilities}. Work environment: {WorkContext}."
-            ],
-            "decision_prompt": [
-                "Given current conditions (COVID: {covid_cases:,} cases, unemployment: {unemployment_rate:.1%}), what is your confidence percentage in continuing your work routine? Answer as a number from 0 to 100:",
-                "With these conditions (COVID cases: {covid_cases:,}, unemployment: {unemployment_rate:.1%}), rate your work confidence on a scale of 0-100%:",
-                "Considering the situation (COVID: {covid_cases:,}, unemployment: {unemployment_rate:.1%}), provide your confidence level as a percentage (0-100):"
-            ]
-        },
-        description="Confidence assessment template using 0-100 percentage scale",
-        output_format={
-            "type": "float",
-            "range": [0.0, 100.0],
-            "patterns": [
-                r'([0-9]+)%',                    # 85%
-                r'([0-9]+)\s*percent',           # 85 percent
-                r'([0-9]+)$',                    # 85 (at end)
-                r'([0-9]*\.?[0-9]+)'            # Any number
-            ]
-        }
-    )
-    
-    # ========================================================================
-    # TEMPLATE REGISTRY AND UTILITIES
-    # ========================================================================
-    
-    @classmethod
-    def get_builtin_templates(cls) -> Dict[str, TemplateDefinition]:
-        """Get all built-in templates as a dictionary."""
-        return {
-            "covid_willingness": cls.COVID_WILLINGNESS,
-            "covid_hobby_willingness": cls.COVID_HOBBY_WILLINGNESS,
-            "economic_decision": cls.ECONOMIC_DECISION,
-            "social_behavior": cls.SOCIAL_BEHAVIOR,
-            "risk_assessment": cls.RISK_ASSESSMENT,
-            "bird_migration_decision": cls.BIRD_MIGRATION_DECISION,
-            "confidence_percentage": cls.CONFIDENCE_PERCENTAGE
-        }
-    
-    @classmethod
-    def list_templates(cls) -> List[str]:
-        """List all available built-in template names."""
-        return list(cls.get_builtin_templates().keys())
-    
-    @classmethod
-    def get_template(cls, name: str) -> Optional[TemplateDefinition]:
-        """Get a built-in template by name."""
-        templates = cls.get_builtin_templates()
-        return templates.get(name)
-    
-    @classmethod
-    def create_custom(
-        cls,
-        name: str,
-        template: str,
-        placeholders: Dict[str, List[str]],
-        description: str = "Custom user template"
-    ) -> TemplateDefinition:
-        """
-        Create a custom template with validation.
+    Structure:
+        src: Path to external data source (pkl/csv file) - N rows, each row = agent data
+        ground_truth_src: Path to ground truth data (csv file) for P3O optimization
+        archetype_data: Template string for population/agent data with {field, learnable=True/False}
+        external_data: Template string for external data source with {field, learnable=True/False}
+        config_data: Template string for simulation config data with {field, learnable=True/False}
+        output_format: Expected output format configuration (type, range, etc.)
+        output_instruction: The instruction/question text for the LLM
+        grouping_logic: How to group agents for behavior application (e.g., "by_job_title", "by_age_group")
         
-        Args:
-            name: Template identifier
-            template: Template string with {{placeholder}} markers
-            placeholders: Dict mapping placeholder names to variation lists
-            description: Template description
-            
-        Returns:
-            Validated TemplateDefinition
-            
-        Raises:
-            ValueError: If template is invalid
-        """
-        # Create template definition
-        template_def = TemplateDefinition(
-            name=name,
-            template=template,
-            placeholders=placeholders,
-            description=description
+    Example:
+        template = Template(
+            src="agent_torch/populations/mock_test_18/job_data.pkl",
+            ground_truth_src="agent_torch/core/llm/data/ground_truth_willingness.csv",
+            archetype_data="This is a {age, learnable=True} year old {gender, learnable=False}.",
+            external_data="Working as {job_name, learnable=True} with skills {Skills, learnable=True}.",
+            config_data="COVID cases: {covid_cases, learnable=False}.",
+            output_format={"type": "float", "range": [0.0, 1.0]},
+            output_instruction="Rate your willingness to continue normal activities (0.0-1.0):",
+            grouping_logic="job_title"  # Apply same behavior to agents with same job
         )
-        
-        # Validate before returning
-        cls.validate(template_def)
-        return template_def
+    """
+    src: Optional[str] = None
+    ground_truth_src: Optional[str] = None
+    ground_truth_column: str = "willingness_score"  # Configurable ground truth column name
+    archetype_data: str = ""
+    external_data: str = ""
+    config_data: str = ""
+    output_format: Optional[Dict[str, Any]] = None
+    output_instruction: str = ""  # The instruction/question for the LLM
+    grouping_logic: Optional[str] = None
     
-    @classmethod
-    def validate(cls, template: TemplateDefinition) -> bool:
+    def __post_init__(self):
+        """Initialize after dataclass creation."""
+        self.optimized_slots: Dict[str, int] = {}  # Store P3O slot choices
+    
+    def set_optimized_slots(self, slot_choices: Dict[str, int]):
         """
-        Validate a template definition.
+        Set P3O optimized slot choices. Template will use these for presentation.
         
         Args:
-            template: Template to validate
-            
-        Returns:
-            True if valid
-            
-        Raises:
-            ValueError: If template is invalid
+            slot_choices: Dictionary mapping field names to slot choice indices
+                         e.g., {"age": 3, "primary_tasks": 1, "abilities": 2}
         """
-        # Check required fields
-        if not template.name:
-            raise ValueError("Template name is required")
-        if not template.template:
-            raise ValueError("Template string is required")
-        if not template.placeholders:
-            raise ValueError("Template placeholders are required")
-        
-        # Extract placeholders from template string
-        template_placeholders = set(re.findall(r'\{\{(\w+)\}\}', template.template))
-        defined_placeholders = set(template.placeholders.keys())
-        
-        # Check placeholder consistency
-        missing_placeholders = template_placeholders - defined_placeholders
-        if missing_placeholders:
-            raise ValueError(f"Template uses undefined placeholders: {missing_placeholders}")
-        
-        extra_placeholders = defined_placeholders - template_placeholders
-        if extra_placeholders:
-            raise ValueError(f"Unused placeholder definitions: {extra_placeholders}")
-        
-        # Validate placeholder variations
-        for name, variations in template.placeholders.items():
-            if not isinstance(variations, list) or len(variations) == 0:
-                raise ValueError(f"Placeholder '{name}' must have at least one variation")
-            
-            for i, variation in enumerate(variations):
-                if not isinstance(variation, str):
-                    raise ValueError(f"Placeholder '{name}' variation {i} must be a string")
-        
-        return True
+        self.optimized_slots = slot_choices.copy()
     
-    @classmethod
-    def resolve_template(cls, template_input: Union[str, Dict[str, Any], TemplateDefinition]) -> TemplateDefinition:
+    def clear_optimized_slots(self):
+        """Clear P3O slot choices, reverting to default presentation."""
+        self.optimized_slots = {}
+    
+    def _load_external_data(self) -> Optional[pd.DataFrame]:
         """
-        Resolve template input to TemplateDefinition.
+        Load external data from the src path.
+        
+        Returns:
+            DataFrame with external data, or None if not available
+        """
+        if not self.src or not os.path.exists(self.src):
+            return None
+            
+        try:
+            if self.src.endswith('.pkl'):
+                with open(self.src, 'rb') as f:
+                    return pickle.load(f)
+            elif self.src.endswith('.csv'):
+                return pd.read_csv(self.src)
+            else:
+                print(f"Template: Unsupported file format: {self.src}")
+                return None
+        except Exception as e:
+            print(f"Template: Error loading external data from {self.src}: {e}")
+            return None
+    
+    def load_ground_truth_dict(self) -> Dict[str, Any]:
+        """
+        Load ground truth data and return in P3O-compatible format.
+        
+        Returns:
+            Dictionary with format {"ground_truth": {agent_id: float_value}}
+        """
+        if not self.ground_truth_src:
+            return {}
+        
+        try:
+            if self.ground_truth_src.endswith('.csv'):
+                df = pd.read_csv(self.ground_truth_src)
+                # Convert to dictionary format expected by P3O
+                ground_truth_dict = {}
+                for idx, row in df.iterrows():
+                    agent_id = idx  # Use row index as agent_id
+                    willingness = float(row.get(self.ground_truth_column, 0.5))
+                    ground_truth_dict[agent_id] = willingness
+                return {"ground_truth": ground_truth_dict}
+            else:
+                # Handle other formats if needed
+                return {}
+        except Exception as e:
+            print(f"Failed to load ground truth data from {self.ground_truth_src}: {e}")
+            return {}
+    
+    def parse_template_fields(self, template_string: str) -> List[Tuple[str, bool]]:
+        """
+        Parse template string to extract field names and learnable flags.
         
         Args:
-            template_input: Template name (str), dict, or TemplateDefinition
+            template_string: String with {field, learnable=True/False} syntax
             
         Returns:
-            Resolved TemplateDefinition
+            List of (field_name, is_learnable) tuples
             
-        Raises:
-            ValueError: If template cannot be resolved
+        Example:
+            parse_template_fields("I am {age, learnable=True} and work as {job, learnable=False}")
+            # Returns: [('age', True), ('job', False)]
         """
-        if isinstance(template_input, TemplateDefinition):
-            cls.validate(template_input)
-            return template_input
+        # Pattern to match {field_name, learnable=True/False}
+        pattern = r'\{([^,}]+)(?:,\s*learnable\s*=\s*(True|False))?\}'
+        matches = re.findall(pattern, template_string)
+        
+        result = []
+        for field_name, learnable_str in matches:
+            field_name = field_name.strip()
+            # Default to False if learnable not specified
+            is_learnable = learnable_str.strip() == 'True' if learnable_str else False
+            result.append((field_name, is_learnable))
             
-        elif isinstance(template_input, str):
-            # Built-in template name
-            template = cls.get_template(template_input)
-            if template is None:
-                available = cls.list_templates()
-                raise ValueError(f"Unknown built-in template '{template_input}'. Available: {available}")
-            return template
-            
-        elif isinstance(template_input, dict):
-            # Custom template dictionary
-            if "template" not in template_input or "placeholders" not in template_input:
-                raise ValueError("Custom template dict must have 'template' and 'placeholders' keys")
-            
-            return cls.create_custom(
-                name=template_input.get("name", "custom"),
-                template=template_input["template"],
-                placeholders=template_input["placeholders"],
-                description=template_input.get("description", "Custom template")
-            )
-            
-        else:
-            raise TypeError(f"Template input must be str, dict, or TemplateDefinition, got {type(template_input)}")
+        return result
     
-    @classmethod
-    def print_template_info(cls, template: Union[str, TemplateDefinition]) -> None:
-        """Print detailed information about a template."""
-        if isinstance(template, str):
-            template = cls.get_template(template)
-            if template is None:
-                print(f"Error: Template '{template}' not found")
-                return
+    def fields(self, section: Literal["archetype", "external", "config"]) -> List[Tuple[str, bool]]:
+        """
+        Get fields for a specific template section.
         
-        print(f"   TEMPLATE: {template.name}")
-        print(f"   Description: {template.description}")
-        print(f"   Structure: {template.template}")
-        print(f"   Placeholders: {len(template.placeholders)}")
-        
-        for name, variations in template.placeholders.items():
-            print(f"     • {name}: {len(variations)} variations")
-            for i, variation in enumerate(variations):
-                preview = variation[:50] + "..." if len(variation) > 50 else variation
-                print(f"       {i+1}. {preview}")
-        print()
+        Args:
+            section: Template section name ("archetype", "external", "config")
+            
+        Returns:
+            List of (field_name, is_learnable) tuples
+        """
+        text = getattr(self, f"{section}_data")
+        return self.parse_template_fields(text)
     
-    @classmethod
-    def print_all_templates(cls) -> None:
-        """Print information about all built-in templates."""
-        print("AVAILABLE P3O TEMPLATES")
-        print("=" * 50)
+    def create_slots(self) -> Dict[str, 'Slot']:
+        """
+        Create Slot objects for all learnable fields in the template.
+            
+        Returns:
+            Dictionary mapping field names to Slot objects
+        """
+        from agent_torch.core.llm.slot import create_slots_from_fields
         
-        templates = cls.get_builtin_templates()
-        for name, template in templates.items():
-            cls.print_template_info(template)
+        # Parse all template sections for learnable fields
+        all_template_text = " ".join([
+            self.archetype_data,
+            self.external_data, 
+            self.config_data
+        ])
+        
+        fields = self.parse_template_fields(all_template_text)
+        return create_slots_from_fields(fields)
+    
+    def create_p3o_placeholder_choices(self, mapping: Dict[str, Any] = None) -> Dict[str, Tuple[int, Any]]:
+        """
+        Convert Template fields to P3O placeholder_choices format using Slot objects.
+        
+        Args:
+            mapping: Mapping dictionary from mapping.json for value transformations
+            
+        Returns:
+            Dictionary compatible with P3O PromptGeneratorModule placeholder_choices
+        """
+        slots = self.create_slots()
+        
+        # Convert Slot objects to P3O format with mapping
+        choices = {}
+        for field_name, slot in slots.items():
+            choices[field_name] = slot.get_p3o_choice(mapping=mapping)
+                
+        return choices
+    
+    def get_slot_parameters(self) -> List[torch.Tensor]:
+        """
+        Get all learnable parameters from slots for P3O optimization.
+            
+        Returns:
+            List of PyTorch parameters that can be optimized
+        """
+        slots = self.create_slots()
+        parameters = []
+        
+        for slot in slots.values():
+            if slot.learnable and slot.theta is not None:
+                parameters.append(slot.theta)
+                
+        return parameters
+    
+    def create_p3o_template_string(self) -> str:
+        """
+        Convert template sections into a single P3O-compatible template string.
+        
+        Converts {field, learnable=True} to {{field}} for P3O placeholders.
+        Converts {field, learnable=False} to direct substitution.
+        
+        Returns:
+            Template string with {{placeholder}} syntax for P3O
+        """
+        def convert_placeholders(text):
+            """Convert {field, learnable=True/False} to appropriate format."""
+            def replace_match(match):
+                field_name = match.group(1).strip()
+                learnable_str = match.group(2)
+                is_learnable = learnable_str and learnable_str.strip() == 'True'
+                
+                if is_learnable:
+                    # Convert to P3O placeholder format
+                    return f"{{{{{field_name}}}}}"
+                else:
+                    # Keep as regular placeholder for direct substitution
+                    return f"{{{field_name}}}"
+            
+            pattern = r'\{([^,}]+)(?:,\s*learnable\s*=\s*(True|False))?\}'
+            return re.sub(pattern, replace_match, text)
+        
+        # Combine all template sections
+        sections = []
+        if self.archetype_data.strip():
+            sections.append(convert_placeholders(self.archetype_data))
+        if self.external_data.strip():
+            sections.append(convert_placeholders(self.external_data))
+        if self.config_data.strip():
+            sections.append(convert_placeholders(self.config_data))
+        
+        return " ".join(sections)
+    
+    def get_base_prompt_manager_template(self) -> str:
+        """
+        Return template compatible with base PromptManager (no learnable syntax).
+        Converts {field, learnable=True/False} to {field}.
+        """
+        # Build template sections directly
+        sections = []
+        if self.archetype_data.strip():
+            sections.append(self.archetype_data)
+        if self.external_data.strip():
+            sections.append(self.external_data)
+        if self.config_data.strip():
+            sections.append(self.config_data)
+        
+        template = " ".join(sections)
+        
+        # Remove learnable syntax for base prompt manager compatibility
+        pattern = r'\{([^,}]+)(?:,\s*learnable\s*=\s*(?:True|False))?\}'
+        clean_template = re.sub(pattern, r'{\1}', template)
+        return clean_template
+    
+    def _process_field_value(self, field_name: str, value: Any) -> str:
+        """
+        Process field values from DataFrame columns into string format.
+        
+        Args:
+            field_name: Name of the field being processed
+            value: Value from DataFrame column
+            
+        Returns:
+            Clean string representation for LLM prompts
+        """
+        if pd.isna(value) or value is None:
+            return ""
+        
+        # DataFrame columns should already be clean - just convert to string
+        return str(value)
+    
+    def _fill_section(self, template_section: str, data: Dict[str, Any], slot_values: Dict[str, Any] = None) -> str:
+        """
+        Fill a template section with data, handling both regular and P3O slots.
+        
+        Args:
+            template_section: Template string to fill
+            data: Data dictionary with field values
+            slot_values: Optional P3O slot values
+            
+        Returns:
+            Filled template section
+        """
+        filled_section = template_section
+        
+        # Use provided slot_values or stored optimized_slots from P3O
+        active_slot_values = slot_values or self.optimized_slots
+        
+        # Pattern to match {field} and {field, learnable=True/False} formats
+        pattern = r'\{([^,}]+)(?:,\s*learnable\s*=\s*(True|False|true|false))?\}'
+        
+        def replace_placeholder(match):
+            field_name = match.group(1).strip()
+            learnable_str = match.group(2)
+            is_learnable = learnable_str and learnable_str.strip().lower() == 'true'
+            
+            # Get the value for this field
+            if is_learnable and active_slot_values and field_name in active_slot_values:
+                # P3O mode: Use slot choice to format the actual data
+                slot_choice = active_slot_values[field_name]
+                
+                # Skip P3O formatting if data is missing - fall back to normal mode
+                if field_name not in data:
+                    raise KeyError(f"Field '{field_name}' missing from data")
+                
+                # Apply P3O presentation choice using Slot lambda function
+                slots = self.create_slots()
+                if field_name in slots:
+                    slot = slots[field_name]
+                    _, lambda_func = slot.get_p3o_choice()
+                    formatted_value = lambda_func(slot_choice, data)
+                    return formatted_value
+                else:
+                    return str(data[field_name])
+            elif field_name in data:
+                # Normal mode: Use data value directly
+                return str(data[field_name])
+            else:
+                # Field missing from data
+                raise KeyError(f"Field '{field_name}' missing from data")
+        
+        # Replace all placeholders
+        filled_section = re.sub(pattern, replace_placeholder, filled_section)
+        
+        return filled_section
+    
+    def grouping_key(self, agent_profile: Dict[str, Any]) -> str:
+        """
+        Get grouping key for an agent based on grouping_logic.
+        
+        Args:
+            agent_profile: Complete agent profile dictionary
+            
+        Returns:
+            String key for grouping agents with similar characteristics
+        """
+        if not self.grouping_logic:
+            # Default: group by all learnable fields
+            learnable_fields = [name for name, slot in self.create_slots().items() if slot.learnable]
+            if learnable_fields:
+                return "_".join([str(agent_profile.get(field, "")) for field in learnable_fields])
+            else:
+                return "default_group"
+        
+        # Direct field grouping (e.g., "job_title" -> group by job_title)
+        return str(agent_profile.get(self.grouping_logic, "unknown"))
+    
+    def make_agent_mask(self, agent_id: int, population_size: int) -> torch.Tensor:
+        """
+        Create a one-hot mask for a specific agent.
+        
+        Args:
+            agent_id: Agent ID to create mask for
+            population_size: Total population size
+            
+        Returns:
+            Boolean tensor of shape (population_size, 1) with True only at agent_id
+        """
+        # Create zero tensor
+        mask = torch.zeros(population_size, 1, dtype=torch.bool)
+        
+        # Set the specific agent to True
+        if 0 <= agent_id < population_size:
+            mask[agent_id, 0] = True
+        
+        return mask
+    
+    def render(self, agent_id: int, population, mapping: Dict[str, Any], config_kwargs: Dict[str, Any]) -> str:
+        """
+        Single Responsibility: Generate a fully resolved prompt for an agent.
+        
+        This is the ONLY public API for prompt generation. Handles ALL data loading, merging, and placeholder resolution:
+        - Population attributes (age, gender, etc.)
+        - External data (CSV/PKL rows) 
+        - Config values (from YAML or kwargs)
+        - Resolving every placeholder {field, learnable=True/False}
+        - Inserting output_instruction
+        
+        Args:
+            agent_id: Agent ID to generate prompt for
+            population: Population object with agent attributes
+            mapping: Mapping dict for converting raw values to human-readable text
+            config_kwargs: Config values from simulation
+            
+        Returns:
+            Fully resolved prompt string ready for LLM
+        """
+        # Assemble complete data for this agent
+        all_data = self.assemble_data(agent_id=agent_id, population=population, mapping=mapping, config_kwargs=config_kwargs)
+        
+        # 5. Fill template sections using unified _fill_section method
+        filled_archetype = self._fill_section(self.archetype_data, all_data) if self.archetype_data else ""
+        filled_external = self._fill_section(self.external_data, all_data) if self.external_data else ""
+        filled_config = self._fill_section(self.config_data, all_data) if self.config_data else ""
+        
+        # 6. Combine into full prompt
+        full_prompt = f"{filled_archetype} {filled_external} {filled_config} {self.output_instruction or ''}".strip()
+        
+        return full_prompt
 
-
-# Convenience functions for backward compatibility
-def get_builtin_templates() -> Dict[str, Dict[str, Any]]:
-    """Get built-in templates in dictionary format (backward compatibility)."""
-    templates = Template.get_builtin_templates()
-    return {name: tmpl.to_dict() for name, tmpl in templates.items()} 
+    def assemble_data(self, agent_id: int, population, mapping: Dict[str, Any] = None, config_kwargs: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Assemble and return the complete data dict used to fill the template for a given agent.
+        Includes population, external, and config data.
+        """
+        mapping = mapping or {}
+        # 1. Population data
+        population_data: Dict[str, Any] = {}
+        if population:
+            for field_name, is_learnable in self.fields("archetype"):
+                if hasattr(population, field_name):
+                    field_data = getattr(population, field_name)
+                    if hasattr(field_data, '__getitem__') and agent_id < len(field_data):
+                        raw_value = field_data[agent_id]
+                        if hasattr(raw_value, 'item'):
+                            raw_value = raw_value.item()
+                        if isinstance(raw_value, float) and hasattr(raw_value, 'is_integer') and raw_value.is_integer():
+                            raw_value = int(raw_value)
+                        if field_name in mapping and isinstance(raw_value, (int, float)):
+                            mapping_values = mapping[field_name]
+                            if 0 <= int(raw_value) < len(mapping_values):
+                                population_data[field_name] = mapping_values[int(raw_value)]
+                            else:
+                                population_data[field_name] = str(raw_value)
+                        else:
+                            population_data[field_name] = raw_value
+        # 2. External data
+        external_data: Dict[str, Any] = {}
+        external_df = self._load_external_data()
+        if external_df is not None and agent_id < len(external_df):
+            row = external_df.iloc[agent_id]
+            for field_name, is_learnable in self.fields("external"):
+                if field_name in row.index:
+                    external_data[field_name] = self._process_field_value(field_name, row[field_name])
+        # 3. Config data
+        config_data = dict(config_kwargs or {})
+        if 'covid_cases' not in config_data and 'base_covid_cases' in config_data:
+            config_data['covid_cases'] = config_data['base_covid_cases']
+        if 'unemployment_rate' not in config_data and 'base_unemployment_rate' in config_data:
+            config_data['unemployment_rate'] = config_data['base_unemployment_rate']
+        # Merge
+        all_data: Dict[str, Any] = {}
+        all_data.update(population_data)
+        all_data.update(external_data)
+        all_data.update(config_data)
+        return all_data
