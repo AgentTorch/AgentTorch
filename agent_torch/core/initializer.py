@@ -1,16 +1,40 @@
 import torch
 import torch.nn as nn
+import os
 
 # import dask.dataframe as dd
 from agent_torch.core.helpers.general import *
 
 
 class Initializer(nn.Module):
+    """Constructs the initial simulation state and helper modules.
+
+    cpu: builds everything on host; cuda: enables lightweight stream utilities
+    for faster host→device transfers during initialization.
+    """
     def __init__(self, config, registry):
         super().__init__()
         self.config = config
         self.registry = registry
-        self.device = torch.device(self.config["simulation_metadata"]["device"])
+        # resolve device from config, supporting 'auto'
+        cfg_dev = str(self.config["simulation_metadata"].get("device", "auto")).lower()
+        if cfg_dev == "auto":
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        else:
+            # fall back to whatever torch recognizes (e.g., 'cpu', 'cuda')
+            self.device = torch.device(cfg_dev)
+        # write back resolved device so downstream modules don't see 'auto'
+        self.config["simulation_metadata"]["device"] = self.device.type
+
+        # enable lightweight cuda utilities without config changes
+        self._enable_streaming = (self.device.type == 'cuda' and torch.cuda.is_available())
+        if self._enable_streaming:
+            try:
+                self._num_streams = int(os.getenv('AGENT_TORCH_INIT_NUM_STREAMS', '4'))
+            except Exception:
+                self._num_streams = 4
+            self._streams = [torch.cuda.Stream(device=self.device) for _ in range(max(1, self._num_streams))]
+            self._stream_rr = 0
 
         self.state = {}
         self.environment, self.agents, self.objects, self.networks = {}, {}, {}, {}
@@ -23,6 +47,37 @@ class Initializer(nn.Module):
             self.transition_function,
             self.reward_function,
         ) = (nn.ModuleDict(), nn.ModuleDict(), nn.ModuleDict(), nn.ModuleDict())
+
+    def _next_stream(self):
+        """get next cuda stream for overlapped operations (cuda only)."""
+        if not self._enable_streaming:
+            return torch.cuda.current_stream(self.device) if self.device.type == 'cuda' and torch.cuda.is_available() else None
+        s = self._streams[self._stream_rr]
+        self._stream_rr = (self._stream_rr + 1) % len(self._streams)
+        return s
+
+    def _to_device_streamed(self, cpu_tensor: torch.Tensor) -> torch.Tensor:
+        """pin and transfer to device asynchronously using round‑robin streams."""
+        if self.device.type != 'cuda' or not torch.cuda.is_available():
+            return cpu_tensor.to(self.device)
+        stream = self._next_stream()
+        if not cpu_tensor.is_contiguous():
+            cpu_tensor = cpu_tensor.contiguous()
+        if hasattr(cpu_tensor, 'is_pinned') and not cpu_tensor.is_pinned():
+            try:
+                cpu_tensor = cpu_tensor.pin_memory()
+            except Exception:
+                pass
+        with torch.cuda.stream(stream):
+            gpu_tensor = cpu_tensor.to(self.device, non_blocking=True)
+        return gpu_tensor
+
+    def _to_device(self, tensor: torch.Tensor) -> torch.Tensor:
+        """route device transfer via streamed path when available."""
+        try:
+            return self._to_device_streamed(tensor) if self._enable_streaming else tensor.to(self.device)
+        except Exception:
+            return tensor.to(self.device)
 
     def _initialize_from_default(self, src_val, shape):
         processed_shape = shape
@@ -60,7 +115,7 @@ class Initializer(nn.Module):
         else:
             init_value = src_val * torch.ones(size=processed_shape)
 
-        init_value = init_value.to(self.device)
+        init_value = self._to_device(init_value)
 
         return init_value
 
@@ -84,7 +139,7 @@ class Initializer(nn.Module):
                 )
             else:
                 print(
-                    "!!! dynamic argument are not currently supported. Setup from fixed value !!!"
+                    "dynamic arguments are not currently supported. Setup from fixed value !!!"
                 )
                 return
 
@@ -98,7 +153,7 @@ class Initializer(nn.Module):
         init_value = self.registry.initialization_helpers[function](
             initialize_shape, params
         )
-        init_value = init_value.to(self.device)
+        init_value = self._to_device(init_value)
 
         return init_value
 
@@ -120,7 +175,7 @@ class Initializer(nn.Module):
                 property_initializer, property_shape, property_key
             )
 
-        property_value = property_value.to(self.device)
+        property_value = self._to_device(property_value)
 
         if property_is_learnable:
             self.learnable_parameters[property_key] = property_value
@@ -211,9 +266,8 @@ class Initializer(nn.Module):
 
                 if len(adjacency_matrix) == 2:
                     edge_list, attr_list = adjacency_matrix
-                    edge_list, attr_list = edge_list.to(self.device), attr_list.to(
-                        self.device
-                    )
+                    edge_list = self._to_device(edge_list)
+                    attr_list = self._to_device(attr_list)
                     adjacency_matrix = (edge_list, attr_list)
 
                 self.networks[interaction_type][contact_network]["graph"] = graph
@@ -234,6 +288,107 @@ class Initializer(nn.Module):
 
         # track learnable parameters
         self.parameters_dict = nn.ParameterDict(self.learnable_parameters)
+
+    # ========================================================================================
+    # LAZY RECONSTRUCTION: Dense adjacency matrices and NetworkX graphs
+    # ========================================================================================
+
+    @property
+    def dense_adjacency_matrices(self):
+        """
+        Get dense adjacency matrices, reconstructing from sparse if needed.
+        """
+        if not hasattr(self, '_dense_cache'):
+            self._dense_cache = {}
+        for interaction_type in self.networks:
+            for contact_network in self.networks[interaction_type]:
+                key = f"{interaction_type}_{contact_network}"
+                if key not in self._dense_cache:
+                    self._dense_cache[key] = self._reconstruct_dense_for(interaction_type, contact_network)
+        return self._dense_cache
+
+    @property
+    def networkx_graphs(self):
+        """
+        Get NetworkX graphs, reconstructing from sparse if needed.
+        """
+        if not hasattr(self, '_networkx_cache'):
+            self._networkx_cache = {}
+        for interaction_type in self.networks:
+            for contact_network in self.networks[interaction_type]:
+                key = f"{interaction_type}_{contact_network}"
+                if key not in self._networkx_cache:
+                    self._networkx_cache[key] = self._reconstruct_networkx_for(interaction_type, contact_network)
+        return self._networkx_cache
+
+    def get_dense_adjacency(self, interaction_type: str, contact_network: str):
+        key = f"{interaction_type}_{contact_network}"
+        if not hasattr(self, '_dense_cache'):
+            self._dense_cache = {}
+        if key not in self._dense_cache:
+            self._dense_cache[key] = self._reconstruct_dense_for(interaction_type, contact_network)
+        return self._dense_cache[key]
+
+    def get_networkx_graph(self, interaction_type: str, contact_network: str):
+        key = f"{interaction_type}_{contact_network}"
+        if not hasattr(self, '_networkx_cache'):
+            self._networkx_cache = {}
+        if key not in self._networkx_cache:
+            self._networkx_cache[key] = self._reconstruct_networkx_for(interaction_type, contact_network)
+        return self._networkx_cache[key]
+
+    def _reconstruct_dense_for(self, interaction_type: str, contact_network: str):
+        try:
+            network = self.networks[interaction_type][contact_network]
+            adjacency_data = network["adjacency_matrix"]
+            if isinstance(adjacency_data, tuple) and len(adjacency_data) == 2:
+                edge_index, edge_attr = adjacency_data
+                if edge_index.numel() == 0:
+                    return torch.eye(2, device=self.device)
+                num_nodes = int(edge_index.max().item()) + 1
+                dense = torch.zeros(num_nodes, num_nodes, device=self.device, dtype=edge_attr.dtype)
+                weights = edge_attr[1] if (edge_attr.dim() > 1 and edge_attr.size(0) >= 2) else edge_attr
+                dense[edge_index[0], edge_index[1]] = weights
+                return dense
+            elif torch.is_tensor(adjacency_data):
+                return adjacency_data.to(self.device)
+            else:
+                raise ValueError(f"Unknown adjacency format: {type(adjacency_data)}")
+        except Exception:
+            return torch.eye(2, device=self.device)
+
+    def _reconstruct_networkx_for(self, interaction_type: str, contact_network: str):
+        try:
+            import networkx as nx
+            network = self.networks[interaction_type][contact_network]
+            adjacency_data = network["adjacency_matrix"]
+            if isinstance(adjacency_data, tuple) and len(adjacency_data) == 2:
+                edge_index, edge_attr = adjacency_data
+                G = nx.Graph()
+                if edge_index.numel() > 0:
+                    edges_cpu = edge_index.cpu().numpy()
+                    weights_cpu = edge_attr[1].cpu().numpy() if edge_attr.dim() > 1 else edge_attr.cpu().numpy()
+                    for i in range(edges_cpu.shape[1]):
+                        src, dst = edges_cpu[0, i], edges_cpu[1, i]
+                        weight = weights_cpu[i] if getattr(weights_cpu, 'ndim', 1) > 0 else 1.0
+                        G.add_edge(int(src), int(dst), weight=float(weight))
+                return G
+            elif torch.is_tensor(adjacency_data):
+                dense_cpu = adjacency_data.cpu().numpy()
+                import networkx as nx
+                G = nx.from_numpy_array(dense_cpu)
+                return G
+            else:
+                raise ValueError(f"Unknown adjacency format: {type(adjacency_data)}")
+        except Exception:
+            import networkx as nx
+            return nx.Graph()
+
+    def clear_reconstruction_cache(self):
+        if hasattr(self, '_dense_cache'):
+            self._dense_cache.clear()
+        if hasattr(self, '_networkx_cache'):
+            self._networkx_cache.clear()
 
     def _parse_function(self, function_object, name_root):
         generator = function_object["generator"]
@@ -272,9 +427,7 @@ class Initializer(nn.Module):
         return input_variables, output_variables, arguments
 
     def substeps(self):
-        """
-        define observation, policy and transition functions for each active_agent on each substep
-        """
+        """define observation, policy and transition modules for each substep."""
 
         for substep in self.config["substeps"].keys():
             active_agents = self.config["substeps"][substep]["active_agents"]
@@ -345,6 +498,7 @@ class Initializer(nn.Module):
                 )
 
     def initialize(self):
+        """populate `self.state` and build helper module dicts."""
         self.state["current_step"] = 0
         self.state["current_substep"] = "0"  # use string not int for nn.ModuleDict
 
@@ -359,6 +513,7 @@ class Initializer(nn.Module):
         self.state["parameters"] = self.parameters_dict
 
     def forward(self):
+        """nn.Module forward delegates to initialize for convenience."""
         self.initialize()
 
     def __getstate__(self):
