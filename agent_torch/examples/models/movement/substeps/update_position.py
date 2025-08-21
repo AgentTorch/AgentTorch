@@ -21,13 +21,17 @@ class UpdatePosition(SubstepTransition):
 
         self.bounds = self.learnable_args["bounds"]
         directions = action["citizens"]["direction"]
-        bounds = torch.tensor(self.bounds)
+        
+        # Ensure bounds tensor is on the same device as positions
+        device = positions.device
+        bounds = torch.tensor(self.bounds, device=device)
 
         # Update positions
         new_positions = positions + directions
 
-        # Clip to bounds
-        new_positions = torch.clamp(new_positions, min=torch.tensor([0, 0]), max=bounds)
+        # Clip to bounds - ensure min/max tensors are on the same device
+        min_bounds = torch.tensor([0, 0], device=device)
+        new_positions = torch.clamp(new_positions, min=min_bounds, max=bounds)
 
         # Return with exact output variable name from config
         outputs = {}
