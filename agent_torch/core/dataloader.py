@@ -74,7 +74,6 @@ class DataLoader(DataLoaderBase):
         self._suppress_config_writes = True
         self.set_input_data_dir(population.population_folder_path)
         self.set_population_size(population.population_size)
-        self._suppress_config_writes = False
         self.register_resolvers = True
         self._write_config()
 
@@ -133,16 +132,15 @@ class LoadPopulation:
             f"{self.population_folder_path}/*.pickle", recursive=False
         ) + glob.glob(f"{self.population_folder_path}/*.pkl", recursive=False)
 
-        # Try authoritative population size from age.pickle
-        authoritative_size = None
-        age_path = os.path.join(self.population_folder_path, "age.pickle")
-        if os.path.exists(age_path):
+        # Establish population size from the first file
+        base_size = None
+        if pickle_files:
             try:
-                age_series = pd.read_pickle(age_path)
-                if isinstance(age_series, pd.Series):
-                    authoritative_size = len(age_series)
+                _first_obj = pd.read_pickle(pickle_files[0])
+                if isinstance(_first_obj, (pd.Series, pd.DataFrame)):
+                    base_size = len(_first_obj)
             except Exception:
-                authoritative_size = None
+                base_size = None
 
         results = {}
         sizes = {}
@@ -180,12 +178,6 @@ class LoadPopulation:
                 else:
                     return key, ("dataframe", obj), n, obj
 
-            # Fallback: raw object
-            try:
-                n = len(obj)  # may fail
-            except Exception:
-                n = 0
-            return key, ("raw", obj), n, None
 
         # Parallel read
         with ThreadPoolExecutor(max_workers=min(6, max(1, os.cpu_count() or 4))) as ex:
@@ -212,17 +204,9 @@ class LoadPopulation:
                     print(f"   {key:20} -> stored as raw {msg}{' (mixed/non-numeric dtypes)' if kind=='dataframe' else ''}")
                 setattr(self, key, value)
 
-        # Determine population size
-        if authoritative_size is not None:
-            self.population_size = authoritative_size
-        elif sizes:
-            # Use the most common size or maximum
-            try:
-                from collections import Counter
-                most_common_size = Counter(sizes.values()).most_common(1)[0][0]
-                self.population_size = most_common_size
-            except Exception:
-                self.population_size = max(sizes.values())
+        # Set population size to the first file's length; fallback to any loaded df
+        if base_size is not None:
+            self.population_size = base_size
         elif last_df is not None:
             self.population_size = len(last_df)
         else:

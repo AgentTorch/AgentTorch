@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from collections import deque
+import types
 
 from agent_torch.core.controller import Controller
 from agent_torch.core.initializer import Initializer
@@ -22,14 +23,11 @@ class Runner(nn.Module):
             list(self.config["substeps"].keys())
         )
 
-        # trajectory recording controls (defaults preserve existing behavior)
+        # trajectory recording controls (defaults preserve base runner behavior)
         sim_meta = self.config.get("simulation_metadata", {})
         self._record_trajectory = bool(sim_meta.get("record_trajectory", True))
         self._trajectory_device = str(sim_meta.get("trajectory_device", "cpu"))  # 'cpu' | 'gpu'
-        try:
-            self._trajectory_every = int(sim_meta.get("trajectory_every", 1))
-        except Exception:
-            self._trajectory_every = 1
+        self._trajectory_every = int(sim_meta.get("trajectory_every", 1))
         self._use_mixed_precision = bool(sim_meta.get("mixed_precision", False))
         self._inplace_progress = bool(sim_meta.get("inplace_progress", False))
 
@@ -42,6 +40,7 @@ class Runner(nn.Module):
             self.trajectory_save_frequency = int(sim_meta.get("trajectory_save_frequency", 1))
             self.gpu_trajectory_buffer = []
             self.memory_pool = {}
+            self._leased_tensors = []  # tensors checked out from pool during a substep
             # private cuda controls from yaml (cuda_params), with sensible defaults
             cuda_params = sim_meta.get("cuda_params", {}) or {}
             self._snapshot_precision = str(cuda_params.get("snapshot_precision", "fp16"))
@@ -49,6 +48,7 @@ class Runner(nn.Module):
             self._ring_size = int(cuda_params.get("ring_size", 4))
             self._batch_size = int(cuda_params.get("batch_size", 16384))
             self._pool_limit_per_shape = int(cuda_params.get("pool_limit_per_shape", 8))
+            self._inplace_progress = bool(cuda_params.get("inplace_progress", self._inplace_progress))
             # dedicated stream for snapshot transfers/compression
             self._snapshot_stream = torch.cuda.Stream()
             self.perf_stats = {
@@ -76,30 +76,20 @@ class Runner(nn.Module):
         self.initializer.initialize()
         self.state = self.initializer.state
 
-        # Ensure state tensors are on configured device
-        if self.use_gpu and isinstance(self.state, dict):
-            def _move(obj):
-                if torch.is_tensor(obj):
-                    return obj.to("cuda", non_blocking=True)
-                return obj
-            # Shallow device move for common tensor leaves
-            for domain in ("environment", "agents", "objects"):
-                if domain in self.state and isinstance(self.state[domain], dict):
-                    for inst, props in self.state[domain].items():
-                        if isinstance(props, dict):
-                            for k, v in props.items():
-                                self.state[domain][inst][k] = _move(v)
+        # tensors are already placed on device by Initializer
 
         # use bounded ring buffer on cuda to avoid unbounded growth
         self.state_trajectory = deque(maxlen=self._ring_size) if self.use_gpu else []
         if self._record_trajectory:
             # Save initial state according to configured sink
             if self._trajectory_device == "gpu" and isinstance(self.state, dict):
-                # Keep GPU-resident state reference (no copy)
                 self.state_trajectory.append([self.state])
             else:
-                self.state_trajectory.append([to_cpu(self.state)])  # default
+                self.state_trajectory.append([to_cpu(self.state)])
         
+        # Wire pooled buffer allocator into transition modules (CUDA only)
+        if self.use_gpu:
+            self._wire_transition_buffer_allocator()
     
     # CUDA optimization happens within base Initializer class
 
@@ -113,10 +103,7 @@ class Runner(nn.Module):
         r"""
         reinitialize the state trajectory of the simulator at the beginning of an episode
         """
-        if self.use_gpu:
-            self.state_trajectory = deque(maxlen=self._ring_size)
-        else:
-            self.state_trajectory = []
+        self.state_trajectory = deque(maxlen=self._ring_size) if self.use_gpu else []
         if self._record_trajectory:
             if self._trajectory_device == "gpu" and isinstance(self.state, dict):
                 self.state_trajectory.append([self.state])
@@ -142,7 +129,6 @@ class Runner(nn.Module):
             num_steps = self.config["simulation_metadata"]["num_steps_per_episode"]
 
         for time_step in range(num_steps):
-            print(f' Step: {time_step}')
 
             self.state["current_step"] = time_step
 
@@ -214,7 +200,6 @@ class Runner(nn.Module):
         if not num_steps:
             num_steps = self.config["simulation_metadata"]["num_steps_per_episode"]
 
-        print(f"Starting GPU-optimized simulation: {num_steps} steps")
         step_times = []
 
         for time_step in range(num_steps):
@@ -222,23 +207,10 @@ class Runner(nn.Module):
             
             self.state["current_step"] = time_step
 
-            # OPTIMIZATION: Override parent's trajectory frequency with our own
-            should_save_trajectory = (time_step % self.trajectory_save_frequency == 0 or 
-                                    time_step == num_steps - 1)  # Always save last step
-            
-            # Temporarily override parent's trajectory settings for this step
-            original_record = self._record_trajectory
-            original_every = self._trajectory_every
-            
+            # Decide whether to snapshot this step according to CUDA cadence
+            should_save_trajectory = (time_step % max(1, self.trajectory_save_frequency) == 0) or (time_step == num_steps - 1)
             if should_save_trajectory:
-                self._record_trajectory = True
-                self._trajectory_every = 1  # Save this step
-                # Create container for this step's substep snapshots
                 self.state_trajectory.append([])
-            else:
-                self._record_trajectory = False  # Skip trajectory for this step
-                # Keep a lightweight GPU-resident buffer
-                self.gpu_trajectory_buffer.append([])
 
             # Process substeps with optimizations
             for substep_idx, substep in enumerate(self.config["substeps"].keys()):
@@ -259,45 +231,31 @@ class Runner(nn.Module):
                     snapshot = self._compress_state_for_snapshot(self.state)
                     self.state_trajectory[-1].append(snapshot)
                     self.perf_stats['gpu_to_cpu_transfers'] += 1
-                else:
-                    # Keep on GPU - much faster!
-                    if self.use_gpu:
-                        # Store lightweight reference instead of full copy
-                        self.gpu_trajectory_buffer[-1].append({
-                            'step': time_step,
-                            'substep': substep_idx,
-                            'device_state_ref': id(self.state)  # Just store reference
-                        })
+                # if not snapshotting this step, do nothing (keep state on GPU)
+                # reclaim leased pooled tensors at end of substep
+                if self.use_gpu and self._leased_tensors:
+                    for t in self._leased_tensors:
+                        self._return_to_pool(t)
+                    self._leased_tensors.clear()
                 
                 substep_time = time.perf_counter() - substep_start
             
-            # Restore original trajectory settings
-            self._record_trajectory = original_record
-            self._trajectory_every = original_every
-                
             step_time = time.perf_counter() - step_start
             step_times.append(step_time)
-            
-            # Progress reporting for every step
-            transfers = "Snapshot" if should_save_trajectory else "No Snapshot"
-            print(f"   {transfers} Step {time_step+1:2d}: {step_time:.3f}s")
+
 
         # Performance summary
         avg_step_time = sum(step_times) / len(step_times)
         total_time = sum(step_times)
         
-        print(f"\nGPU-Optimized Performance Summary:")
-        print(f" Total time: {total_time:.3f}s")
-        print(f" Avg per step: {avg_step_time:.3f}s")
-        print(f" GPU→CPU transfers: {self.perf_stats['gpu_to_cpu_transfers']}")
-        print(f" Tensors reused: {self.perf_stats['memory_reused']}")
-        print(f" New allocations: {self.perf_stats['tensor_allocations']}")
-        print(f" Vectorized ops: {self.perf_stats['vectorized_operations']}")
-        
+        '''
+        print(f"\nGPU-Optimized Performance Summary:\n Total time: {total_time:.3f}s\n Avg per step: {avg_step_time:.3f}s\n GPU→CPU transfers: {self.perf_stats['gpu_to_cpu_transfers']}\n Tensors reused: {self.perf_stats['memory_reused']}\n New allocations: {self.perf_stats['tensor_allocations']}\n Vectorized ops: {self.perf_stats['vectorized_operations']}")
+        '''
+
         # Efficiency metrics
         total_possible_transfers = num_steps * len(self.config["substeps"])
         transfer_reduction = (total_possible_transfers - self.perf_stats['gpu_to_cpu_transfers']) / total_possible_transfers
-        print(f" Transfer reduction: {transfer_reduction:.1%}")
+        #print(f" Transfer reduction: {transfer_reduction:.1%}")
 
     def _compress_state_for_snapshot(self, state_dict: dict):
         """Create a CPU snapshot with minimal, safe contents for analysis.
@@ -342,6 +300,31 @@ class Runner(nn.Module):
             "environment": env_snapshot,
         }
         return snapshot
+
+    def _wire_transition_buffer_allocator(self):
+        """Inject pooled buffer allocate/release into transition modules on CUDA.
+        Replaces transition._get_buffer to draw tensors from Runner's memory pool.
+        """
+        for substep, trans_dict in self.initializer.transition_function.items():
+            for name, trans in trans_dict.items():
+                orig_get_buffer = getattr(trans, "_get_buffer", None)
+
+                def _alloc_like(like_tensor: torch.Tensor, _self=self):
+                    t = _self._get_pooled_tensor(tuple(like_tensor.shape), like_tensor.dtype, like_tensor.device)
+                    if _self.use_gpu:
+                        _self._leased_tensors.append(t)
+                    return t
+
+                def _release(t: torch.Tensor, _self=self):
+                    _self._return_to_pool(t)
+
+                setattr(trans, "_external_buffer_alloc", _alloc_like)
+                setattr(trans, "_external_buffer_release", _release)
+
+                if callable(orig_get_buffer):
+                    def patched_get_buffer(self_trans, name, like_tensor, _orig=orig_get_buffer, _alloc=_alloc_like):
+                        return _alloc(like_tensor)
+                    trans._get_buffer = types.MethodType(patched_get_buffer, trans)
 
     def _process_substep_vectorized(self, substep: str):
         """
@@ -439,7 +422,19 @@ class Runner(nn.Module):
         for key, tensor in full_obs.items():
             if torch.is_tensor(tensor) and tensor.dim() >= 1 and tensor.size(0) == num_agents and active_indices is not None and active_indices.numel() > 0:
                 updated = self._process_tensor_active_batched(tensor, active_indices)
-                batched_obs[key] = updated
+                if self.use_gpu and torch.is_tensor(updated) and updated.numel() > 1000:
+                    pooled_tensor = self._get_pooled_tensor(updated.shape, updated.dtype, updated.device)
+                    if pooled_tensor is not None:
+                        pooled_tensor.copy_(updated)
+                        batched_obs[key] = pooled_tensor
+                        self.perf_stats['memory_reused'] += 1
+                        self._leased_tensors.append(pooled_tensor)
+                        # return the transient updated (if it was a new tensor) back to pool
+                        self._return_to_pool(updated)
+                    else:
+                        batched_obs[key] = updated
+                else:
+                    batched_obs[key] = updated
             else:
                 batched_obs[key] = tensor
         return batched_obs
@@ -456,7 +451,19 @@ class Runner(nn.Module):
         for key, tensor in act.items():
             if torch.is_tensor(tensor) and tensor.dim() >= 1 and tensor.size(0) == num_agents and active_indices is not None and active_indices.numel() > 0:
                 updated = self._process_tensor_active_batched(tensor, active_indices)
-                act[key] = updated
+                if self.use_gpu and torch.is_tensor(updated) and updated.numel() > 1000:
+                    pooled_tensor = self._get_pooled_tensor(updated.shape, updated.dtype, updated.device)
+                    if pooled_tensor is not None:
+                        pooled_tensor.copy_(updated)
+                        act[key] = pooled_tensor
+                        self.perf_stats['memory_reused'] += 1
+                        self._leased_tensors.append(pooled_tensor)
+                        # return the original tensor to the pool as well
+                        self._return_to_pool(updated)
+                    else:
+                        act[key] = updated
+                else:
+                    act[key] = updated
             elif torch.is_tensor(tensor) and tensor.numel() > 1000:
                 # Pool large tensors
                 pooled_tensor = self._get_pooled_tensor(tensor.shape, tensor.dtype, tensor.device)
@@ -464,6 +471,10 @@ class Runner(nn.Module):
                     pooled_tensor.copy_(tensor)
                     act[key] = pooled_tensor
                     self.perf_stats['memory_reused'] += 1
+                    # mark pooled tensor as leased so we can reclaim after substep
+                    if self.use_gpu:
+                        self._leased_tensors.append(pooled_tensor)
+                    # original tensor can also be returned to pool
                     self._return_to_pool(tensor)
                 else:
                     self.perf_stats['tensor_allocations'] += 1
@@ -494,27 +505,18 @@ class Runner(nn.Module):
         - Prefer infected/exposed masks when present
         - Fallback to all agents
         """
-        try:
-            agents = self.state.get("agents", {})
-            # Heuristic: look for common disease stage labels
-            for agent_type, props in agents.items():
-                stage = props.get("disease_stage", None)
-                if torch.is_tensor(stage) and stage.dim() >= 1:
-                    # Active if infected (stage==2) or exposed (stage==1) – adjust as needed
-                    active_mask = (stage.view(-1) >= 1)
-                    idx = torch.nonzero(active_mask, as_tuple=True)[0]
-                    return idx
-        except Exception:
-            pass
-        # Fallback: all agents based on a known property (e.g., age)
-        try:
-            env_agents = self.state.get("agents", {})
-            for agent_type, props in env_agents.items():
-                any_prop = next((v for v in props.values() if torch.is_tensor(v) and v.dim() >= 1), None)
-                if any_prop is not None:
-                    return torch.arange(any_prop.size(0), device=any_prop.device)
-        except Exception:
-            pass
+        agents = self.state.get("agents", {})
+        # Prefer disease_stage if present
+        for _, props in agents.items():
+            stage = props.get("disease_stage", None)
+            if torch.is_tensor(stage) and stage.dim() >= 1:
+                active_mask = (stage.view(-1) >= 1)
+                return torch.nonzero(active_mask, as_tuple=True)[0]
+        # Fallback: first tensor-like agent property determines full range
+        for _, props in agents.items():
+            any_prop = next((v for v in props.values() if torch.is_tensor(v) and v.dim() >= 1), None)
+            if any_prop is not None:
+                return torch.arange(any_prop.size(0), device=any_prop.device)
         return torch.tensor([], device=self.device, dtype=torch.long)
 
     def _progress_state_optimized(self, state, action_profile, transition_function):
@@ -550,7 +552,7 @@ class Runner(nn.Module):
             self.memory_pool[key] = []
         
         # Only keep reasonable number of tensors in pool
-        if len(self.memory_pool[key]) < 10:
+        if len(self.memory_pool[key]) < self._pool_limit_per_shape if hasattr(self, '_pool_limit_per_shape') else 10:
             self.memory_pool[key].append(tensor.detach())
 
     def get_performance_stats(self):
