@@ -1,0 +1,73 @@
+{
+  "population_size": 18,
+  "created_by": "create_mock_18_population_fixed.py",
+  "description": "Mock 18-agent population for P3O testing - numeric encoded",
+  "ground_truth": {
+    "type": "ground_truth",
+    "source_path": "agent_torch/core/llm/data/ground_truth_willingness.csv"
+  },
+  "field_sources": {
+    "population_fields": {
+      "age": {
+        "source": "age.pickle"
+      },
+      "gender": {
+        "source": "gender.pickle",
+        "categorical": ["male", "female"]
+      },
+      "ethnicity": {
+        "source": "ethnicity.pickle",
+        "categorical": ["other", "white", "hispanic", "black", "asian"]
+      },
+      "area": {
+        "source": "area.pickle",
+        "categorical": ["urban", "suburban", "rural"]
+      },
+      "household_size": {
+        "source": "household.pickle"
+      },
+      "region": {
+        "source": "region.pickle",
+        "categorical": ["Northeast", "Southeast", "Midwest", "West"]
+      },
+      "soc_code": {
+        "source": "soc_code.pickle",
+        "categorical": [
+          "13-1074.00",
+          "13-2081.00",
+          "25-4012.00",
+          "27-2091.00",
+          "29-1229.05",
+          "35-9031.00",
+          "39-6011.00",
+          "47-2081.00",
+          "47-2121.00",
+          "49-9081.00",
+          "53-1044.00",
+          "53-3033.00",
+          "53-7011.00",
+          "53-7121.00"
+        ]
+      },
+      "hobby_code": {
+        "source": "hobby_code.pickle",
+        "categorical": [
+          "H001", "H002", "H003", "H004", "H005",
+          "H006", "H007", "H008", "H009", "H010"
+        ]
+      }
+    },
+    "external_sources": {
+      "job_profiles": {
+        "source_path": "agent_torch/core/llm/data/job_data_processed/job_data_processed.pkl",
+        "lookup_field": "soc_code",
+        "fields": ["job_name", "Skills", "Tasks", "Abilities", "WorkContext", "TechnologySkills", "WorkActivities", "DetailedWorkActivities", "Knowledge", "Interests", "WorkValues", "WorkStyles", "Education"]
+      },
+      "hobbies": {
+        "source_path": "agent_torch/core/llm/data/hobbies_data/hobbies_data.pkl",
+        "lookup_field": "hobby_code",
+        "fields": ["hobby_name", "HobbyActivities", "HobbySkills", "Equipment", "Time_Commitment", "Cost_Level", "Social_Aspect", "Indoor_Outdoor"]
+      }
+    }
+  }
+}
