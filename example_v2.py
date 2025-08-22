@@ -61,11 +61,7 @@ def setup(model, population):
     t_loader_end = time.perf_counter()
     
     runner = simulation.runner
-    
-    # TESTING: Override utils registry (easy to remove this line)
-    #override_utils_registry(runner, use_base_utils=True)  # Use base utils
-    # override_utils_registry(runner, use_base_utils=False) # Use standard utils
-    
+
     # Time runner.init()
     t_init_start = time.perf_counter()
     runner.init()
@@ -75,7 +71,7 @@ def setup(model, population):
     loader_exec_s = t_loader_end - t_loader_start
     runner_init_s = t_init_end - t_init_start
     total_init_s = t_init_end - t0
-    print(f"\n⏱️ Init timings: loader+executor={loader_exec_s:.3f}s, runner.init()={runner_init_s:.3f}s, total={total_init_s:.3f}s")
+    print(f"\n Init timings: loader+executor={loader_exec_s:.3f}s, runner.init()={runner_init_s:.3f}s, total={total_init_s:.3f}s")
 
     return runner
 
@@ -103,11 +99,11 @@ def simulate(runner):
 if __name__ == "__main__":
     script_t0 = time.perf_counter()
     
-    runner = setup(covid, astoria)
+    runner = setup(covid, NYC)
     learn_params = [(name, params) for (name, params) in runner.named_parameters()]
     
     # Ensure new tensor is on the same device as the runner
-    device = runner.device if hasattr(runner, 'device') else torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = runner.device
     new_tensor = torch.tensor([3.5, 4.2, 5.6], requires_grad=True, device=device)
     
     input_string = learn_params[0][0]
@@ -120,6 +116,7 @@ if __name__ == "__main__":
     sim_t0 = time.perf_counter()
     loss = simulate(runner)
     sim_t1 = time.perf_counter()
+    print(f"\nLoss: {loss}")
 
     # Script timing summary
     script_t1 = time.perf_counter()

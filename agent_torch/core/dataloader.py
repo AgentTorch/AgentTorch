@@ -240,6 +240,7 @@ class LinkPopulation(DataLoader):
             f"{self.population_folder_path}/*.pickle", recursive=False
         ) + glob.glob(f"{self.population_folder_path}/*.pkl", recursive=False)
 
+        # convert existing pickle files to parquet once
         for pickle_file in pickle_files:
             self.convert_to_parquet(pickle_file)
 
@@ -247,11 +248,11 @@ class LinkPopulation(DataLoader):
             f"{self.population_folder_path}/*.parquet", recursive=False
         )
 
-        import dask.dataframe as dd
-
+        last_len = 0
         for file in parquet_files:
-            with open(file, "rb") as f:
-                key = os.path.splitext(os.path.basename(file))[0]
-                df = dd.read_parquet(file)
-                setattr(self, key, torch.from_numpy(df.values).float())
-        self.population_size = len(df)
+            key = os.path.splitext(os.path.basename(file))[0]
+            df = pd.read_parquet(file)
+            arr = df.to_numpy()
+            setattr(self, key, torch.from_numpy(arr).float())
+            last_len = len(df)
+        self.population_size = last_len

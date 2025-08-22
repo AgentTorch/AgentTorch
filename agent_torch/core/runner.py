@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-from collections import deque
 import types
 
 from agent_torch.core.controller import Controller
@@ -25,9 +24,7 @@ class Runner(nn.Module):
 
         # trajectory recording controls (defaults preserve base runner behavior)
         sim_meta = self.config.get("simulation_metadata", {})
-        self._record_trajectory = bool(sim_meta.get("record_trajectory", True))
-        self._trajectory_device = str(sim_meta.get("trajectory_device", "cpu"))  # 'cpu' | 'gpu'
-        self._trajectory_every = int(sim_meta.get("trajectory_every", 1))
+        # snapshots are always recorded every substep to CPU (match base behavior)
         self._use_mixed_precision = bool(sim_meta.get("mixed_precision", False))
         self._inplace_progress = bool(sim_meta.get("inplace_progress", False))
 
@@ -36,19 +33,13 @@ class Runner(nn.Module):
         
         if self.use_gpu:
             # gpu‑specific attributes
-            # match base cadence by default: snapshot every substep
-            self.trajectory_save_frequency = int(sim_meta.get("trajectory_save_frequency", 1))
-            self.gpu_trajectory_buffer = []
             self.memory_pool = {}
             self._leased_tensors = []  # tensors checked out from pool during a substep
-            # private cuda controls from yaml (cuda_params), with sensible defaults
             cuda_params = sim_meta.get("cuda_params", {}) or {}
-            self._snapshot_precision = str(cuda_params.get("snapshot_precision", "fp16"))
             self._snapshot_pack_bools = bool(cuda_params.get("snapshot_pack_bools", True))
-            self._ring_size = int(cuda_params.get("ring_size", 4))
             self._batch_size = int(cuda_params.get("batch_size", 16384))
-            self._pool_limit_per_shape = int(cuda_params.get("pool_limit_per_shape", 8))
-            self._inplace_progress = bool(cuda_params.get("inplace_progress", self._inplace_progress))
+            self._pool_limit_per_shape = int(cuda_params.get("pool_limit_per_shape", 12))
+            self._inplace_progress = bool(cuda_params.get("inplace_progress", False))
             # dedicated stream for snapshot transfers/compression
             self._snapshot_stream = torch.cuda.Stream()
             self.perf_stats = {
@@ -78,14 +69,9 @@ class Runner(nn.Module):
 
         # tensors are already placed on device by Initializer
 
-        # use bounded ring buffer on cuda to avoid unbounded growth
-        self.state_trajectory = deque(maxlen=self._ring_size) if self.use_gpu else []
-        if self._record_trajectory:
-            # Save initial state according to configured sink
-            if self._trajectory_device == "gpu" and isinstance(self.state, dict):
-                self.state_trajectory.append([self.state])
-            else:
-                self.state_trajectory.append([to_cpu(self.state)])
+        # record initial snapshot on cpu (match base runner behavior)
+        self.state_trajectory = []
+        self.state_trajectory.append([to_cpu(self.state)])
         
         # Wire pooled buffer allocator into transition modules (CUDA only)
         if self.use_gpu:
@@ -103,12 +89,8 @@ class Runner(nn.Module):
         r"""
         reinitialize the state trajectory of the simulator at the beginning of an episode
         """
-        self.state_trajectory = deque(maxlen=self._ring_size) if self.use_gpu else []
-        if self._record_trajectory:
-            if self._trajectory_device == "gpu" and isinstance(self.state, dict):
-                self.state_trajectory.append([self.state])
-            else:
-                self.state_trajectory.append([to_cpu(self.state)])
+        self.state_trajectory = []
+        self.state_trajectory.append([to_cpu(self.state)])
 
     def step(self, num_steps=None):
         r"""
@@ -132,10 +114,7 @@ class Runner(nn.Module):
 
             self.state["current_step"] = time_step
 
-            # Decide whether to snapshot this step (per substep, like base runner)
-            save_this_step = self._record_trajectory and (
-                (time_step % max(1, self._trajectory_every) == 0) or (time_step == num_steps - 1)
-            )
+            # snapshots taken every substep to CPU (base behavior)
 
             for substep in self.config["substeps"].keys():
                 observation_profile, action_profile = {}, {}
@@ -207,10 +186,8 @@ class Runner(nn.Module):
             
             self.state["current_step"] = time_step
 
-            # Decide whether to snapshot this step according to CUDA cadence
-            should_save_trajectory = (time_step % max(1, self.trajectory_save_frequency) == 0) or (time_step == num_steps - 1)
-            if should_save_trajectory:
-                self.state_trajectory.append([])
+            # always snapshot every step/substep to cpu (match base runner)
+            self.state_trajectory.append([])
 
             # Process substeps with optimizations
             for substep_idx, substep in enumerate(self.config["substeps"].keys()):
@@ -225,13 +202,10 @@ class Runner(nn.Module):
                 )
                 self.state = next_state
 
-                # CRITICAL OPTIMIZATION: Reduce GPU→CPU transfers (only snapshot when needed)
-                if should_save_trajectory:
-                    # Compress and transfer snapshot efficiently
-                    snapshot = self._compress_state_for_snapshot(self.state)
-                    self.state_trajectory[-1].append(snapshot)
-                    self.perf_stats['gpu_to_cpu_transfers'] += 1
-                # if not snapshotting this step, do nothing (keep state on GPU)
+                # snapshot to cpu every substep
+                snapshot = self._compress_state_for_snapshot(self.state)
+                self.state_trajectory[-1].append(snapshot)
+                self.perf_stats['gpu_to_cpu_transfers'] += 1
                 # reclaim leased pooled tensors at end of substep
                 if self.use_gpu and self._leased_tensors:
                     for t in self._leased_tensors:
@@ -560,7 +534,6 @@ class Runner(nn.Module):
         if self.use_gpu:
             return {
                 **self.perf_stats,
-                'trajectory_save_frequency': self.trajectory_save_frequency,
                 'device': str(self.device),
                 'memory_pool_sizes': {k: len(v) for k, v in self.memory_pool.items()}
             }
