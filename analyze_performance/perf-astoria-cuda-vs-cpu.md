@@ -71,7 +71,7 @@ For comparison, NYC population (2,712,360 agents - 72x larger than Astoria):
 
 ### Generated Visualizations
 
-The benchmark run generated the following plots in `plots/`:
+The benchmark run generated the following plots in this directory:
 - `astoria_init_times.png`: Comparison of initialization times (CUDA vs CPU)
 - `astoria_step_times.png`: Comparison of simulation step times (CUDA vs CPU) 
 - `astoria_total_times.png`: Comparison of total runtime (CUDA vs CPU)

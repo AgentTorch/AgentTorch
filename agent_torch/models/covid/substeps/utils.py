@@ -87,6 +87,7 @@ def read_from_file(shape, params):
 
 def get_mean_agent_interactions(shape, params):
     agents_ages = load_population_attribute(shape, params)
+
     ADULT_LOWER_INDEX, ADULT_UPPER_INDEX = (
         1,
         4,

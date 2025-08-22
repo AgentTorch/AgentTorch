@@ -99,7 +99,7 @@ def simulate(runner):
 if __name__ == "__main__":
     script_t0 = time.perf_counter()
     
-    runner = setup(covid, NYC)
+    runner = setup(covid, astoria)
     learn_params = [(name, params) for (name, params) in runner.named_parameters()]
     
     # Ensure new tensor is on the same device as the runner

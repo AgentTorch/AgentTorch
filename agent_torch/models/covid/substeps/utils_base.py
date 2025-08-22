@@ -66,17 +66,23 @@ def initialize_infections(shape, params):
     cat_logits = torch.log(p + 1e-9)
     agents_stages = F.gumbel_softmax(logits=cat_logits, tau=1, hard=True, dim=1)[:, 0]
 
-    return agent_stages.unsqueeze(1)
+    return agents_stages.unsqueeze(1)
 
 
 def read_from_file(shape, params):
     file_path = params["file_path"]
 
     if file_path[-3:] == "csv":
-        data = pd.read_csv(file_path)
+        data = pd.read_csv(file_path, header=None)
+    else:
+        data = pd.read_pickle(file_path)
 
     data_values = data.values
-    assert data_values.shape == tuple(shape)
+    # Ensure 2D shape (like utils.py does)
+    if data_values.ndim == 1:
+        data_values = data_values.reshape(-1, 1)
+    
+    assert data_values.shape == tuple(shape), f"read_from_file: shape mismatch {data_values.shape} vs {tuple(shape)} for {file_path}"
 
     data_tensor = torch.from_numpy(data_values)
 
