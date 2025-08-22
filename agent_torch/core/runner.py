@@ -109,10 +109,8 @@ class Runner(nn.Module):
             num_steps = self.config["simulation_metadata"]["num_steps_per_episode"]
 
         for time_step in range(num_steps):
-
             self.state["current_step"] = time_step
-
-            # snapshots taken every substep to CPU (base behavior)
+            self.state_trajectory.append([])  # track state after each substep
 
             for substep in self.config["substeps"].keys():
                 observation_profile, action_profile = {}, {}
@@ -120,6 +118,20 @@ class Runner(nn.Module):
                 for agent_type in self.config["substeps"][substep]["active_agents"]:
                     assert substep == self.state["current_substep"]
                     assert time_step == self.state["current_step"]
+                    
+                    observation_profile[agent_type] = self.controller.observe(
+                        self.state, self.initializer.observation_function, agent_type
+                    )
+                    action_profile[agent_type] = self.controller.act(
+                        self.state, observation_profile[agent_type],
+                        self.initializer.policy_function, agent_type,
+                    )
+
+                next_state = self.controller.progress(
+                    self.state, action_profile, self.initializer.transition_function
+                )
+                self.state = next_state
+                self.state_trajectory[-1].append(to_cpu(self.state))  # move state to cpu and save
 
 
     def _step_gpu_optimized(self, num_steps=None):
@@ -286,27 +298,27 @@ class Runner(nn.Module):
                 print(f"GPU optimization failed, falling back: {e}")
                 # Fallback to standard processing
                 for agent_type in active_agents:
-                    observation_profile[agent_type] = self.controller.observe(
-                        self.state, self.initializer.observation_function, agent_type
-                    )
-                    action_profile[agent_type] = self.controller.act(
-                        self.state,
-                        observation_profile[agent_type],
-                        self.initializer.policy_function,
-                        agent_type,
-                    )
+                            observation_profile[agent_type] = self.controller.observe(
+                                self.state, self.initializer.observation_function, agent_type
+                            )
+                            action_profile[agent_type] = self.controller.act(
+                                self.state,
+                                observation_profile[agent_type],
+                                self.initializer.policy_function,
+                                agent_type,
+                            )
         else:
             # Standard processing for CPU or small populations
             for agent_type in active_agents:
-                observation_profile[agent_type] = self.controller.observe(
-                    self.state, self.initializer.observation_function, agent_type
-                )
-                action_profile[agent_type] = self.controller.act(
-                    self.state,
-                    observation_profile[agent_type],
-                    self.initializer.policy_function,
-                    agent_type,
-                )
+                        observation_profile[agent_type] = self.controller.observe(
+                            self.state, self.initializer.observation_function, agent_type
+                        )
+                        action_profile[agent_type] = self.controller.act(
+                            self.state,
+                            observation_profile[agent_type],
+                            self.initializer.policy_function,
+                            agent_type,
+                        )
 
         return observation_profile, action_profile
 
