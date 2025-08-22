@@ -26,8 +26,6 @@ class Runner(nn.Module):
         sim_meta = self.config.get("simulation_metadata", {})
         # snapshots are always recorded every substep to CPU (match base behavior)
         self._use_mixed_precision = bool(sim_meta.get("mixed_precision", False))
-        self._inplace_progress = bool(sim_meta.get("inplace_progress", False))
-
         # GPU optimization detection - single boolean field
         self.use_gpu = torch.cuda.is_available()
         
@@ -123,45 +121,6 @@ class Runner(nn.Module):
                     assert substep == self.state["current_substep"]
                     assert time_step == self.state["current_step"]
 
-                    # Optional mixed precision on CUDA for speed
-                    if self._use_mixed_precision and self.use_gpu:
-                        with torch.autocast(device_type="cuda", dtype=torch.float16):
-                            observation_profile[agent_type] = self.controller.observe(
-                                self.state, self.initializer.observation_function, agent_type
-                            )
-                            action_profile[agent_type] = self.controller.act(
-                                self.state,
-                                observation_profile[agent_type],
-                                self.initializer.policy_function,
-                                agent_type,
-                            )
-                    else:
-                        observation_profile[agent_type] = self.controller.observe(
-                            self.state, self.initializer.observation_function, agent_type
-                        )
-                        action_profile[agent_type] = self.controller.act(
-                            self.state,
-                            observation_profile[agent_type],
-                            self.initializer.policy_function,
-                            agent_type,
-                        )
-
-                if self._inplace_progress:
-                    next_state = self.controller.progress_inplace(
-                        self.state, action_profile, self.initializer.transition_function
-                    )
-                else:
-                    next_state = self.controller.progress(
-                        self.state, action_profile, self.initializer.transition_function
-                    )
-                self.state = next_state
-
-            # (Per-substep snapshots handled inside the substep loop)
-
-        # Back-compat: ensure at least one snapshot exists for consumers that expect it
-        # (e.g., example_v1.py reads state_trajectory[-1][-1])
-        if not self.state_trajectory or (isinstance(self.state_trajectory[-1], list) and len(self.state_trajectory[-1]) == 0):
-            self.state_trajectory.append([to_cpu(self.state)])
 
     def _step_gpu_optimized(self, num_steps=None):
         """
