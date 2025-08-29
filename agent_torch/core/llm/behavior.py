@@ -16,6 +16,8 @@ class Behavior:
                 self.population = LoadPopulation(population)
         self.template = template
         self._memory_initialized = False
+        # P3O: store last slot choices used during rendering (global per-sample)
+        self.last_slot_choices = None
         if self.template is None:
             # Base PromptManager flow (string prompts)
             self.prompt_manager = PromptManager(self.archetype[-1].user_prompt, self.population)
@@ -44,8 +46,19 @@ class Behavior:
 
         if self.template is not None:
             # Template-based grouped flow
+            # If template has learnable variables, sample presentation choices once per call
+            slots = self.template.create_slots()
+            sampled_choices = {}
+            for name, var in slots.items():
+                if getattr(var, 'learnable', False):
+                    idx, _, _ = var.sample_index(self.template)
+                    sampled_choices[name] = int(idx)
+            if sampled_choices:
+                self.template.set_optimized_slots(sampled_choices)
+                self.last_slot_choices = sampled_choices
+
             prompt_list, group_keys, group_indices = self.template.get_grouped_prompts(self.population, kwargs or {})
-            max_show = int(kwargs.get("print_examples", 0)) if isinstance(kwargs, dict) else 0
+            max_show = int(kwargs.get("print_examples", 0))
             if max_show > 0:
                 print(f"\n=== Population Broadcast LLM Calls ===")
                 print(f"Number of unique prompts: {len(prompt_list)}")
@@ -54,16 +67,9 @@ class Behavior:
                     print(f"\nPrompt {i+1}:\n{prompt}")
             self.last_group_keys = group_keys
             agent_outputs = []
-            for num_retries in range(10):
-                try:
-                    for n_arch in range(self.archetype[-1].n_arch):
-                        outputs = self.archetype[n_arch](prompt_list, last_k=12)
-                        agent_outputs.append(outputs)
-                    break
-                except Exception as e:
-                    print(f"Error in sampling behavior: {e}")
-                    print("Retrying")
-                    continue
+            for n_arch in range(self.archetype[-1].n_arch):
+                outputs = self.archetype[n_arch](prompt_list, last_k=12)
+                agent_outputs.append(outputs)
             group_values_accum = [0.0 for _ in range(len(prompt_list))]
             for arch_outputs in agent_outputs:
                 for en, output_value in enumerate(arch_outputs):
@@ -88,7 +94,7 @@ class Behavior:
 
         # Base PromptManager flow
         prompt_list = self.prompt_manager.get_prompt_list(kwargs=kwargs)
-        max_show = int(kwargs.get("print_examples", 0)) if isinstance(kwargs, dict) else 0
+        max_show = int(kwargs.get("print_examples", 0))
         if max_show > 0:
             print(f"\n=== Population Broadcast LLM Calls (base) ===")
             print(f"Number of prompts: {len(prompt_list)}")
@@ -97,15 +103,8 @@ class Behavior:
                 print(f"\nPrompt {i+1}:\n{prompt}")
         masks = self.get_masks_for_each_group(self.prompt_manager.dict_variables_with_values, kwargs)
         agent_outputs = []
-        for num_retries in range(10):
-            try:
-                for n_arch in range(self.archetype[-1].n_arch):
-                    agent_outputs.append(self.archetype[n_arch](prompt_list, last_k=12))
-                break
-            except Exception as e:
-                print(f"Error in sampling behavior: {e}")
-                print("Retrying")
-                continue
+        for n_arch in range(self.archetype[-1].n_arch):
+            agent_outputs.append(self.archetype[n_arch](prompt_list, last_k=12))
         sampled_behavior = self.get_sampled_behavior(sampled_behavior, masks, agent_outputs)
         if max_show > 0:
             print(f"=== End Population LLM Calls ===\n")

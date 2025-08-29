@@ -18,6 +18,7 @@ class MockLLM:
         return self
 
     def prompt(self, prompt_list: List[Union[str, Dict[str, Any]]]):
+        # Accept both raw strings and dicts with chat_history; ignore history in mock
         return [{"text": str(self.fixed_value)} for _ in prompt_list]
 
     def __call__(self, prompt_inputs: List[Union[str, Dict[str, Any]]]):

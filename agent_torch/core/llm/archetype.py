@@ -66,28 +66,23 @@ class Archetype:
                 region=population,
             )
 
-    def configure(self, *, external_df=None, ground_truth_src: str | None = None, match_on: str | None = None, value_col: str = "willingness", reducer: str = "mean"):
+    def configure(self, *, external_df=None, ground_truth: list | None = None, match_on: str | None = None, reducer: str = "mean"):
         """Configure archetype-level data and ground truth.
 
         - external_df: DataFrame of all jobs (923 rows) to drive prompt generation before/after broadcast
-        - ground_truth_src: CSV path for targets
+        - ground_truth: list of target values (aligned with external_df rows or to be matched via match_on)
         - match_on: key to match external rows and/or ground truth (e.g., 'job_title' or 'soc_code')
-        - value_col: target column in ground truth CSV (default: 'willingness')
         - reducer: how to combine duplicate matches ('mean' default)
         """
         if isinstance(self._prompt, Template):
             # attach external_df and matching config to Template
             if external_df is not None:
                 setattr(self._prompt, "_external_df", external_df)
-            if ground_truth_src is not None:
-                import pandas as pd
+            if ground_truth is not None:
                 try:
-                    gt_df = pd.read_csv(ground_truth_src)
-                    setattr(self._prompt, "_ground_truth_df", gt_df)
-                    setattr(self._prompt, "_gt_value_col", value_col)
+                    # store a copy to avoid accidental mutation
+                    setattr(self._prompt, "_ground_truth_list", list(ground_truth))
                     setattr(self._prompt, "_gt_reducer", reducer)
-                    # Also set path for any legacy consumers
-                    setattr(self._prompt, "ground_truth_src", ground_truth_src)
                 except Exception:
                     pass
             if match_on is not None:
@@ -243,6 +238,20 @@ class LLMArchetype:
         # self.predictor = self.llm.initialize_llm()
         self.backend = getattr(llm, "backend", None)
         self.user_prompt = user_prompt
+        # Ensure a memory handler exists for single-shot flows (no behavior)
+        class _NoOpMemoryHandler:
+            def __init__(self):
+                self._history = [[]]
+            def get_memory(self, last_k, agent_id):
+                return {"chat_history": self._history[0][-last_k:] if last_k else []}
+            def save_memory(self, query, output, agent_id):
+                try:
+                    self._history[0].append({"query": query, "output": output})
+                except Exception:
+                    pass
+            def export_memory_to_file(self, file_dir, last_k):
+                return
+        self.memory_handler = _NoOpMemoryHandler()
 
     def __call__(self, prompt_list, last_k):
         last_k = 2 * last_k + 8
@@ -255,11 +264,8 @@ class LLMArchetype:
             agent_outputs = self.llm.prompt(prompt_inputs)
 
         # Save conversation history
-        if hasattr(self, "memory_handler"):
-            for id, (prompt_input, agent_output) in enumerate(
-                zip(prompt_inputs, agent_outputs)
-            ):
-                self.save_memory(prompt_input, agent_output, agent_id=id)
+        for id, (prompt_input, agent_output) in enumerate(zip(prompt_inputs, agent_outputs)):
+            self.save_memory(prompt_input, agent_output, agent_id=id)
 
         return agent_outputs
 
@@ -271,26 +277,37 @@ class LLMArchetype:
             ConversationBufferMemory = None  # type: ignore
 
         self.num_agents = num_agents  # Number of agents
+        # Define a no-op handler to avoid hasattr checks
+        class _NoOpMemoryHandler:
+            def __init__(self):
+                self._history = [[] for _ in range(num_agents)]
+            def get_memory(self, last_k, agent_id):
+                return {"chat_history": self._history[agent_id][-last_k:] if last_k else []}
+            def save_memory(self, query, output, agent_id):
+                try:
+                    self._history[agent_id].append({"query": query, "output": output})
+                except Exception:
+                    pass
+            def export_memory_to_file(self, file_dir, last_k):
+                return
+
+        self.memory_handler = _NoOpMemoryHandler()
+
         if ConversationBufferMemory is not None:
-            self.agent_memory = [
+            agent_memory = [
                 ConversationBufferMemory(memory_key="chat_history", return_messages=True)
                 for _ in range(num_agents)
             ]
-            # Optional memory handlers depending on available backends
             if self.backend == "dspy":
-                self.memory_handler = DSPYMemoryHandler(agent_memory=self.agent_memory, llm=self.llm)
+                self.memory_handler = DSPYMemoryHandler(agent_memory=agent_memory, llm=self.llm)
             elif self.backend in ["langchain", "claude"]:
-                self.memory_handler = LangchainMemoryHandler(agent_memory=self.agent_memory)
-            # Else: no memory handler; proceed without persistent history
+                self.memory_handler = LangchainMemoryHandler(agent_memory=agent_memory)
 
     def preprocess_prompts(self, prompt_list, last_k):
         prompt_inputs = []
         for agent_id, prompt in enumerate(prompt_list):
-            if hasattr(self, "memory_handler"):
-                history = self.get_memory(last_k, agent_id=agent_id)["chat_history"]
-                prompt_inputs.append({"agent_query": prompt, "chat_history": history})
-            else:
-                prompt_inputs.append(prompt)
+            history = self.get_memory(last_k, agent_id=agent_id)["chat_history"]
+            prompt_inputs.append({"agent_query": prompt, "chat_history": history})
         return prompt_inputs
 
     def reflect(self, reflection_prompt, agent_id, last_k=3):
@@ -298,14 +315,10 @@ class LLMArchetype:
         return self.__call__(prompt_list=[reflection_prompt], last_k=last_k)
 
     def save_memory(self, query, output, agent_id):
-        if hasattr(self, "memory_handler"):
-            self.memory_handler.save_memory(query, output, agent_id)
+        self.memory_handler.save_memory(query, output, agent_id)
 
     def export_memory_to_file(self, file_dir, last_k):
-        if hasattr(self, "memory_handler"):
-            self.memory_handler.export_memory_to_file(file_dir, last_k)
+        self.memory_handler.export_memory_to_file(file_dir, last_k)
 
     def get_memory(self, last_k, agent_id):
-        if hasattr(self, "memory_handler"):
-            return self.memory_handler.get_memory(last_k=last_k, agent_id=agent_id)
-        return {"chat_history": []}
+        return self.memory_handler.get_memory(last_k=last_k, agent_id=agent_id)
