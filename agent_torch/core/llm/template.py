@@ -9,6 +9,7 @@ Single Public API: Template.render(agent_id, population, mapping, config_kwargs)
 """
 
 import os
+import json
 import pandas as pd
 import pickle
 import re
@@ -17,7 +18,7 @@ from typing import Dict, Any, Optional, Union, List, Tuple, Literal
 from dataclasses import dataclass
 
 # Import Slot class
-from agent_torch.core.llm.slot import Slot
+from agent_torch.core.llm.Variable import Variable
 
 
 @dataclass
@@ -25,41 +26,27 @@ class Template:
     """
     Template structure for organizing prompt data sources.
     
-    Structure:
-        src: Path to external data source (pkl/csv file) - N rows, each row = agent data
-        ground_truth_src: Path to ground truth data (csv file) for P3O optimization
-        archetype_data: Template string for population/agent data with {field, learnable=True/False}
-        external_data: Template string for external data source with {field, learnable=True/False}
-        config_data: Template string for simulation config data with {field, learnable=True/False}
-        output_format: Expected output format configuration (type, range, etc.)
-        output_instruction: The instruction/question text for the LLM
-        grouping_logic: How to group agents for behavior application (e.g., "by_job_title", "by_age_group")
-        
-    Example:
-        template = Template(
-            src="agent_torch/populations/mock_test_18/job_data.pkl",
-            ground_truth_src="agent_torch/core/llm/data/ground_truth_willingness.csv",
-            archetype_data="This is a {age, learnable=True} year old {gender, learnable=False}.",
-            external_data="Working as {job_name, learnable=True} with skills {Skills, learnable=True}.",
-            config_data="COVID cases: {covid_cases, learnable=False}.",
-            output_format={"type": "float", "range": [0.0, 1.0]},
-            output_instruction="Rate your willingness to continue normal activities (0.0-1.0):",
-            grouping_logic="job_title"  # Apply same behavior to agents with same job
-        )
+
     """
     src: Optional[str] = None
-    ground_truth_src: Optional[str] = None
-    ground_truth_column: str = "willingness_score"  # Configurable ground truth column name
-    archetype_data: str = ""
-    external_data: str = ""
-    config_data: str = ""
-    output_format: Optional[Dict[str, Any]] = None
-    output_instruction: str = ""  # The instruction/question for the LLM
-    grouping_logic: Optional[str] = None
+    grouping_logic: Optional[Union[str, List[str]]] = None
     
     def __post_init__(self):
         """Initialize after dataclass creation."""
         self.optimized_slots: Dict[str, int] = {}  # Store P3O slot choices
+        # Optional externally provided datasets and configs
+        self._external_df: Optional[pd.DataFrame] = getattr(self, "_external_df", None)
+        self._match_on: Optional[str] = getattr(self, "_match_on", None)
+        # Ground-truth is owned by Archetype; no internal defaults here
+        # Register class-declared Variables (descriptor instances)
+        self._variables: Dict[str, Variable] = {}
+        for name, attr in vars(self.__class__).items():
+            if isinstance(attr, Variable):
+                self._variables[name] = attr
+                # Initialize instance value from default if not already set
+                if name not in self.__dict__:
+                    if attr.default is not None:
+                        self.__dict__[name] = attr.default
     
     def set_optimized_slots(self, slot_choices: Dict[str, int]):
         """
@@ -77,53 +64,32 @@ class Template:
     
     def _load_external_data(self) -> Optional[pd.DataFrame]:
         """
-        Load external data from the src path.
+        Load external data from the src path (strict mode).
         
         Returns:
-            DataFrame with external data, or None if not available
+            DataFrame with external data, or None if not configured
+        Raises:
+            FileNotFoundError/ValueError on invalid paths or formats
         """
-        if not self.src or not os.path.exists(self.src):
+        # Prefer programmatically provided DataFrame
+        if isinstance(getattr(self, "_external_df", None), pd.DataFrame):
+            return self._external_df
+
+        if not self.src:
             return None
-            
-        try:
-            if self.src.endswith('.pkl'):
-                with open(self.src, 'rb') as f:
-                    return pickle.load(f)
-            elif self.src.endswith('.csv'):
-                return pd.read_csv(self.src)
-            else:
-                print(f"Template: Unsupported file format: {self.src}")
-                return None
-        except Exception as e:
-            print(f"Template: Error loading external data from {self.src}: {e}")
-            return None
+        if not os.path.exists(self.src):
+            raise FileNotFoundError(f"External data file not found: {self.src}")
+        
+        if self.src.endswith('.pkl'):
+            with open(self.src, 'rb') as f:
+                return pickle.load(f)
+        if self.src.endswith('.csv'):
+            return pd.read_csv(self.src)
+        raise ValueError(f"Unsupported external data format: {self.src}")
     
     def load_ground_truth_dict(self) -> Dict[str, Any]:
-        """
-        Load ground truth data and return in P3O-compatible format.
-        
-        Returns:
-            Dictionary with format {"ground_truth": {agent_id: float_value}}
-        """
-        if not self.ground_truth_src:
-            return {}
-        
-        try:
-            if self.ground_truth_src.endswith('.csv'):
-                df = pd.read_csv(self.ground_truth_src)
-                # Convert to dictionary format expected by P3O
-                ground_truth_dict = {}
-                for idx, row in df.iterrows():
-                    agent_id = idx  # Use row index as agent_id
-                    willingness = float(row.get(self.ground_truth_column, 0.5))
-                    ground_truth_dict[agent_id] = willingness
-                return {"ground_truth": ground_truth_dict}
-            else:
-                # Handle other formats if needed
-                return {}
-        except Exception as e:
-            print(f"Failed to load ground truth data from {self.ground_truth_src}: {e}")
-            return {}
+        """Deprecated: ground truth handling moved to Archetype.configure."""
+        raise NotImplementedError("Use Archetype.configure(..., ground_truth_src=...) for ground truth.")
     
     def parse_template_fields(self, template_string: str) -> List[Tuple[str, bool]]:
         """
@@ -153,36 +119,24 @@ class Template:
         return result
     
     def fields(self, section: Literal["archetype", "external", "config"]) -> List[Tuple[str, bool]]:
-        """
-        Get fields for a specific template section.
-        
-        Args:
-            section: Template section name ("archetype", "external", "config")
-            
-        Returns:
-            List of (field_name, is_learnable) tuples
-        """
-        text = getattr(self, f"{section}_data")
+        """Return fields referenced by the effective base prompt (section ignored)."""
+        text = self.get_base_prompt_manager_template()
         return self.parse_template_fields(text)
     
-    def create_slots(self) -> Dict[str, 'Slot']:
-        """
-        Create Slot objects for all learnable fields in the template.
-            
-        Returns:
-            Dictionary mapping field names to Slot objects
-        """
-        from agent_torch.core.llm.slot import create_slots_from_fields
-        
-        # Parse all template sections for learnable fields
-        all_template_text = " ".join([
-            self.archetype_data,
-            self.external_data, 
-            self.config_data
-        ])
-        
-        fields = self.parse_template_fields(all_template_text)
-        return create_slots_from_fields(fields)
+    def create_slots(self) -> Dict[str, Variable]:
+        """Backward-compatible API: return variables for learnables."""
+        base_text = self.get_base_prompt_manager_template()
+        fields = self.parse_template_fields(base_text)
+        vars_map: Dict[str, Variable] = {}
+        for var_name, var in getattr(self, "_variables", {}).items():
+            if var.learnable:
+                vars_map[var_name] = var
+        # include parsed learnables not declared explicitly by creating dynamic Variables
+        for field_name, is_learnable in fields:
+            if is_learnable and field_name not in vars_map:
+                dyn = Variable(desc=f"dynamic {field_name}", learnable=True)
+                vars_map[field_name] = dyn
+        return vars_map
     
     def create_p3o_placeholder_choices(self, mapping: Dict[str, Any] = None) -> Dict[str, Tuple[int, Any]]:
         """
@@ -210,73 +164,58 @@ class Template:
         Returns:
             List of PyTorch parameters that can be optimized
         """
-        slots = self.create_slots()
-        parameters = []
-        
-        for slot in slots.values():
-            if slot.learnable and slot.theta is not None:
-                parameters.append(slot.theta)
-                
+        parameters: List[torch.Tensor] = []
+        for name, var in self.create_slots().items():
+            param = var.get_parameter(self)
+            if isinstance(param, torch.nn.Parameter):
+                parameters.append(param)
         return parameters
     
     def create_p3o_template_string(self) -> str:
+        """Create a P3O-compatible template from the effective base prompt.
+        Learnable placeholders are converted to {{field}}.
         """
-        Convert template sections into a single P3O-compatible template string.
-        
-        Converts {field, learnable=True} to {{field}} for P3O placeholders.
-        Converts {field, learnable=False} to direct substitution.
-        
-        Returns:
-            Template string with {{placeholder}} syntax for P3O
-        """
-        def convert_placeholders(text):
-            """Convert {field, learnable=True/False} to appropriate format."""
-            def replace_match(match):
-                field_name = match.group(1).strip()
-                learnable_str = match.group(2)
-                is_learnable = learnable_str and learnable_str.strip() == 'True'
-                
-                if is_learnable:
-                    # Convert to P3O placeholder format
-                    return f"{{{{{field_name}}}}}"
-                else:
-                    # Keep as regular placeholder for direct substitution
-                    return f"{{{field_name}}}"
-            
-            pattern = r'\{([^,}]+)(?:,\s*learnable\s*=\s*(True|False))?\}'
-            return re.sub(pattern, replace_match, text)
-        
-        # Combine all template sections
-        sections = []
-        if self.archetype_data.strip():
-            sections.append(convert_placeholders(self.archetype_data))
-        if self.external_data.strip():
-            sections.append(convert_placeholders(self.external_data))
-        if self.config_data.strip():
-            sections.append(convert_placeholders(self.config_data))
-        
-        return " ".join(sections)
+        base_text = self.get_base_prompt_manager_template()
+        slots = self.create_slots()
+        # Replace {field} with {{field}} if learnable
+        def repl(match):
+            field_name = match.group(1).strip()
+            var = slots.get(field_name)
+            if var and var.learnable:
+                return f"{{{{{field_name}}}}}"
+            return f"{{{field_name}}}"
+        return re.sub(r'\{([^,}]+)\}', repl, base_text)
     
     def get_base_prompt_manager_template(self) -> str:
         """
         Return template compatible with base PromptManager (no learnable syntax).
         Converts {field, learnable=True/False} to {field}.
         """
-        # Build template sections directly
-        sections = []
-        if self.archetype_data.strip():
-            sections.append(self.archetype_data)
-        if self.external_data.strip():
-            sections.append(self.external_data)
-        if self.config_data.strip():
-            sections.append(self.config_data)
-        
-        template = " ".join(sections)
-        
-        # Remove learnable syntax for base prompt manager compatibility
-        pattern = r'\{([^,}]+)(?:,\s*learnable\s*=\s*(?:True|False))?\}'
-        clean_template = re.sub(pattern, r'{\1}', template)
-        return clean_template
+        # Build from class-based hooks only
+        if hasattr(self, "__data__") and callable(getattr(self, "__data__")):
+            self.__data__()
+        if hasattr(self, "__prompt__") and callable(getattr(self, "__prompt__")):
+            self.__prompt__()
+        parts = []
+        system_prompt = getattr(self, "system_prompt", None)
+        if isinstance(system_prompt, str) and system_prompt.strip():
+            parts.append(system_prompt.strip())
+        if hasattr(self, "prompt_string") and isinstance(self.prompt_string, str):
+            parts.append(self.prompt_string)
+        if hasattr(self, "__output__") and callable(getattr(self, "__output__")):
+            output_instruction = str(self.__output__())
+            if output_instruction:
+                parts.append(output_instruction)
+        text = " ".join(p for p in parts if p)
+        return self._normalize_self_placeholders(self._strip_learnable_syntax(text))
+
+    def _strip_learnable_syntax(self, text: str) -> str:
+        pattern = r'\{([^,}]+)(?:,\s*learnable\s*=\s*(?:True|False|true|false))?\}'
+        return re.sub(pattern, r'{\1}', text)
+
+    def _normalize_self_placeholders(self, text: str) -> str:
+        # Convert {self.var} -> {var}
+        return re.sub(r"\{\s*self\.([a-zA-Z_][a-zA-Z0-9_]*)\s*\}", r"{\1}", text)
     
     def _process_field_value(self, field_name: str, value: Any) -> str:
         """
@@ -332,8 +271,8 @@ class Template:
                 # Apply P3O presentation choice using Slot lambda function
                 slots = self.create_slots()
                 if field_name in slots:
-                    slot = slots[field_name]
-                    _, lambda_func = slot.get_p3o_choice()
+                    var = slots[field_name]
+                    _, lambda_func = var.get_p3o_choice()
                     formatted_value = lambda_func(slot_choice, data)
                     return formatted_value
                 else:
@@ -368,28 +307,90 @@ class Template:
             else:
                 return "default_group"
         
+        # Accept list of fields for composite grouping
+        if isinstance(self.grouping_logic, (list, tuple)):
+            parts: List[str] = []
+            for field in self.grouping_logic:
+                parts.append(str(agent_profile.get(field, "")))
+            return "|".join(parts)
+        
         # Direct field grouping (e.g., "job_title" -> group by job_title)
         return str(agent_profile.get(self.grouping_logic, "unknown"))
+
+    # --- Mapping and grouped prompt generation (unifies former DataFramePromptManager) ---
+    def _load_mapping(self, population=None) -> Dict[str, Any]:
+        mapping: Dict[str, Any] = {}
+        base_dir: Optional[str] = None
+        if population is not None:
+            if hasattr(population, 'population_folder_path'):
+                base_dir = str(population.population_folder_path)
+            elif hasattr(population, '__path__'):
+                try:
+                    base_dir = population.__path__[0]
+                except Exception:
+                    base_dir = None
+        if base_dir is None and getattr(self, 'src', None):
+            base_dir = os.path.dirname(self.src)
+        if not base_dir:
+            return {}
+        mapping_path = os.path.join(base_dir, 'mapping.json')
+        try:
+            with open(mapping_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            return {}
+
+    def get_grouped_prompts(self, population, kwargs: Dict[str, Any]) -> tuple[list[str], list[str], list[list[int]]]:
+        """Group agents by grouping_logic and return prompts, keys, and indices per group."""
+        pop_size = getattr(population, 'population_size', 0)
+        mapping = self._load_mapping(population)
+        external_df = self._load_external_data()
+
+        # Build buckets by grouping key
+        buckets: Dict[str, list[int]] = {}
+        keys = self.grouping_logic if isinstance(self.grouping_logic, (list, tuple)) else [self.grouping_logic]
+        keys = [k for k in keys if isinstance(k, str) and k]
+        for i in range(pop_size):
+            profile: Dict[str, Any] = {}
+            for key in keys:
+                val = None
+                if hasattr(population, key):
+                    attr = getattr(population, key)
+                    if hasattr(attr, '__getitem__') and i < len(attr):
+                        v = attr[i]
+                        if hasattr(v, 'item'):
+                            v = v.item()
+                        # apply mapping if available
+                        if key in mapping and isinstance(v, (int, float)):
+                            mv = mapping[key]
+                            try:
+                                idx = int(v)
+                                if 0 <= idx < len(mv):
+                                    v = mv[idx]
+                            except Exception:
+                                pass
+                        val = v
+                if val is None and external_df is not None and i < len(external_df) and key in list(external_df.columns):
+                    val = external_df.iloc[i][key]
+                profile[key] = val
+            gkey = self.grouping_key(profile)
+            buckets.setdefault(gkey, []).append(i)
+
+        # Create prompts per group using representative agent
+        prompt_list: list[str] = []
+        group_keys: list[str] = []
+        group_indices: list[list[int]] = []
+        for gkey, indices in buckets.items():
+            rep_id = indices[0]
+            ctx = {**(kwargs or {}), 'agent_id': rep_id}
+            prompt = self.render(agent_id=rep_id, population=population, mapping=mapping, config_kwargs=ctx)
+            prompt_list.append(prompt)
+            group_keys.append(gkey)
+            group_indices.append(indices)
+
+        return prompt_list, group_keys, group_indices
     
-    def make_agent_mask(self, agent_id: int, population_size: int) -> torch.Tensor:
-        """
-        Create a one-hot mask for a specific agent.
-        
-        Args:
-            agent_id: Agent ID to create mask for
-            population_size: Total population size
-            
-        Returns:
-            Boolean tensor of shape (population_size, 1) with True only at agent_id
-        """
-        # Create zero tensor
-        mask = torch.zeros(population_size, 1, dtype=torch.bool)
-        
-        # Set the specific agent to True
-        if 0 <= agent_id < population_size:
-            mask[agent_id, 0] = True
-        
-        return mask
+    # Removed legacy make_agent_mask; masking is handled at behavior layer.
     
     def render(self, agent_id: int, population, mapping: Dict[str, Any], config_kwargs: Dict[str, Any]) -> str:
         """
@@ -413,16 +414,26 @@ class Template:
         """
         # Assemble complete data for this agent
         all_data = self.assemble_data(agent_id=agent_id, population=population, mapping=mapping, config_kwargs=config_kwargs)
-        
-        # 5. Fill template sections using unified _fill_section method
-        filled_archetype = self._fill_section(self.archetype_data, all_data) if self.archetype_data else ""
-        filled_external = self._fill_section(self.external_data, all_data) if self.external_data else ""
-        filled_config = self._fill_section(self.config_data, all_data) if self.config_data else ""
-        
-        # 6. Combine into full prompt
-        full_prompt = f"{filled_archetype} {filled_external} {filled_config} {self.output_instruction or ''}".strip()
-        
-        return full_prompt
+
+        # Class-based hook mode only
+        if hasattr(self, "__data__") and callable(getattr(self, "__data__")):
+            self.__data__()
+        if hasattr(self, "__prompt__") and callable(getattr(self, "__prompt__")):
+            self.__prompt__()
+        parts = []
+        system_prompt = getattr(self, "system_prompt", None)
+        if isinstance(system_prompt, str) and system_prompt.strip():
+            parts.append(system_prompt.strip())
+        base_text = getattr(self, "prompt_string", "")
+        base_text = self._normalize_self_placeholders(base_text)
+        # Replace placeholders using all_data
+        rendered = self._fill_section(base_text, all_data)
+        parts.append(rendered)
+        if hasattr(self, "__output__") and callable(getattr(self, "__output__")):
+            output_instruction = str(self.__output__())
+            if output_instruction:
+                parts.append(output_instruction)
+        return " ".join(p for p in parts if p).strip()
 
     def assemble_data(self, agent_id: int, population, mapping: Dict[str, Any] = None, config_kwargs: Dict[str, Any] = None) -> Dict[str, Any]:
         """
@@ -433,40 +444,132 @@ class Template:
         # 1. Population data
         population_data: Dict[str, Any] = {}
         if population:
-            for field_name, is_learnable in self.fields("archetype"):
+            # Determine all fields referenced in the base prompt (handles class-based hooks)
+            base_text_for_fields = self.get_base_prompt_manager_template()
+            requested_fields = set(re.findall(r"\{([^,}]+)\}", base_text_for_fields))
+            for field_name in requested_fields:
                 if hasattr(population, field_name):
                     field_data = getattr(population, field_name)
                     if hasattr(field_data, '__getitem__') and agent_id < len(field_data):
                         raw_value = field_data[agent_id]
                         if hasattr(raw_value, 'item'):
                             raw_value = raw_value.item()
-                        if isinstance(raw_value, float) and hasattr(raw_value, 'is_integer') and raw_value.is_integer():
-                            raw_value = int(raw_value)
-                        if field_name in mapping and isinstance(raw_value, (int, float)):
-                            mapping_values = mapping[field_name]
-                            if 0 <= int(raw_value) < len(mapping_values):
-                                population_data[field_name] = mapping_values[int(raw_value)]
-                            else:
-                                population_data[field_name] = str(raw_value)
+                        # Normalize common cases and types
+                        if raw_value is None or (isinstance(raw_value, float) and pd.isna(raw_value)):
+                            normalized_value = ""
                         else:
-                            population_data[field_name] = raw_value
+                            normalized_value = raw_value
+                            # Strings like "0" → 0
+                            if isinstance(normalized_value, str) and normalized_value.isdigit():
+                                try:
+                                    normalized_value = int(normalized_value)
+                                except Exception:
+                                    pass
+                            # Float that is integral → int
+                            if isinstance(normalized_value, float) and hasattr(normalized_value, 'is_integer') and normalized_value.is_integer():
+                                normalized_value = int(normalized_value)
+
+                        if field_name in mapping and isinstance(normalized_value, (int, float)):
+                            mapping_values = mapping[field_name]
+                            try:
+                                idx = int(normalized_value)
+                                if 0 <= idx < len(mapping_values):
+                                    population_data[field_name] = mapping_values[idx]
+                                else:
+                                    population_data[field_name] = str(normalized_value)
+                            except Exception:
+                                population_data[field_name] = str(normalized_value)
+                        else:
+                            population_data[field_name] = normalized_value
+        # 2a. Self-declared variables (from class-based templates)
+        self_vars: Dict[str, Any] = {}
+        for var_name, var in getattr(self, "_variables", {}).items():
+            value = getattr(self, var_name, var.default)
+            if value is not None:
+                self_vars[var_name] = value
+
         # 2. External data
         external_data: Dict[str, Any] = {}
         external_df = self._load_external_data()
-        if external_df is not None and agent_id < len(external_df):
-            row = external_df.iloc[agent_id]
-            for field_name, is_learnable in self.fields("external"):
-                if field_name in row.index:
-                    external_data[field_name] = self._process_field_value(field_name, row[field_name])
+        if external_df is not None:
+            base_text_for_fields = self.get_base_prompt_manager_template()
+            requested_fields = set(re.findall(r"\{([^,}]+)\}", base_text_for_fields))
+            # Determine matching row based on configured key if available
+            match_on_key: Optional[str] = getattr(self, "_match_on", None)
+            matched_row: Optional[pd.Series] = None
+            if match_on_key:
+                # get key value from precedence: self_vars > population_data > config_data
+                key_value = None
+                if match_on_key in self_vars:
+                    key_value = self_vars[match_on_key]
+                elif match_on_key in population_data:
+                    key_value = population_data[match_on_key]
+                elif match_on_key in (config_kwargs or {}):
+                    key_value = (config_kwargs or {}).get(match_on_key)
+                # Fallback: read directly from population even if not requested
+                if key_value is None and population is not None and hasattr(population, match_on_key):
+                    try:
+                        attr_data = getattr(population, match_on_key)
+                        if hasattr(attr_data, '__getitem__') and agent_id < len(attr_data):
+                            kv = attr_data[agent_id]
+                            if hasattr(kv, 'item'):
+                                kv = kv.item()
+                            key_value = kv
+                    except Exception:
+                        key_value = None
+                # Final fallback: read from external_df at agent index if column exists
+                if key_value is None and match_on_key in external_df.columns:
+                    try:
+                        if 0 <= agent_id < len(external_df):
+                            key_value = external_df.iloc[agent_id][match_on_key]
+                    except Exception:
+                        key_value = None
+                # Ensure the match key itself is available in final data for prompt filling
+                if key_value is not None and match_on_key not in self_vars and match_on_key not in population_data:
+                    external_data[match_on_key] = key_value
+                if key_value is not None and match_on_key in external_df.columns:
+                    try:
+                        candidates = external_df[external_df[match_on_key] == key_value]
+                        if not candidates.empty:
+                            matched_row = candidates.iloc[0]
+                    except Exception:
+                        matched_row = None
+            # Fallback selection: respect match_on semantics
+            if matched_row is None:
+                if match_on_key:
+                    # If user requested key-based matching but no column/match, skip external fill
+                    matched_row = None
+                else:
+                    if len(external_df) == 0:
+                        raise ValueError("External data frame is empty")
+                    if not (0 <= agent_id < len(external_df)):
+                        raise IndexError(f"agent_id {agent_id} out of range for external_df length {len(external_df)}")
+                    matched_row = external_df.iloc[agent_id]
+            if matched_row is not None:
+                # Build case-sensitive index
+                ci_map = {}
+                for field_name in requested_fields:
+                    if field_name in self_vars or field_name in population_data:
+                        continue
+                    if field_name in matched_row.index:
+                        external_data[field_name] = self._process_field_value(field_name, matched_row[field_name])
+                        continue
         # 3. Config data
         config_data = dict(config_kwargs or {})
-        if 'covid_cases' not in config_data and 'base_covid_cases' in config_data:
-            config_data['covid_cases'] = config_data['base_covid_cases']
-        if 'unemployment_rate' not in config_data and 'base_unemployment_rate' in config_data:
-            config_data['unemployment_rate'] = config_data['base_unemployment_rate']
-        # Merge
+        # No special-case aliasing; users must provide canonical keys
+        # Merge with precedence: external < population < self_vars < config
         all_data: Dict[str, Any] = {}
-        all_data.update(population_data)
         all_data.update(external_data)
+        all_data.update(population_data)
+        all_data.update(self_vars)
         all_data.update(config_data)
         return all_data
+        
+        # Removed unreachable legacy hook utilities.
+    
+    # Removed deprecated configure; ground truth is owned by Archetype.
+
+
+def load_file(filepath: str):
+    raise NotImplementedError("Use pandas to load data within __data__ hooks directly.")
+        
