@@ -300,12 +300,17 @@ class Template:
             String key for grouping agents with similar characteristics
         """
         if not self.grouping_logic:
-            # Default: group by all learnable fields
+            # Default: group by population attributes referenced in the template if available
+            if agent_profile:
+                parts: List[str] = []
+                for key in sorted(agent_profile.keys()):
+                    parts.append(str(agent_profile.get(key, "")))
+                return "|".join(parts) if any(parts) else "default_group"
+            # Fallback: if no profile provided, try learnable fields; else single default group
             learnable_fields = [name for name, slot in self.create_slots().items() if slot.learnable]
             if learnable_fields:
                 return "_".join([str(agent_profile.get(field, "")) for field in learnable_fields])
-            else:
-                return "default_group"
+            return "default_group"
         
         # Accept list of fields for composite grouping
         if isinstance(self.grouping_logic, (list, tuple)):
@@ -348,8 +353,15 @@ class Template:
 
         # Build buckets by grouping key
         buckets: Dict[str, list[int]] = {}
-        keys = self.grouping_logic if isinstance(self.grouping_logic, (list, tuple)) else [self.grouping_logic]
-        keys = [k for k in keys if isinstance(k, str) and k]
+        # Determine grouping keys
+        if self.grouping_logic:
+            keys = self.grouping_logic if isinstance(self.grouping_logic, (list, tuple)) else [self.grouping_logic]
+            keys = [k for k in keys if isinstance(k, str) and k]
+        else:
+            # Derive default keys from placeholders referenced in the template that exist on the population
+            base_text_for_fields = self.get_base_prompt_manager_template()
+            requested_fields = set(re.findall(r"\{([^,}]+)\}", base_text_for_fields))
+            keys = [fld for fld in requested_fields if hasattr(population, fld)]
         for i in range(pop_size):
             profile: Dict[str, Any] = {}
             for key in keys:
@@ -529,31 +541,51 @@ class Template:
                     external_data[match_on_key] = key_value
                 if key_value is not None and match_on_key in external_df.columns:
                     try:
-                        candidates = external_df[external_df[match_on_key] == key_value]
+                        # Robust match: compare as strings to avoid dtype mismatches
+                        key_str = str(key_value)
+                        col_as_str = external_df[match_on_key].astype(str)
+                        candidates = external_df[col_as_str == key_str]
                         if not candidates.empty:
                             matched_row = candidates.iloc[0]
+                        else:
+                            # Fallback: index-aligned selection if available
+                            if 0 <= agent_id < len(external_df):
+                                matched_row = external_df.iloc[agent_id]
                     except Exception:
                         matched_row = None
             # Fallback selection: respect match_on semantics
             if matched_row is None:
-                if match_on_key:
-                    # If user requested key-based matching but no column/match, skip external fill
-                    matched_row = None
-                else:
-                    if len(external_df) == 0:
-                        raise ValueError("External data frame is empty")
-                    if not (0 <= agent_id < len(external_df)):
-                        raise IndexError(f"agent_id {agent_id} out of range for external_df length {len(external_df)}")
+                # Pre-broadcast (population is None): always allow index-aligned fallback
+                if population is None and 0 <= agent_id < len(external_df):
                     matched_row = external_df.iloc[agent_id]
+                else:
+                    if match_on_key:
+                        # When population is present and match_on is specified but no match, skip external fill
+                        matched_row = None
+                    else:
+                        if len(external_df) == 0:
+                            raise ValueError("External data frame is empty")
+                        if not (0 <= agent_id < len(external_df)):
+                            raise IndexError(f"agent_id {agent_id} out of range for external_df length {len(external_df)}")
+                        matched_row = external_df.iloc[agent_id]
             if matched_row is not None:
-                # Build case-sensitive index
-                ci_map = {}
+                # Prefer copying all columns from the matched row to maximize availability pre-broadcast
+                for col in list(getattr(matched_row, 'index', [])):
+                    if col in self_vars or col in population_data:
+                        continue
+                    try:
+                        external_data[col] = self._process_field_value(col, matched_row[col])
+                    except Exception:
+                        pass
+                # Also ensure any requested fields not covered above are attempted
                 for field_name in requested_fields:
-                    if field_name in self_vars or field_name in population_data:
+                    if field_name in external_data or field_name in self_vars or field_name in population_data:
                         continue
-                    if field_name in matched_row.index:
-                        external_data[field_name] = self._process_field_value(field_name, matched_row[field_name])
-                        continue
+                    if field_name in getattr(matched_row, 'index', []):
+                        try:
+                            external_data[field_name] = self._process_field_value(field_name, matched_row[field_name])
+                        except Exception:
+                            pass
         # 3. Config data
         config_data = dict(config_kwargs or {})
         # No special-case aliasing; users must provide canonical keys

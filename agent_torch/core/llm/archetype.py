@@ -66,13 +66,14 @@ class Archetype:
                 region=population,
             )
 
-    def configure(self, *, external_df=None, ground_truth: list | None = None, match_on: str | None = None, reducer: str = "mean"):
+    def configure(self, *, external_df=None, ground_truth: list | None = None, match_on: str | None = None, reducer: str = "mean", group_on: str | list | None = None):
         """Configure archetype-level data and ground truth.
 
         - external_df: DataFrame of all jobs (923 rows) to drive prompt generation before/after broadcast
         - ground_truth: list of target values (aligned with external_df rows or to be matched via match_on)
         - match_on: key to match external rows and/or ground truth (e.g., 'job_title' or 'soc_code')
         - reducer: how to combine duplicate matches ('mean' default)
+        - group_on: optional grouping key(s); if not provided, will default to match_on when set
         """
         if isinstance(self._prompt, Template):
             # attach external_df and matching config to Template
@@ -87,6 +88,14 @@ class Archetype:
                     pass
             if match_on is not None:
                 setattr(self._prompt, "_match_on", match_on)
+            # Configure grouping: explicit group_on wins; otherwise default to match_on if grouping not already set
+            try:
+                if group_on is not None:
+                    setattr(self._prompt, "grouping_logic", group_on)
+                elif match_on is not None and getattr(self._prompt, "grouping_logic", None) in (None, "", []):
+                    setattr(self._prompt, "grouping_logic", match_on)
+            except Exception:
+                pass
         return self
 
     def sample(self, kwargs: Dict[str, Any] | None = None, print_examples: int = 0) -> torch.Tensor:

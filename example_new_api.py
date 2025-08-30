@@ -18,20 +18,18 @@ import pandas as pd
 
 class MyPromptTemplate(lm.Template):
     system_prompt = "You are evaluating willingness based on job profile and context."
-    #grouping logic always based on population 
-    grouping_logic = "soc_code"
 
     # Use existing dataset fields
     age = lm.Variable(desc="agent age", learnable=True)
     gender = lm.Variable(desc="agent gender", learnable=False)
     soc_code = lm.Variable(desc="job id", learnable=False)
-    #Abilities = lm.Variable(desc="abilities required", learnable=True)
-    #WorkContext = lm.Variable(desc="work context", learnable=True)
+    abilities = lm.Variable(desc="abilities required", learnable=True)
+    work_context = lm.Variable(desc="work context", learnable=True)
 
     def __prompt__(self):
         self.prompt_string = (
             "You are in your {age}'s and are a {gender}. "
-            "As a {soc_code}..."
+            "As a {soc_code}...you have {abilities} and work in {work_context}."
         )
 
     def __output__(self):
@@ -43,8 +41,10 @@ class MyPromptTemplate(lm.Template):
 
 
 def fn(api_key=None):
+
+    
     prompt_template = MyPromptTemplate()
-    # Ground truth now configured via archetype.configure()
+    # Ground truth and grouping configured via archetype.configure()
     
     llm = MockLLM()  # or lm.ClaudeHaiku(api_key)
     arch = Archetype(prompt=prompt_template, llm=llm, n_arch=3)
@@ -64,11 +64,11 @@ def fn(api_key=None):
         match_on="soc_code",
     )
 
-    arch.sample(print_examples=1)  # runs the prompt for base version
+    arch.sample(print_examples=3)  # runs the prompt for base version
 
     arch.broadcast(population=astoria)
 
-    arch.sample(print_examples = 1)  # returns (n_agents,) tensor of decisions
+    arch.sample(print_examples = 3)  # returns (n_agents,) tensor of decisions
 
 
     from agent_torch.optim import P3O
@@ -84,7 +84,7 @@ def fn(api_key=None):
     
     for i in range(2):
         # Run population sample; behavior stores group outputs/keys
-        i = arch.sample()
+        arch.sample()
         # Apply parameter step (auto-pulls group info from archetype)
         opt.step()
         opt.zero_grad()
