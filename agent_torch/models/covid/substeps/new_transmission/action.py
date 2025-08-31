@@ -56,7 +56,12 @@ class MakeIsolationDecision(SubstepAction):
             if self.behavior is None:
                 will_isolate = torch.rand(self.num_agents, 1).to(self.device)
             else:
-                assert self.behavior is not None
                 will_isolate = self.behavior(observation)
 
-        return {self.output_variables[0]: will_isolate}
+        # Safe handling of output_variables to prevent None access
+        if hasattr(self, 'output_variables') and self.output_variables:
+            output_key = self.output_variables[0]
+        else:
+            output_key = "isolation_decision"
+            
+        return {output_key: will_isolate}
