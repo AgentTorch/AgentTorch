@@ -1,4 +1,4 @@
-## Writing an LLM backend for Archetype (New API)
+## Extending an LLM backend for Archetype (New API)
 
 Archetype expects a minimal LLM protocol so different backends can be plugged in.
 

@@ -38,7 +38,9 @@ class Behavior:
         pass
 
     def sample(self, kwargs=None):
-        print("Behavior: Decision")
+        verbose = bool(kwargs.get("verbose", False)) if kwargs else False
+        if verbose:
+            print("Behavior: Decision")
         self.pre_sample_hook(kwargs)
 
         device = kwargs["device"]
@@ -49,23 +51,33 @@ class Behavior:
             # If template has learnable variables, sample presentation choices once per call
             slots = self.template.create_slots()
             sampled_choices = {}
+            logp_sum = None
+            entropy_sum = None
             for name, var in slots.items():
                 if getattr(var, 'learnable', False):
-                    idx, _, _ = var.sample_index(self.template)
+                    idx, logp, entropy = var.sample_index(self.template)
                     sampled_choices[name] = int(idx)
+                    try:
+                        logp_sum = logp if logp_sum is None else (logp_sum + logp)
+                        entropy_sum = entropy if entropy_sum is None else (entropy_sum + entropy)
+                    except Exception:
+                        pass
             if sampled_choices:
                 self.template.set_optimized_slots(sampled_choices)
                 self.last_slot_choices = sampled_choices
+                # Store aggregates for optimizer (REINFORCE/PSPGO)
+                self.last_slot_logp_sum = logp_sum
+                self.last_slot_entropy_sum = entropy_sum
 
             prompt_list, group_keys, group_indices = self.template.get_grouped_prompts(self.population, kwargs or {})
-            max_show = int(kwargs.get("print_examples", 0))
-            if max_show <= 0:
-                max_show = len(prompt_list)
-            if max_show > 0:
+            # Save for downstream (e.g., optimizer diagnostics)
+            self.last_prompt_list = prompt_list
+            self.last_group_indices = group_indices
+            if verbose:
                 print(f"\n=== Population Broadcast LLM Calls ===")
                 print(f"Number of unique prompts: {len(prompt_list)}")
                 print(f"Number of archetypes: {self.archetype[-1].n_arch}")
-                for i, prompt in enumerate(prompt_list[:max_show]):
+                for i, prompt in enumerate(prompt_list):
                     print(f"\nPrompt {i+1}:\n{prompt}")
             self.last_group_keys = group_keys
             agent_outputs = []
@@ -88,7 +100,13 @@ class Behavior:
             n = len(agent_outputs) if agent_outputs else 1
             sampled_behavior = sampled_behavior / max(n, 1)
             self.last_group_outputs = [v / max(n, 1) for v in group_values_accum]
-            if max_show > 0:
+            # Always print meta summary regardless of verbosity
+            try:
+                mean_val = float(sampled_behavior.mean().item())
+            except Exception:
+                mean_val = float('nan')
+            print(f"Population sample complete: outputs shape={tuple(sampled_behavior.shape)}, mean={mean_val:.4f}")
+            if verbose:
                 print(f"=== End Population LLM Calls ===\n")
             self.archetype[-1].export_memory_to_file(file_dir=kwargs["current_memory_dir"], last_k=len(prompt_list))
             self.post_sample_hook(sampled_behavior, kwargs)
@@ -96,21 +114,26 @@ class Behavior:
 
         # Base PromptManager flow
         prompt_list = self.prompt_manager.get_prompt_list(kwargs=kwargs)
-        max_show = int(kwargs.get("print_examples", 0))
-        if max_show <= 0:
-            max_show = len(prompt_list)
-        if max_show > 0:
+        # Save last prompt list for completeness
+        self.last_prompt_list = prompt_list
+        if verbose:
             print(f"\n=== Population Broadcast LLM Calls (base) ===")
             print(f"Number of prompts: {len(prompt_list)}")
             print(f"Number of archetypes: {self.archetype[-1].n_arch}")
-            for i, prompt in enumerate(prompt_list[:max_show]):
+            for i, prompt in enumerate(prompt_list):
                 print(f"\nPrompt {i+1}:\n{prompt}")
         masks = self.get_masks_for_each_group(self.prompt_manager.dict_variables_with_values, kwargs)
         agent_outputs = []
         for n_arch in range(self.archetype[-1].n_arch):
             agent_outputs.append(self.archetype[n_arch](prompt_list, last_k=12))
         sampled_behavior = self.get_sampled_behavior(sampled_behavior, masks, agent_outputs)
-        if max_show > 0:
+        # Always print meta summary regardless of verbosity
+        try:
+            mean_val = float(sampled_behavior.mean().item())
+        except Exception:
+            mean_val = float('nan')
+        print(f"Population sample complete: outputs shape={tuple(sampled_behavior.shape)}, mean={mean_val:.4f}")
+        if verbose:
             print(f"=== End Population LLM Calls ===\n")
         self.archetype[-1].export_memory_to_file(file_dir=kwargs["current_memory_dir"], last_k=len(prompt_list))
         self.post_sample_hook(sampled_behavior, kwargs)

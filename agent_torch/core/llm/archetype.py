@@ -89,7 +89,7 @@ class Archetype:
                 setattr(self._prompt, "_external_df", df)
         return self
 
-    def sample(self, kwargs: Dict[str, Any] | None = None, print_examples: int = 0) -> torch.Tensor:
+    def sample(self, kwargs: Dict[str, Any] | None = None, verbose: bool = False) -> torch.Tensor:
         """Sample decisions.
         - If broadcast not called: run a single prompt and return (1,)
         - If broadcast called: run group-based prompts over population and return (n_agents,)
@@ -110,28 +110,20 @@ class Archetype:
                 if external_df is not None:
                     prompt_list = []
                     for row_idx in range(len(external_df)):
-                        try:
-                            render_text = self._prompt.render(
-                                agent_id=row_idx,
-                                population=self._population,
-                                mapping={},
-                                config_kwargs={},
-                            )
-                        except Exception:
-                            # Graceful: show as much as possible (external fields) pre-broadcast
-                            base_text = self._prompt.get_base_prompt_manager_template()
-                            data = self._prompt.assemble_data(
-                                agent_id=row_idx,
-                                population=self._population,
-                                mapping={},
-                                config_kwargs={},
-                            )
-                            # Safe fill: replace placeholders that exist in data; leave others intact
-                            import re as _re
-                            def _safe_fill(m):
-                                key = m.group(1).strip()
-                                return str(data[key]) if key in data else m.group(0)
-                            render_text = _re.sub(r"\{([^,}]+)\}", _safe_fill, base_text)
+                        # Pre-broadcast: show placeholders for fields not present in external_df
+                        base_text = self._prompt.get_base_prompt_manager_template()
+                        data = self._prompt.assemble_data(
+                            agent_id=row_idx,
+                            population=self._population,
+                            mapping={},
+                            config_kwargs={},
+                        )
+                        # Safe fill: replace only placeholders that exist in data; leave others intact
+                        import re as _re
+                        def _safe_fill(m):
+                            key = m.group(1).strip()
+                            return str(data[key]) if key in data else m.group(0)
+                        render_text = _re.sub(r"\{([^,}]+)\}", _safe_fill, base_text)
                         prompt_list.append(render_text)
                 else:
                     # Single render with minimal context: agent_id 0
@@ -160,25 +152,28 @@ class Archetype:
                 prompt_list = [str(self._prompt)]
 
             # Query the first LLM archetype
-            pe_req = int(print_examples)
-            max_show = len(prompt_list) if pe_req <= 0 else pe_req
-            print(f"\n=== Single-shot LLM Call ===")
-            print(f"Prompts: {len(prompt_list)} (showing up to {max_show})")
-            for i, p in enumerate(prompt_list[:max_show]):
-                print(f"Prompt {i+1}:\n{p}")
+            if verbose:
+                print(f"\n=== Single-shot LLM Call ===")
+                print(f"Prompts: {len(prompt_list)}")
+                for i, p in enumerate(prompt_list):
+                    print(f"Prompt {i+1}:\n{p}")
             outputs = self._llm_archetypes[0](prompt_list, last_k=0)
-            print(f"LLM Responses (first {max_show}): {outputs[:max_show]}{'...' if len(outputs) > max_show else ''}")
+            if verbose:
+                print(f"LLM Responses: {outputs}")
             value = 0.0
             if outputs:
                 out0 = outputs[0]
                 try:
                     text_value = out0["text"] if isinstance(out0, dict) and "text" in out0 else out0
                     value = float(text_value)
-                    print(f"Parsed value: {value}")
+                    if verbose:
+                        print(f"Parsed value: {value}")
                 except Exception:
                     value = 0.0
-                    print(f"Failed to parse, using default: {value}")
-            print(f"=== End LLM Call ===\n")
+                    if verbose:
+                        print(f"Failed to parse, using default: {value}")
+            if verbose:
+                print(f"=== End LLM Call ===\n")
             tensor_out = torch.tensor([value], device=kwargs["device"]).float()
             if len(prompt_list) > 1:
                 try:
@@ -189,15 +184,19 @@ class Archetype:
                     tensor_out = torch.tensor(vals, device=kwargs["device"]).float()
                 except Exception:
                     pass
-            print(f"Single-shot complete: outputs shape={tuple(tensor_out.shape)}, mean={float(tensor_out.mean().item()):.4f}")
+            # Always print meta summary regardless of verbosity
+            try:
+                _mean = float(tensor_out.mean().item())
+            except Exception:
+                _mean = float('nan')
+            print(f"Single-shot complete: outputs shape={tuple(tensor_out.shape)}, mean={_mean:.4f}")
             return tensor_out
 
         # Broadcast path: delegate to behavior (optionally print examples)
-        pe = int(print_examples)
         if kwargs is None:
             kwargs = {"device": device, "current_memory_dir": ".agent_torch_memory"}
-        # Pass requested print_examples downstream; Behavior will interpret <=0 as "all"
-        kwargs = {**kwargs, "print_examples": pe}
+        # Pass verbosity downstream
+        kwargs = {**kwargs, "verbose": bool(verbose)}
         result = self._behavior.sample(kwargs=kwargs)
         # Flatten (n,1) -> (n,) for user ergonomics
         if result.ndim == 2 and result.shape[1] == 1:
