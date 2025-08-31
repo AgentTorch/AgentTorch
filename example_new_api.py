@@ -54,7 +54,8 @@ def fn(api_key=None):
     base_dir = os.path.dirname(__file__)
     all_jobs_df = pd.read_pickle(os.path.join(base_dir, "job_data_clean.pkl"))
 
-    gt_csv = pd.read_csv("agent_torch/core/llm/test_data/test_data.csv")
+    gt_csv_path = os.path.join(base_dir, "agent_torch", "core", "llm", "test_data", "test_data.csv")
+    gt_csv = pd.read_csv(gt_csv_path, encoding="utf-8-sig")
     soc_to_val = {r['soc_code']: float(r['willingness']) for _, r in gt_csv.iterrows() if 'soc_code' in r and 'willingness' in r}
     ground_truth_list = [soc_to_val.get(str(row.get('soc_code')), 0.0) for _, row in all_jobs_df.iterrows()]
 
@@ -72,7 +73,7 @@ def fn(api_key=None):
 
 
     from agent_torch.optim import P3O
-
+    
     params = list(arch.parameters())
     print(f"\nLearnable parameters: {len(params)}")
     
@@ -80,7 +81,7 @@ def fn(api_key=None):
 
 
     # Create P3O with archetype; auto-updates from archetype in step()
-    opt = P3O(arch.parameters(), archetype=arch, ground_truth=ground_truth_list)
+    opt = P3O(arch.parameters(), archetype=arch)
     
     for i in range(2):
         # Run population sample; behavior stores group outputs/keys

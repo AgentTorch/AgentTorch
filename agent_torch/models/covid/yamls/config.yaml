@@ -39,11 +39,11 @@ simulation_metadata:
     lr_gamma: 0.9999
     model_path: saved_model.pth
   mapping_path: ${simulation_metadata.population_dir}/population_mapping.json
-  num_agents: 2712360
+  num_agents: 37518
   num_episodes: 5
   num_steps_per_episode: 21
   num_substeps_per_step: 2
-  population_dir: C:\Users\ayanp\OneDrive\Documents\GitHub\AgentTorch-1\agent_torch\populations\NYC
+  population_dir: C:\Users\ayanp\OneDrive\Documents\GitHub\AgentTorch-1\agent_torch\populations\astoria
   quarantine_days: 12
   test_ineligible_days: 2
   test_result_delay_days: 3
