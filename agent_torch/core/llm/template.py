@@ -79,12 +79,12 @@ class Template:
             return None
         if not os.path.exists(self.src):
             raise FileNotFoundError(f"External data file not found: {self.src}")
-        
-        if self.src.endswith('.pkl'):
-            with open(self.src, 'rb') as f:
-                return pickle.load(f)
+            
+            if self.src.endswith('.pkl'):
+                with open(self.src, 'rb') as f:
+                    return pickle.load(f)
         if self.src.endswith('.csv'):
-            return pd.read_csv(self.src)
+                return pd.read_csv(self.src)
         raise ValueError(f"Unsupported external data format: {self.src}")
     
     def load_ground_truth_dict(self) -> Dict[str, Any]:
@@ -171,21 +171,6 @@ class Template:
                 parameters.append(param)
         return parameters
     
-    def create_p3o_template_string(self) -> str:
-        """Create a P3O-compatible template from the effective base prompt.
-        Learnable placeholders are converted to {{field}}.
-        """
-        base_text = self.get_base_prompt_manager_template()
-        slots = self.create_slots()
-        # Replace {field} with {{field}} if learnable
-        def repl(match):
-            field_name = match.group(1).strip()
-            var = slots.get(field_name)
-            if var and var.learnable:
-                return f"{{{{{field_name}}}}}"
-            return f"{{{field_name}}}"
-        return re.sub(r'\{([^,}]+)\}', repl, base_text)
-    
     def get_base_prompt_manager_template(self) -> str:
         """
         Return template compatible with base PromptManager (no learnable syntax).
@@ -251,14 +236,18 @@ class Template:
         # Use provided slot_values or stored optimized_slots from P3O
         active_slot_values = slot_values or self.optimized_slots
         
-        # Pattern to match {field} and {field, learnable=True/False} formats
+        # Pattern to match placeholders like {field} (learnable inferred from Variable registry)
         pattern = r'\{([^,}]+)(?:,\s*learnable\s*=\s*(True|False|true|false))?\}'
+
+        # Cache slots once per call
+        slots = self.create_slots()
         
         def replace_placeholder(match):
             field_name = match.group(1).strip()
-            learnable_str = match.group(2)
-            is_learnable = learnable_str and learnable_str.strip().lower() == 'true'
-            
+            # Infer learnable from declared Variables, ignore inline flags
+            var = slots.get(field_name)
+            is_learnable = bool(var and getattr(var, 'learnable', False))
+
             # Get the value for this field
             if is_learnable and active_slot_values and field_name in active_slot_values:
                 # P3O mode: Use slot choice to format the actual data
@@ -269,10 +258,10 @@ class Template:
                     raise KeyError(f"Field '{field_name}' missing from data")
                 
                 # Apply P3O presentation choice using Slot lambda function
-                slots = self.create_slots()
-                if field_name in slots:
-                    var = slots[field_name]
-                    _, lambda_func = var.get_p3o_choice()
+                if var is not None:
+                    # Use mapping if available (from population mapping.json or src directory)
+                    mapping = getattr(self, '_mapping', None)
+                    _, lambda_func = var.get_p3o_choice(mapping)
                     formatted_value = lambda_func(slot_choice, data)
                     return formatted_value
                 else:
@@ -310,7 +299,7 @@ class Template:
             learnable_fields = [name for name, slot in self.create_slots().items() if slot.learnable]
             if learnable_fields:
                 return "_".join([str(agent_profile.get(field, "")) for field in learnable_fields])
-            return "default_group"
+                return "default_group"
         
         # Accept list of fields for composite grouping
         if isinstance(self.grouping_logic, (list, tuple)):
@@ -321,7 +310,7 @@ class Template:
         
         # Direct field grouping (e.g., "job_title" -> group by job_title)
         return str(agent_profile.get(self.grouping_logic, "unknown"))
-
+    
     # --- Mapping and grouped prompt generation (unifies former DataFramePromptManager) ---
     def _load_mapping(self, population=None) -> Dict[str, Any]:
         mapping: Dict[str, Any] = {}
@@ -349,6 +338,11 @@ class Template:
         """Group agents by grouping_logic and return prompts, keys, and indices per group."""
         pop_size = getattr(population, 'population_size', 0)
         mapping = self._load_mapping(population)
+        # Persist mapping for downstream rendering (e.g., P3O variant prints)
+        try:
+            self._mapping = mapping
+        except Exception:
+            pass
         external_df = self._load_external_data()
 
         # Build buckets by grouping key
@@ -426,7 +420,7 @@ class Template:
         """
         # Assemble complete data for this agent
         all_data = self.assemble_data(agent_id=agent_id, population=population, mapping=mapping, config_kwargs=config_kwargs)
-
+        
         # Class-based hook mode only
         if hasattr(self, "__data__") and callable(getattr(self, "__data__")):
             self.__data__()
@@ -596,7 +590,7 @@ class Template:
         all_data.update(self_vars)
         all_data.update(config_data)
         return all_data
-        
+
         # Removed unreachable legacy hook utilities.
     
     # Removed deprecated configure; ground truth is owned by Archetype.

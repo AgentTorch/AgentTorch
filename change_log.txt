@@ -1,0 +1,43 @@
+Files changed:
+
+--agent_torch/core--
+Runner.py #view docs/tutorials/optimized_runner.md
+Initializer.py #views docs/tutorials/optimized_runner.md
+Executor.py #passes flag to determine whether to use optimized runner
+DataLoader.py #parallelize io read/write, added handling for pkls,parquets,feather files
+
+--agent_torch/populations/astoria--
+disease_stages.csv #header removal (stages)
+
+
+--agent_torch/core/llm--
+archetype.py #added template functionality and initial sampling logic, includes .configure .sample
+behavior.py #added grouping logic and broadcasting capabilities, includes .broadcast .sample .
+prompt_manager.py
+
+--docs/tutorials/--
+creating_archetypes
+
+##########################################
+
+Files added:
+
+--agent_torch/populations/astoria--
+soc_code.pkl
+
+--agent_torch/core/llm--
+Variable.py #creates slots to be used in prompt and optimization loops
+template.py #manages and fills optimized prompts based on external data and optimizer loop
+mock_llm.py #barebones class for llm, review docs/tutorials/extnding_an_llm
+
+--agent_torch/optim--
+p3o.py #p3o optimizer
+__init__.py 
+
+--docs/tutorials/--
+optimizing-on-prompts #p3o information
+using-optimized-runner #optimized runner information
+extending-a-template #template/variable information
+extending-an-llm #llm creation information
+
+
