@@ -73,7 +73,9 @@ class MyLLM(MockLLM):
 ```
 
 I/O contract:
+
 Input: A list of items, one per prompt in the form: {"agent_query": str, "chat_history": list}. Chat history can be [] if you do not wish to use the memory handler.
+
 Output: a list of the same length, one result per input, in the same order.
 Each result must be float-convertible (you manage formatting/validation).
 Preferred: return strings like "0.12" (or floats like 1.23).
@@ -90,7 +92,7 @@ String template example:
 arch = Archetype(prompt="Your age is {age}, gender is {gender}, and you are deciding whether to isolate or not.", llm=MyLLM(), n_arch=1)
 ```
 
-However, when you have external data and you want to optimize on prompts, consider extending the Template.py class. The Template class defines how to turn agent and external context data into a single prompt for the LLM.
+However, when you have external data and you want to optimize on prompts, consider extending the Template class. The Template class defines how to turn agent and external context data into a single prompt for the LLM.
 
 Here is an example dataframe:
 
@@ -234,7 +236,7 @@ However, __if your dataframe does not cover a per-agent basis__, ensure that:
 
 The population chosen has a .pkl file which references the key you wish to map to. Template will fill the external data based on that key for each agent, so ensure your dataframe references the exact key. 
 
-Assume we have a created Job_Number.pkl file in the "astoria" population which contain the numbers 1, 2, 3 and matches them across n_agents.
+Assume we have created a Job_Number.pkl file in the "astoria" population which contain the numbers 1, 2, 3 and matches them across n_agents.
 
 In your dataframe, add a Job_Number column:
 
@@ -256,9 +258,9 @@ Lastly, consider how to batch/group your prompts with an explicit group_on argum
 Examples of broadcast calls:
 
 ```python
-arch.broadcast(population=astoria, match_on="Job_Number")  # groups based on match_on argument
-arch.broadcast(population=astoria, match_on="Age")         # any agent with the same age is put into a bucket
-arch.broadcast(population=astoria, match_on=["Age", "Job_Number"])  # same age AND job_number share a bucket
+arch.broadcast(population=astoria, match_on="Job_Number")  # groups based on match_on argument aka Job_Number
+arch.broadcast(population=astoria, match_on="Job_Number", group_on = "Age")         # any agent with the same age is put into a bucket
+arch.broadcast(population=astoria, match_on="Job_Number", group_on = ["Age", "Job_Number"])  # same age AND job_number share a bucket
 ```
 
 Call .sample after calling .broadcast to execute on the buckets created. This step is necessary to execute if you want to receive an (n_agents,) decision tensor.
