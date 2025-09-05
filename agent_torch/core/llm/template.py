@@ -176,22 +176,37 @@ class Template:
         Return template compatible with base PromptManager (no learnable syntax).
         Converts {field, learnable=True/False} to {field}.
         """
-        # Build from class-based hooks only
-        if hasattr(self, "__data__") and callable(getattr(self, "__data__")):
-            self.__data__()
-        if hasattr(self, "__prompt__") and callable(getattr(self, "__prompt__")):
-            self.__prompt__()
-        parts = []
-        system_prompt = getattr(self, "system_prompt", None)
-        if isinstance(system_prompt, str) and system_prompt.strip():
-            parts.append(system_prompt.strip())
-        if hasattr(self, "prompt_string") and isinstance(self.prompt_string, str):
-            parts.append(self.prompt_string)
-        if hasattr(self, "__output__") and callable(getattr(self, "__output__")):
-            output_instruction = str(self.__output__())
-            if output_instruction:
-                parts.append(output_instruction)
-        text = " ".join(p for p in parts if p)
+        # Invoke optional hooks to allow users to populate fields
+        sys_hook = getattr(self, "__system_prompt__", None)
+        data_hook = getattr(self, "__data__", None)
+        prompt_hook = getattr(self, "__prompt__", None)
+        out_hook = getattr(self, "__output__", None)
+
+        if callable(data_hook):
+            data_hook()
+        if callable(prompt_hook):
+            prompt_hook()
+
+        # Resolve system prompt (hook wins; else class attribute)
+        sys_text = str(sys_hook()) if callable(sys_hook) else None
+        if not sys_text:
+            sp = getattr(self, "system_prompt", None)
+            sys_text = sp.strip() if isinstance(sp, str) and sp.strip() else None
+
+        # Resolve base prompt
+        prompt_text = self.prompt_string if isinstance(getattr(self, "prompt_string", None), str) else None
+
+        # Resolve output instruction (hook wins; else any supported class attribute)
+        out_text = str(out_hook()) if callable(out_hook) else None
+        if not out_text:
+            for name in ("output", "output_instruction", "output_prompt"):
+                cand = getattr(self, name, None)
+                if isinstance(cand, str) and cand.strip():
+                    out_text = cand.strip()
+                    break
+
+        parts = [p for p in (sys_text, prompt_text, out_text) if isinstance(p, str) and p]
+        text = " ".join(parts)
         return self._normalize_self_placeholders(self._strip_learnable_syntax(text))
 
     def _strip_learnable_syntax(self, text: str) -> str:
@@ -427,18 +442,39 @@ class Template:
         if hasattr(self, "__prompt__") and callable(getattr(self, "__prompt__")):
             self.__prompt__()
         parts = []
-        system_prompt = getattr(self, "system_prompt", None)
-        if isinstance(system_prompt, str) and system_prompt.strip():
-            parts.append(system_prompt.strip())
+        # Optional system prompt hook takes precedence if provided
+        sys_text = None
+        if hasattr(self, "__system_prompt__") and callable(getattr(self, "__system_prompt__")):
+            try:
+                sys_text = str(self.__system_prompt__())
+            except Exception:
+                sys_text = None
+        if not sys_text:
+            system_prompt = getattr(self, "system_prompt", None)
+            if isinstance(system_prompt, str) and system_prompt.strip():
+                sys_text = system_prompt.strip()
+        if sys_text:
+            parts.append(sys_text)
         base_text = getattr(self, "prompt_string", "")
         base_text = self._normalize_self_placeholders(base_text)
         # Replace placeholders using all_data
         rendered = self._fill_section(base_text, all_data)
         parts.append(rendered)
+        # Optional output hook or class attribute
+        out_text = None
         if hasattr(self, "__output__") and callable(getattr(self, "__output__")):
-            output_instruction = str(self.__output__())
-            if output_instruction:
-                parts.append(output_instruction)
+            try:
+                out_text = str(self.__output__())
+            except Exception:
+                out_text = None
+        if not out_text:
+            for attr_name in ("output", "output_instruction", "output_prompt"):
+                cand = getattr(self, attr_name, None)
+                if isinstance(cand, str) and cand.strip():
+                    out_text = cand.strip()
+                    break
+        if out_text:
+            parts.append(out_text)
         return " ".join(p for p in parts if p).strip()
 
     def assemble_data(self, agent_id: int, population, mapping: Dict[str, Any] = None, config_kwargs: Dict[str, Any] = None) -> Dict[str, Any]:

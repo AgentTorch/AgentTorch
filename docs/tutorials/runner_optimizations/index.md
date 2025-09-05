@@ -1,6 +1,6 @@
-## Runner Flow: Basic vs Optimized
+## Runner Flow: Base vs Optimized
 
-This document compares a basic Runner usage pattern with an optimized pattern and highlights added optimizations and functions in the current Runner implementation.
+This document compares the base Runner usage pattern with the optimized Runner and highlights the practical differences, why they matter, and how to use the optimized path.
 
 ### Summary of Differences
 
@@ -41,7 +41,7 @@ runner.init()
 runner.step(runner.config["simulation_metadata"]["num_steps_per_episode"])
 ```
 
-### Optimized pattern (auto-selects GPU Runner, timings, stats)
+### Optimized pattern (auto-selects best runner, timings, stats)
 
 ```python
 from agent_torch.core.executor import Executor
@@ -53,16 +53,11 @@ import time
 # Setup
 t0 = time.perf_counter()
 pop_loader = LoadPopulation(astoria)
-dl = DataLoader(covid, pop_loader)  # lets Executor pick optimized Runner when available
+dl = DataLoader(covid, pop_loader)  # lets Executor pick an optimized Runner when available
 simulation = Executor(model=covid, data_loader=dl)
 runner = simulation.runner
 
-# Time init
-t_init_start = time.perf_counter()
 runner.init()
-t_init_end = time.perf_counter()
-
-print(f"\n Init timings: runner.init()={t_init_end - t_init_start:.3f}s, total={t_init_end - t0:.3f}s")
 
 # Simulate and optionally print perf stats
 num_steps = runner.config["simulation_metadata"]["num_steps_per_episode"]
@@ -85,11 +80,11 @@ param_path = "initializer.transition_function.0.new_transmission.learnable_args.
 runner._set_parameters({param_path: new_tensor})
 ```
 
-### Added Optimizations (GPU path)
+### Added Optimizations (optimized Runner)
 
-1. `use_gpu` flag, CUDA params, and dedicated snapshot stream
+1. Device awareness and snapshot stream
    - Fields: `_snapshot_stream`, `_batch_size`, `_pool_limit_per_shape`, `_inplace_progress`
-   - Purpose: manage memory and transfers efficiently on GPU
+   - Purpose: manage memory and transfers efficiently and asynchronously when supported
 
 2. Memory pooling and reuse
    - `_get_pooled_tensor`, `_return_to_pool`
@@ -103,7 +98,7 @@ runner._set_parameters({param_path: new_tensor})
    - `_compute_active_indices` identifies which agents to process (e.g., by disease stage)
 
 5. Snapshot compression
-   - `_compress_state_for_snapshot` downcasts/normalizes tensors, uses non-blocking transfers on a CUDA stream
+   - `_compress_state_for_snapshot` downcasts/normalizes tensors; uses non-blocking transfers on a dedicated stream
 
 6. Optimized progress
    - `_progress_state_optimized` placeholder for in-place/vectorized transitions (currently calls controller.progress)
@@ -118,7 +113,7 @@ runner._set_parameters({param_path: new_tensor})
 - `_observe_with_batches(...)`, `_act_with_batches(...)`, `_process_tensor_active_batched(...)` → active-index updates and reuse
 - `_wire_transition_buffer_allocator()` → pooled buffer hooks for transitions
 - `_get_pooled_tensor(...)`, `_return_to_pool(...)` → memory pool
-- `get_performance_stats()` → perf summary (GPU) or mode (CPU)
+- `get_performance_stats()` → perf summary (optimized) or mode (base)
 
 ### When to use the optimized pattern
 
@@ -128,36 +123,20 @@ runner._set_parameters({param_path: new_tensor})
 
 ## Using the Optimized Runner
 
-This guide shows how to use the GPU‑optimized Runner demonstrated in `example_v2.py`, and how it differs from the basic usage in `example.py`.
-
-### Overview
-
-- **example.py (basic):**
-  - Loads a population via `LoadPopulation`
-  - Constructs `Executor(model, pop_loader=...)`
-  - Calls `runner.init()` and then `runner.step(...)`
-
-- **example_v2.py (optimized):**
-  - Measures init and step timings
-  - Uses `DataLoader(model, pop_loader)` to let AgentTorch pick an optimized Runner (CUDA when available)
-  - Prints performance statistics when supported
-
-### Optimized setup (from example_v2.py)
+Below is a compact, copy‑pasteable pattern to set up and profile the optimized Runner without referring to any specific examples.
 
 ```python
 from agent_torch.core.executor import Executor
 from agent_torch.core.dataloader import LoadPopulation, DataLoader
-
 from agent_torch.models import covid
 from agent_torch.populations import astoria
-
 import time
 
 def setup(model, population):
     # Timers
     t0 = time.perf_counter()
 
-    # Executor + DataLoader → auto-detect optimized backend (e.g., CUDA)
+    # Executor + DataLoader → auto-select optimized Runner when available
     t_loader_start = time.perf_counter()
     pop_loader = LoadPopulation(population)
     dl = DataLoader(model, pop_loader)
@@ -220,7 +199,7 @@ runner._set_parameters(params_dict)
 
 ### End‑to‑end script timing
 
-`example_v2.py` also measures total script time and per‑section timings to help profile initialization and simulation step performance.
+You can also measure total script time and per‑section timings to profile initialization and simulation step performance.
 
 ```python
 if __name__ == "__main__":
@@ -236,13 +215,52 @@ if __name__ == "__main__":
     print(f"\n Timings: simulation_step={sim_t1 - sim_t0:.3f}s, script_total={script_t1 - script_t0:.3f}s")
 ```
 
-### Key differences vs basic example
+### Key differences vs base pattern
 
-- Uses `DataLoader` so the `Executor` can choose the best Runner automatically (e.g., GPU‑accelerated).
+- Uses `DataLoader` so the `Executor` can choose the best Runner automatically.
 - Tracks timings around loader/executor creation and `runner.init()`.
 - Optionally prints performance stats via `runner.get_performance_stats()`.
 - Ensures tensors are created on `runner.device` when directly setting parameters.
 
 Use this pattern when you want the fastest available execution and basic profiling hooks with minimal changes to your workflow.
+
+### Initialization differences vs base Initializer
+
+The optimized Initializer accelerates and hardens setup compared to the legacy/base version:
+
+- Device resolution and propagation
+  - Base: reads `device` directly from config
+  - Optimized: supports `device: auto`, resolves to `cuda` when available and writes the resolved device back to `config["simulation_metadata"]["device"]` so downstream code is consistent
+
+- Streamed host→device transfers (CUDA)
+  - Base: `tensor.to(self.device)` for every tensor
+  - Optimized: round‑robin CUDA streams + pinned memory + `non_blocking=True` to overlap copies
+    ```python
+    def _to_device_streamed(self, cpu_tensor):
+        if not self.is_cuda: return cpu_tensor.to(self.device)
+        s = self._next_stream()
+        if hasattr(cpu_tensor, 'is_pinned') and not cpu_tensor.is_pinned():
+            cpu_tensor = cpu_tensor.pin_memory()
+        with torch.cuda.stream(s):
+            return cpu_tensor.to(self.device, non_blocking=True)
+    ```
+
+- Centralized device routing
+  - Base: scattered `.to(self.device)` calls
+  - Optimized: `_to_device()` routes through the streamed path when on CUDA, used consistently across environment/agents/objects/networks
+
+- Network adjacency handling
+  - Base: moves `edge_list`/`attr_list` directly
+  - Optimized: moves via streamed path and guards tuple structure
+
+- Clear error behavior for dynamic args
+  - Base: prints a message and returns
+  - Optimized: raises `NotImplementedError` so misconfigurations fail fast during init
+
+- ParameterDict state
+  - Base: stores a custom dict; pickling paths vary
+  - Optimized: tracks `nn.ParameterDict` for learnables; `__getstate__/__setstate__` save/restore a real `state_dict`
+
+These changes collectively reduce init time and make initialization deterministic and observable, especially on GPUs.
 
 
