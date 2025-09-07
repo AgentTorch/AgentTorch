@@ -71,16 +71,18 @@ def initialize_infections(shape, params):
 
 def read_from_file(shape, params):
     file_path = params["file_path"]
-
-    if file_path[-3:] == "csv":
-        data = pd.read_csv(file_path)
-
-    data_values = data.values
-    assert data_values.shape == tuple(shape)
-
-    data_tensor = torch.from_numpy(data_values)
-
-    return data_tensor
+    if file_path.endswith("csv"):
+        # Read without header, coerce to numeric
+        df = pd.read_csv(file_path, header=None)
+        values = pd.to_numeric(df.stack(), errors='coerce').unstack().to_numpy()
+    else:
+        df = pd.read_pickle(file_path)
+        values = df.values
+    # Ensure 2D
+    if values.ndim == 1:
+        values = values.reshape(-1, 1)
+    assert values.shape == tuple(shape), f"read_from_file: shape mismatch {values.shape} vs {tuple(shape)} for {file_path}"
+    return torch.from_numpy(values)
 
 
 def get_mean_agent_interactions(shape, params):
@@ -126,28 +128,21 @@ def initialize_id(shape, params):
 
 def network_from_file(params):
     file_path = params["file_path"]
+    # Read edge list, tolerate headers; coerce to numeric
+    df = pd.read_csv(file_path, header=None)
+    # Detect possible header row with non-numeric tokens
+    if df.iloc[0].apply(lambda v: isinstance(v, str)).any():
+        df = pd.read_csv(file_path, header=0)
+    # Use first two columns as source/target
+    df = df.iloc[:, :2]
+    df = df.apply(pd.to_numeric, errors='coerce').dropna().astype('int64')
 
-    random_network_edgelist_forward = (
-        torch.tensor(pd.read_csv(file_path, header=None).to_numpy()).t().long()
-    )
-    random_network_edgelist_backward = torch.vstack(
-        (random_network_edgelist_forward[1, :], random_network_edgelist_forward[0, :])
-    )
-    random_network_edgelist = torch.hstack(
-        (random_network_edgelist_forward, random_network_edgelist_backward)
-    )
-    random_network_edgeattr_type = torch.ones(random_network_edgelist.shape[1]).long()
-    random_network_edgeattr_B_n = torch.ones(random_network_edgelist.shape[1]).float()
-    random_network_edgeattr = torch.vstack(
-        (random_network_edgeattr_type, random_network_edgeattr_B_n)
-    )
+    # Build edge_index (2, E) and edge_attr (2, E) without creating dense adjacency
+    edge_index = torch.tensor(df.values.T, dtype=torch.long)
+    E = edge_index.shape[1]
+    edge_type = torch.ones(E, dtype=torch.long)
+    edge_weight = torch.ones(E, dtype=torch.float32)
+    edge_attr = torch.vstack((edge_type, edge_weight))
 
-    all_edgelist = torch.hstack((random_network_edgelist,))
-    all_edgeattr = torch.hstack((random_network_edgeattr,))
-
-    agents_data = Data(edge_index=all_edgelist, edge_attr=all_edgeattr)
-
-    G = to_networkx(agents_data)
-    A = torch.tensor(nx.adjacency_matrix(G).todense())
-
-    return G, (all_edgelist, all_edgeattr)
+    # Return no dense graph; provide edge_index/edge_attr tuple as adjacency_matrix payload
+    return None, (edge_index, edge_attr)

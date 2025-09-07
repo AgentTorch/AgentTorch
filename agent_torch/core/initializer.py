@@ -1,16 +1,39 @@
 import torch
 import torch.nn as nn
+import os
 
 # import dask.dataframe as dd
 from agent_torch.core.helpers.general import *
 
 
 class Initializer(nn.Module):
+    """Constructs the initial simulation state and helper modules.
+
+    cpu: builds everything on host; cuda: enables lightweight stream utilities
+    for faster host→device transfers during initialization.
+    """
     def __init__(self, config, registry):
         super().__init__()
         self.config = config
         self.registry = registry
-        self.device = torch.device(self.config["simulation_metadata"]["device"])
+        # resolve device from config (supporting 'auto') and cache flags
+        cfg_dev = str(self.config["simulation_metadata"].get("device", "auto")).lower()
+        self.device = torch.device("cuda" if (cfg_dev == "auto" and torch.cuda.is_available()) else (cfg_dev if cfg_dev != "auto" else "cpu"))
+        self.is_cuda = (self.device.type == 'cuda')
+        # write back resolved device
+        self.config["simulation_metadata"]["device"] = self.device.type
+
+        # lightweight cuda stream utilities
+        if self.is_cuda:
+            try:
+                self._num_streams = int(os.getenv('AGENT_TORCH_INIT_NUM_STREAMS', '4'))
+            except Exception:
+                self._num_streams = 4
+            self._streams = [torch.cuda.Stream(device=self.device) for _ in range(max(1, self._num_streams))]
+            self._stream_rr = 0
+        else:
+            self._streams = []
+            self._stream_rr = 0
 
         self.state = {}
         self.environment, self.agents, self.objects, self.networks = {}, {}, {}, {}
@@ -23,6 +46,34 @@ class Initializer(nn.Module):
             self.transition_function,
             self.reward_function,
         ) = (nn.ModuleDict(), nn.ModuleDict(), nn.ModuleDict(), nn.ModuleDict())
+
+    def _next_stream(self):
+        """get next cuda stream for overlapped operations (cuda only)."""
+        if not self.is_cuda or not self._streams:
+            return torch.cuda.current_stream(self.device) if self.is_cuda else None
+        s = self._streams[self._stream_rr]
+        self._stream_rr = (self._stream_rr + 1) % len(self._streams)
+        return s
+
+    def _to_device_streamed(self, cpu_tensor: torch.Tensor) -> torch.Tensor:
+        """pin and transfer to device asynchronously using round‑robin streams."""
+        if not self.is_cuda:
+            return cpu_tensor.to(self.device)
+        stream = self._next_stream()
+        if not cpu_tensor.is_contiguous():
+            cpu_tensor = cpu_tensor.contiguous()
+        if hasattr(cpu_tensor, 'is_pinned') and not cpu_tensor.is_pinned():
+            try:
+                cpu_tensor = cpu_tensor.pin_memory()
+            except Exception:
+                pass
+        with torch.cuda.stream(stream):
+            gpu_tensor = cpu_tensor.to(self.device, non_blocking=True)
+        return gpu_tensor
+
+    def _to_device(self, tensor: torch.Tensor) -> torch.Tensor:
+        """route device transfer via streamed path when available."""
+        return self._to_device_streamed(tensor) if self.is_cuda else tensor.to(self.device)
 
     def _initialize_from_default(self, src_val, shape):
         processed_shape = shape
@@ -60,7 +111,7 @@ class Initializer(nn.Module):
         else:
             init_value = src_val * torch.ones(size=processed_shape)
 
-        init_value = init_value.to(self.device)
+        init_value = self._to_device(init_value)
 
         return init_value
 
@@ -83,10 +134,7 @@ class Initializer(nn.Module):
                     arg_object["value"], arg_shape
                 )
             else:
-                print(
-                    "!!! dynamic argument are not currently supported. Setup from fixed value !!!"
-                )
-                return
+                raise NotImplementedError("Dynamic argument initialization is not supported yet.")
 
             params[argument] = arg_value
 
@@ -98,7 +146,7 @@ class Initializer(nn.Module):
         init_value = self.registry.initialization_helpers[function](
             initialize_shape, params
         )
-        init_value = init_value.to(self.device)
+        init_value = self._to_device(init_value)
 
         return init_value
 
@@ -119,8 +167,6 @@ class Initializer(nn.Module):
             property_value = self._initialize_from_generator(
                 property_initializer, property_shape, property_key
             )
-
-        property_value = property_value.to(self.device)
 
         if property_is_learnable:
             self.learnable_parameters[property_key] = property_value
@@ -211,9 +257,8 @@ class Initializer(nn.Module):
 
                 if len(adjacency_matrix) == 2:
                     edge_list, attr_list = adjacency_matrix
-                    edge_list, attr_list = edge_list.to(self.device), attr_list.to(
-                        self.device
-                    )
+                    edge_list = self._to_device(edge_list)
+                    attr_list = self._to_device(attr_list)
                     adjacency_matrix = (edge_list, attr_list)
 
                 self.networks[interaction_type][contact_network]["graph"] = graph
@@ -272,9 +317,7 @@ class Initializer(nn.Module):
         return input_variables, output_variables, arguments
 
     def substeps(self):
-        """
-        define observation, policy and transition functions for each active_agent on each substep
-        """
+        """define observation, policy and transition modules for each substep."""
 
         for substep in self.config["substeps"].keys():
             active_agents = self.config["substeps"][substep]["active_agents"]
@@ -345,6 +388,7 @@ class Initializer(nn.Module):
                 )
 
     def initialize(self):
+        """populate `self.state` and build helper module dicts."""
         self.state["current_step"] = 0
         self.state["current_substep"] = "0"  # use string not int for nn.ModuleDict
 
@@ -359,14 +403,17 @@ class Initializer(nn.Module):
         self.state["parameters"] = self.parameters_dict
 
     def forward(self):
+        """nn.Module forward delegates to initialize for convenience."""
         self.initialize()
 
     def __getstate__(self):
         state_dict = self.state.copy()
-        state_dict["parameters"] = self.learnable_params_dict.state_dict()
+        params = getattr(self, 'parameters_dict', None)
+        if isinstance(params, nn.ParameterDict):
+            state_dict["parameters"] = params.state_dict()
         return state_dict
 
     def __setstate__(self, state):
-        self.learnable_params = nn.ParameterDict(state["parameters"])
+        self.parameters_dict = nn.ParameterDict(state.get("parameters", {}))
         self.state = state
-        self.state["parameters"] = self.learnable_params
+        self.state["parameters"] = self.parameters_dict

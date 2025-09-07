@@ -31,6 +31,24 @@ class NewTransmission(SubstepTransitionMessagePassing):
 
         self.calibration_mode = self.config["simulation_metadata"]["calibration"]
 
+        # Precompute one-hot matrices and buffers for reuse
+        self._time_one_hot = torch.eye(self.num_timesteps, device=self.device)
+        self._week_one_hot = torch.eye(self.num_weeks, device=self.device)
+        self._buffer_cache = {}
+
+    def _get_buffer(self, name, like_tensor):
+        key = (name, tuple(like_tensor.shape), like_tensor.dtype, like_tensor.device)
+        buf = self._buffer_cache.get(key)
+        if (
+            buf is None
+            or buf.shape != like_tensor.shape
+            or buf.dtype != like_tensor.dtype
+            or buf.device != like_tensor.device
+        ):
+            buf = torch.empty_like(like_tensor)
+            self._buffer_cache[key] = buf
+        return buf
+
     def _lam(
         self,
         x_i,
@@ -86,31 +104,29 @@ class NewTransmission(SubstepTransitionMessagePassing):
         return new_stages
 
     def update_transition_times(self, t, current_transition_times, newly_exposed_today):
-        """Note: not differentiable"""
-        new_transition_times = torch.clone(current_transition_times).to(
-            current_transition_times.device
-        )
-        new_transition_times = (
-            newly_exposed_today * (t + 1 + self.EXPOSED_TO_INFECTED_TIME)
-            + (1 - newly_exposed_today) * current_transition_times
-        )
-        return new_transition_times
+        out = self._get_buffer("next_stage_time", current_transition_times)
+        out.copy_(current_transition_times)
+        mask = newly_exposed_today.bool().squeeze()
+        if mask.numel() > 0:
+            out[mask] = t + 1 + self.EXPOSED_TO_INFECTED_TIME
+        return out
 
     def _generate_one_hot_tensor(self, timestep, num_timesteps):
-        timestep_tensor = torch.tensor([timestep])
+        if num_timesteps == self.num_timesteps:
+            return self._time_one_hot[timestep]
+        if num_timesteps == self.num_weeks:
+            return self._week_one_hot[timestep]
+        timestep_tensor = torch.tensor([timestep], device=self.device)
         one_hot_tensor = F.one_hot(timestep_tensor, num_classes=num_timesteps)
-
         return one_hot_tensor.to(self.device)
 
     def update_infected_times(self, t, agents_infected_times, newly_exposed_today):
-        """Note: not differentiable"""
-        updated_infected_times = torch.clone(agents_infected_times).to(
-            agents_infected_times.device
-        )
-
-        updated_infected_times[newly_exposed_today.bool()] = t
-
-        return updated_infected_times
+        out = self._get_buffer("infected_time", agents_infected_times)
+        out.copy_(agents_infected_times)
+        mask = newly_exposed_today.bool().squeeze()
+        if mask.numel() > 0:
+            out[mask] = t
+        return out
 
     def forward(self, state, action=None):
         input_variables = self.input_variables
@@ -131,29 +147,29 @@ class NewTransmission(SubstepTransitionMessagePassing):
         )
         SFInfector = get_by_path(state, re.split("/", input_variables["SFInfector"]))
         all_lam_gamma = get_by_path(
-            state, re.split("/", input_variables["lam_gamma_integrals"])
+            state, re.split("/", input_variables["lam_gamma_integrals"]) 
         )
 
         agents_infected_time = get_by_path(
-            state, re.split("/", input_variables["infected_time"])
+            state, re.split("/", input_variables["infected_time"]) 
         )
         agents_mean_interactions_split = get_by_path(
-            state, re.split("/", input_variables["mean_interactions"])
+            state, re.split("/", input_variables["mean_interactions"]) 
         )
         agents_ages = get_by_path(state, re.split("/", input_variables["age"]))
         current_stages = get_by_path(
-            state, re.split("/", input_variables["disease_stage"])
+            state, re.split("/", input_variables["disease_stage"]) 
         )
         current_transition_times = get_by_path(
-            state, re.split("/", input_variables["next_stage_time"])
+            state, re.split("/", input_variables["next_stage_time"]) 
         )
 
         all_edgelist, all_edgeattr = get_by_path(
-            state, re.split("/", input_variables["adjacency_matrix"])
+            state, re.split("/", input_variables["adjacency_matrix"]) 
         )
 
         daily_infected = get_by_path(
-            state, re.split("/", input_variables["daily_infected"])
+            state, re.split("/", input_variables["daily_infected"]) 
         )
 
         agents_infected_index = torch.logical_and(
@@ -183,9 +199,12 @@ class NewTransmission(SubstepTransitionMessagePassing):
             .squeeze()
         )  # .t() # 6
 
+        num_nodes = all_node_attr.size(0) if hasattr(all_node_attr, 'size') else None
         agents_data = Data(
             all_node_attr, edge_index=all_edgelist, edge_attr=all_edgeattr, t=t
         )
+        if num_nodes is not None:
+            agents_data.num_nodes = int(num_nodes)
 
         new_transmission = self.propagate(
             agents_data.edge_index,
@@ -199,10 +218,8 @@ class NewTransmission(SubstepTransitionMessagePassing):
         )
 
         prob_not_infected = torch.exp(-1 * new_transmission)
-        # prob_infected = will_isolate*(1 - prob_not_infected)
         probs = torch.hstack((1 - prob_not_infected, prob_not_infected))
 
-        # Gumbel softmax logic
         potentially_exposed_today = self.st_bernoulli(probs)[:, 0].to(
             self.device
         )  # using straight-through bernoulli
@@ -214,8 +231,8 @@ class NewTransmission(SubstepTransitionMessagePassing):
             current_stages == self.SUSCEPTIBLE_VAR
         ).squeeze() * potentially_exposed_today
 
-        daily_infected = daily_infected + newly_exposed_today.sum() * time_step_one_hot
-        daily_infected = daily_infected.squeeze(0)
+        # In-place update to avoid tensor reallocation
+        daily_infected.add_(newly_exposed_today.sum() * time_step_one_hot)
 
         newly_exposed_today = newly_exposed_today.unsqueeze(1)
 

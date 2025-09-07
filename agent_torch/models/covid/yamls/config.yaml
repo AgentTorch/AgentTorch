@@ -1,6 +1,6 @@
 simulation_metadata:
   ALIGN_LLM: true
-  EXECUTION_MODE: heuristic # llm
+  EXECUTION_MODE: heuristic
   EXPOSED_TO_INFECTED_TIME: 5
   EXPOSED_VAR: 1
   INCLUDE_WEEK_COUNT: true
@@ -21,7 +21,13 @@ simulation_metadata:
   USE_GROUND_TRUTH_CASE_NUMBERS: false
   age_group_file: ${simulation_metadata.population_dir}/age.pickle
   calibration: true
-  device: cpu
+  cuda_params:
+    batch_size: 16384
+    inplace_progress: false
+    pool_limit_per_shape: 8
+    snapshot_pack_bools: true
+    snapshot_precision: fp16
+  device: auto
   disease_stage_file: ${simulation_metadata.population_dir}/disease_stages.csv
   infection_network_file: ${simulation_metadata.population_dir}/mobility_networks/0.csv
   initial_infection_ratio: 0.04
@@ -37,10 +43,11 @@ simulation_metadata:
   num_episodes: 5
   num_steps_per_episode: 21
   num_substeps_per_step: 2
-  population_dir: /u/ayushc/projects/GradABM/systems/AgentTorch/agent_torch/populations/astoria
+  population_dir: C:\Users\ayanp\OneDrive\Documents\GitHub\AgentTorch-1\agent_torch\populations\astoria
   quarantine_days: 12
   test_ineligible_days: 2
   test_result_delay_days: 3
+  trajectory_save_frequency: 1
 state:
   agents:
     citizens:
