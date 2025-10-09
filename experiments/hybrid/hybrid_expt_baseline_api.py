@@ -31,13 +31,16 @@ from agent_torch.core.llm.mock_llm import MockLLM
 from agent_torch.optim.p3o import P3O
 
 
-# --- Local experiment paths (experiments/hybrid) ---
+# --- Local experiment paths (experiments/hybrid + dependencies) ---
 HYBRID_ROOT = os.path.abspath(os.path.dirname(__file__))
-EXPT2_ROOT = os.path.join(HYBRID_ROOT, "expt2")
-if HYBRID_ROOT not in sys.path:
-    sys.path.append(HYBRID_ROOT)
-if EXPT2_ROOT not in sys.path:
-    sys.path.append(EXPT2_ROOT)
+# Dependencies live at experiments/dependencies (sibling of 'hybrid')
+DEPS_ROOT = os.path.abspath(os.path.join(HYBRID_ROOT, "..", "dependencies"))
+EXPT2_ROOT = os.path.join(DEPS_ROOT, "expt2")
+EXPT2_DATA_ROOT = os.path.join(DEPS_ROOT, "expt2_data")
+
+for p in (HYBRID_ROOT, DEPS_ROOT, EXPT2_ROOT):
+    if p not in sys.path:
+        sys.path.append(p)
 
 # DSPy program will be imported inside main after sys.path is configured
 
@@ -72,13 +75,13 @@ def _clean_skill_name(skill_name: str) -> str:
 
 
 def load_data() -> tuple[pd.DataFrame, List[str]]:
-    # Local CSV of all skills
-    all_skills_csv = os.path.join(HYBRID_ROOT, "expt2_data", "skill_dimensions_updated", "all_skills.csv")
+    # Local CSV of all skills (from dependencies)
+    all_skills_csv = os.path.join(EXPT2_DATA_ROOT, "skill_dimensions_updated", "all_skills.csv")
     skills_df = pd.read_csv(all_skills_csv)
     slot_universe: List[str] = skills_df["primary_skill_name"].dropna().astype(str).unique().tolist()
 
     # Optional local job vectors JSON; build a minimal DF if missing
-    job_vectors_path = os.path.join(HYBRID_ROOT, "expt2_data", "skill_dimensions_updated", "updated_job_vectors.json")
+    job_vectors_path = os.path.join(EXPT2_DATA_ROOT, "skill_dimensions_updated", "updated_job_vectors.json")
     if os.path.exists(job_vectors_path):
         with open(job_vectors_path, 'r', encoding='utf-8') as f:
             job_vectors = json.load(f)
@@ -115,9 +118,9 @@ def main() -> None:
     print("Starting baseline hybrid API experiment (DSPy → P3O)...")
     print("=" * 60)
 
-    # Ensure import paths for expt2 and its vendored modules (if any)
+    # Ensure import paths for dependencies/expt2 and its vendored modules (if any)
     EXPT2_VENDOR_ROOT = os.path.join(EXPT2_ROOT, "experiments")
-    for p in (HYBRID_ROOT, EXPT2_ROOT, EXPT2_VENDOR_ROOT):
+    for p in (HYBRID_ROOT, DEPS_ROOT, EXPT2_ROOT, EXPT2_VENDOR_ROOT, EXPT2_DATA_ROOT):
         if p not in sys.path:
             sys.path.append(p)
 
@@ -129,9 +132,9 @@ def main() -> None:
     from expt2.mipro_skills import JobAnalysisModule, run_mipro_optimization  # type: ignore
 
     # DSPy compile (light) using the local module's own pipeline. Ensure relative
-    # paths like ./expt2_data resolve under experiments/hybrid
+    # paths like ./expt2_data resolve under experiments/hybrid/dependencies
     _cwd = os.getcwd()
-    os.chdir(HYBRID_ROOT)
+    os.chdir(DEPS_ROOT)
     try:
         optimized_module, _examples, _summary = run_mipro_optimization(data_type="exp1")
     finally:
