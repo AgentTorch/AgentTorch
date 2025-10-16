@@ -1,14 +1,11 @@
 """
-Round-robin hybrid experiment (DSPy ↔ P3O) using marker-based insertion.
+Round-robin hybrid experiment (DSPy ↔ P3O) using marker-based insertion and closed-loop feedback.
 
 Flow per round:
- 1) DSPy compile (light)
+ 1) DSPy compile (fresh instance) with examples augmented by last P3O selections
  2) Convert DSPy → Template with marker so attributes render in-place
  3) P3O train with chosen mode/batch_size
- 4) Capture selections and warm-start next round by seeding template choices
-
-Note: This version does not rewrite DSPy job_info between rounds. It demonstrates
-the marker-powered, non-duplicating attributes block and warm-starting P3O.
+ 4) Capture selections and warm-start next round by seeding template choices and DSPy examples
 """
 
 from typing import List, Dict
@@ -19,7 +16,12 @@ import json
 import pandas as pd
 import torch
 
-from agent_torch.integrations.dspy_to_template import from_predict
+from agent_torch.integrations.dspy_to_template import (
+    from_predict,
+    build_selection_block,
+    inject_block_into_examples,
+    get_input_field_from_module,
+)
 from agent_torch.core.llm.archetype import Archetype
 from agent_torch.core.llm.mock_llm import MockLLM
 from agent_torch.optim.p3o import P3O
@@ -101,8 +103,6 @@ def build_categories_from_df(df: pd.DataFrame) -> List[str]:
 
 
 def main() -> None:
-    print("Starting round-robin hybrid API experiment (DSPy ↔ P3O)...")
-    print("=" * 60)
 
     # Paths for expt2 imports
     EXPT2_VENDOR_ROOT = os.path.join(EXPT2_ROOT, "experiments")
@@ -111,10 +111,17 @@ def main() -> None:
             sys.path.append(p)
 
     ext_df, slot_universe = load_data()
-    print(f"Loaded data: {len(ext_df)} rows, slots={len(slot_universe)}")
+    # Minimal log: dataset size
+    print(f"Data: rows={len(ext_df)}, slots={len(slot_universe)}")
 
-    # Import DSPy
-    from expt2.mipro_skills import run_mipro_optimization  # type: ignore
+    # Import DSPy components for MiPRO-like compile
+    import dspy  # type: ignore
+    from dspy.teleprompt import MIPROv2  # type: ignore
+    from expt2.mipro_skills import (
+        JobAnalysisModule,
+        create_training_examples,
+        job_metrics_metric_mipro,
+    )  # type: ignore
 
     rounds = int(os.getenv("RR_ROUNDS", "2"))
     mode_schedule = os.getenv("RR_MODES", "balanced,quick").split(",")
@@ -125,15 +132,31 @@ def main() -> None:
 
     for r in range(rounds):
         mode = mode_schedule[r] if r < len(mode_schedule) else mode_schedule[-1]
-        print(f"\n=== Round {r+1}/{rounds} | P3O mode={mode} ===")
+        print(f"\nRound {r+1}/{rounds} | mode={mode}")
 
-        # DSPy compile
-        _cwd = os.getcwd()
-        os.chdir(DEPS_ROOT)
-        try:
-            optimized_module, _examples, _summary = run_mipro_optimization(data_type="exp1")
-        finally:
-            os.chdir(_cwd)
+        # DSPy compile (fresh each round) using injected examples when available
+        base_module = JobAnalysisModule()
+        input_field = get_input_field_from_module(base_module)
+        max_examples = int(os.getenv("RR_MAX_EXAMPLES", "40"))
+        base_examples = create_training_examples(max_examples=max_examples, data_type="exp1")
+
+        if last_selections:
+            block_text = build_selection_block(slot_universe, last_selections, header="Attributes:")
+            train_examples = inject_block_into_examples(base_examples, input_field, block_text)
+        else:
+            train_examples = base_examples
+
+        train_size = max(1, len(train_examples) // 2)
+        trainset = train_examples[:train_size]
+        valset = train_examples[train_size:train_size + 2] if len(train_examples) > train_size else train_examples[:1]
+
+        optimizer = MIPROv2(metric=job_metrics_metric_mipro, auto=os.getenv("RR_DSPY_MODE", "light"), num_threads=2)
+        optimized_module = optimizer.compile(
+            student=base_module,
+            trainset=trainset,
+            valset=valset,
+            requires_permission_to_run=False,
+        )
 
         # Convert with marker so attributes render in-place
         categories = build_categories_from_df(ext_df) or KNOWLEDGE_CATEGORIES
@@ -148,52 +171,22 @@ def main() -> None:
         )
         template.configure(external_df=ext_df)
 
-        # Sanity: ensure marker consumed and only one attributes block exists
-        try:
-            text = template.get_base_prompt_manager_template()
-            assert marker not in text, "Marker should be consumed"
-            assert text.count("Attributes:") == 1, "Expected exactly one Attributes block"
-            print("[Sanity] Marker consumed and single Attributes block confirmed.")
-        except Exception as e:
-            print(f"[Warning] Prompt sanity check failed: {e}")
-
         # Warm-start P3O with last selections if available
         if last_selections:
-            try:
-                template.set_optimized_slots(last_selections)
-            except Exception:
-                pass
+            template.set_optimized_slots(last_selections)
 
         llm = JobKnowledgeMockLLM(low=0, high=100, seed=0)
         arch = Archetype(prompt=template, llm=llm, n_arch=3)
         arch.configure(external_df=ext_df)
-        opt = P3O(archetype=arch, verbose=True)
-
-        # Snapshot logits before training
-        init_logits = {}
-        for name, var in template._variables.items():
-            if getattr(var, 'learnable', False):
-                p = var.get_parameter(template)
-                if isinstance(p, torch.Tensor):
-                    init_logits[name] = p.detach().clone()
+        opt = P3O(archetype=arch, verbose=False)
 
         opt.train(mode=mode, log_interval=1, batch_size=batch_size)
 
-        # Verify logits changed
-        changed = False
-        for name, var in template._variables.items():
-            if getattr(var, 'learnable', False) and name in init_logits:
-                p = var.get_parameter(template)
-                if isinstance(p, torch.Tensor) and not torch.allclose(p.detach(), init_logits[name]):
-                    changed = True
-                    break
-        print(f"[Check] Logits changed after training: {changed}")
-
         # Freeze selections for next round
         last_selections = opt.get_p3o_selections()
-        print(f"[Selections] {last_selections}")
+        print(f"Selections: {last_selections}")
 
-    print("\nRound-robin hybrid API experiment complete.")
+    print("\nDone.")
 
 
 if __name__ == "__main__":

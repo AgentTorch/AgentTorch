@@ -338,3 +338,55 @@ def from_predict(
 			return self
 
 	return PredictProjectedTemplate(module, slots, title)
+
+
+# --- Round-robin utilities (general-purpose) ---
+
+def build_selection_block(slot_universe: List[str], selections: Dict[str, int], header: str = "Attributes:") -> str:
+	"""
+	Render a human-readable attributes block using the raw slot labels gated by binary selections
+	keyed by cleaned variable names (same cleaning as used for Template variables).
+	"""
+	cleaned_to_raw: Dict[str, str] = {_clean_skill_name(s): s for s in slot_universe}
+	lines: List[str] = [header]
+	for cleaned_name, raw in cleaned_to_raw.items():
+		if selections.get(cleaned_name, 0) == 1:
+			lines.append(f"- {raw}")
+	return "\n".join(lines)
+
+
+def inject_block_into_examples(
+	examples: List[Any],
+	input_field: str,
+	block_text: str,
+	marker: Optional[str] = None,
+) -> List[Any]:
+	"""
+	Return new DSPy examples with the block injected into the given input field.
+	If marker is provided and present, replace it; otherwise append the block.
+	"""
+	import dspy  # type: ignore
+
+	injected: List[Any] = []
+	for ex in examples:
+		base_text = getattr(ex, input_field)
+		if marker and marker in base_text:
+			new_text = base_text.replace(marker, block_text)
+		else:
+			sep = "\n\n" if base_text and not str(base_text).endswith("\n") else ""
+			new_text = f"{base_text}{sep}{block_text}"
+		# Preserve outputs if present
+		fields: Dict[str, Any] = {input_field: new_text}
+		for k, v in ex.__dict__.items():
+			if k != input_field:
+				fields[k] = v
+		injected.append(dspy.Example(**fields).with_inputs(input_field))
+	return injected
+
+
+def get_input_field_from_module(module: Any) -> str:
+	owner = getattr(module, "predictor", module)
+	sig = getattr(owner, "signature")
+	in_names = list(getattr(sig, "input_fields").keys())
+	assert len(in_names) >= 1, "Signature must define at least one input field"
+	return in_names[0]
