@@ -78,7 +78,15 @@ def project_to_template(module: Any, skill_names: List[str], title: Optional[str
 	return ProjectedTemplate(module, skill_names, title)
 
 
-def from_dspy(module: Any, slots: List[str], title: Optional[str] = None) -> Template:
+def from_dspy(
+    module: Any,
+    slots: List[str],
+    title: Optional[str] = None,
+    *,
+    marker: Optional[str] = None,
+    include_attributes_block: bool = True,
+    block_header: Optional[str] = None,
+) -> Template:
 	"""
 	Convert a DSPy module into a Template with the given slots, embedding scaffold.
 	- Extracts scaffold (instruction + demos) from module.predictor when available
@@ -125,6 +133,9 @@ def from_dspy(module: Any, slots: List[str], title: Optional[str] = None) -> Tem
 			self._demos = list(demo_list)
 			self._input_names = input_names
 			self._output_names = output_names
+			self._marker = marker
+			self._include_block = bool(include_attributes_block)
+			self._block_header = block_header or "Relevant attributes (conditionally included):"
 
 			# Variables per slot
 			skill_variables: Dict[str, Variable] = {}
@@ -136,6 +147,14 @@ def from_dspy(module: Any, slots: List[str], title: Optional[str] = None) -> Tem
 					presentations=["", "- {value}"]
 				)
 			self.register_variables(skill_variables)
+
+		def _skills_block(self) -> str:
+            # Slot placeholders assembled as lines (resolved by Template engine)
+			lines: List[str] = []
+			for skill_name in self.skill_names_used:
+				attr_name = _clean_skill_name(skill_name)
+				lines.append(f"{{{attr_name}}}")
+			return "\n".join(lines)
 
 		def __system_prompt__(self) -> str:
 			lines: List[str] = [
@@ -150,7 +169,16 @@ def from_dspy(module: Any, slots: List[str], title: Optional[str] = None) -> Tem
 			if self._input_names:
 				lines.append("")
 				lines.append(f"Inputs: {', '.join(self._input_names)}")
-			return "\n".join(lines)
+			sys_text = "\n".join(lines)
+			# Optional in-body insertion in system text
+			if self._marker and self._marker in sys_text:
+				block_parts = [self._block_header, self._skills_block()]
+				block_text = "\n".join(p for p in block_parts if p)
+				try:
+					return sys_text.replace(self._marker, block_text)
+				except Exception:
+					return sys_text
+			return sys_text
 
 		def __prompt__(self) -> str:
 			# Optional few-shot section
@@ -158,18 +186,15 @@ def from_dspy(module: Any, slots: List[str], title: Optional[str] = None) -> Tem
 			if self._demos:
 				fewshot = "Few-shot examples:\n" + "\n".join(self._demos) + "\n\n"
 
-			# Slot placeholders
-			skill_lines: List[str] = []
-			for skill_name in self.skill_names_used:
-				attr_name = _clean_skill_name(skill_name)
-				skill_lines.append(f"{{{attr_name}}}")
-			skills_block = "\n".join(skill_lines)
+			# Build content body according to marker/include flag
+			skills_block = self._skills_block()
+			body = ""
+			if self._include_block:
+				body = f"{self._block_header}\n{skills_block}\n"
 
-			return (
-				f"{fewshot}"
-				f"Relevant attributes (conditionally included):\n"
-				f"{skills_block}\n"
-			)
+			# If marker is intended for system, __prompt__ just carries few-shot + optional body
+			# (When marker is used in system, we still allow appended body only if include flag is True.)
+			return f"{fewshot}{body}"
 
 		def __output__(self) -> str:
 			if self._output_names:
@@ -179,12 +204,16 @@ def from_dspy(module: Any, slots: List[str], title: Optional[str] = None) -> Tem
 	return DspyScaffoldTemplate(module, slots, header_title, instruction_text, demo_texts)
 
 def from_predict(
-	module: Any,
-	slots: List[str],
-	title: Optional[str] = None,
-	categories: Optional[List[str]] = None,
-	input_field: Optional[str] = None,
-	output_field: Optional[str] = None,
+    module: Any,
+    slots: List[str],
+    title: Optional[str] = None,
+    categories: Optional[List[str]] = None,
+    input_field: Optional[str] = None,
+    output_field: Optional[str] = None,
+    *,
+    marker: Optional[str] = None,
+    include_attributes_block: bool = True,
+    block_header: Optional[str] = None,
 ) -> Template:
 	"""
 	Create a Template from a DSPy Predict-like module and explicit IO field names.
@@ -230,6 +259,9 @@ def from_predict(
 			self._header_title = header_title or module_ref.__class__.__name__
 			self._instruction = instruction_text
 			self._demos = demo_texts
+			self._marker = marker
+			self._include_block = bool(include_attributes_block)
+			self._block_header = block_header or "Relevant attributes (conditionally included):"
 
 			# Create Variables (binary include/omit) and register dynamically
 			skill_variables: Dict[str, Variable] = {}
@@ -241,6 +273,13 @@ def from_predict(
 					presentations=["", "- {value}"]
 				)
 			self.register_variables(skill_variables)
+
+		def _skills_block(self) -> str:
+			lines: List[str] = []
+			for skill_name in self.skill_names_used:
+				attr_name = _clean_skill_name(skill_name)
+				lines.append(f"{{{attr_name}}}")
+			return "\n".join(lines)
 
 		def __system_prompt__(self) -> str:
 			module_name = getattr(self._dspy_module, "__class__", type(self._dspy_module)).__name__
@@ -257,7 +296,15 @@ def from_predict(
 			# Optional: list inputs for context
 			lines.append("")
 			lines.append(f"Inputs: {', '.join(in_names)}")
-			return "\n".join(lines)
+			sys_text = "\n".join(lines)
+			if self._marker and self._marker in sys_text:
+				block_parts = [self._block_header, self._skills_block()]
+				block_text = "\n".join(p for p in block_parts if p)
+				try:
+					return sys_text.replace(self._marker, block_text)
+				except Exception:
+					return sys_text
+			return sys_text
 
 		def __prompt__(self) -> str:
 			# Optional few-shot section
@@ -266,16 +313,11 @@ def from_predict(
 				fewshot = "Few-shot examples:\n" + "\n".join(self._demos) + "\n\n"
 
 			# Content block placeholders; actual values come from external_df via render_job_info
-			skill_lines: List[str] = []
-			for skill_name in self.skill_names_used:
-				attr_name = _clean_skill_name(skill_name)
-				skill_lines.append(f"{{{attr_name}}}")
-			skills_block = "\n".join(skill_lines)
-			return (
-				f"{fewshot}"
-				f"Relevant attributes (conditionally included):\n"
-				f"{skills_block}\n"
-			)
+			skills_block = self._skills_block()
+			body = ""
+			if self._include_block:
+				body = f"{self._block_header}\n{skills_block}\n"
+			return f"{fewshot}{body}"
 
 		def __output__(self) -> str:
 			# If categories provided, emit a strict JSON scaffold; else a concise generic instruction from signature
