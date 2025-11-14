@@ -61,65 +61,81 @@ def _get_env_any(names: List[str]) -> str | None:
     return None
 
 
-def _extract_text_from_obj(obj: Dict[str, Any]) -> Tuple[str, str]:
-    """Return (title, text) from a wiki-like JSON record, trying multiple layouts."""
-    # Title candidates (flat or nested)
+def _extract_id_title_text_url(obj: Dict[str, Any]) -> Dict[str, str]:
+    """Precise extractor for common wiki JSONL variants observed in schema report.
+    Maps:
+      - id: identifier | id
+      - title: name | title | page_title | meta.title | document.title
+      - url: url | main_entity.url | is_part_of.url
+      - text: description | abstract | sections[].has_parts[].text (joined) | fallback string-leaf join
+    """
+    # id
+    art_id = (
+        str(obj.get("identifier") or obj.get("id") or "").strip()
+    )
+    # title
     title = (
-        obj.get("title")
+        obj.get("name")
+        or obj.get("title")
         or obj.get("page_title")
         or obj.get("meta", {}).get("title")
         or obj.get("document", {}).get("title")
         or ""
     )
-
-    # Direct text candidates
-    direct_candidates = [
-        obj.get("text"),
-        obj.get("content"),
-        obj.get("body"),
-        obj.get("extract"),
-        obj.get("article"),
-    ]
-    for c in direct_candidates:
-        if isinstance(c, str) and c.strip():
-            return str(title), c
-
-    # Common nested places
-    # e.g., {"document": {"text": ...}}, {"revision": {"text": ...}}, {"sections": [{"text": ...}, ...]}
-    for k in ("document", "revision", "page", "meta"):
-        v = obj.get(k)
-        if isinstance(v, dict):
-            t = v.get("text") or v.get("content") or v.get("body")
-            if isinstance(t, str) and t.strip():
-                return str(title), t
-            if isinstance(v.get("sections"), list):
-                try:
-                    parts = [s.get("text", "") for s in v["sections"] if isinstance(s, dict)]
-                    joined = "\n\n".join([p for p in parts if isinstance(p, str) and p.strip()])
-                    if joined.strip():
-                        return str(title), joined
-                except Exception:
-                    pass
-
-    # Fallback: concatenate all string-like leaf values (limited)
-    def _gather_strings(x: Any, acc: List[str]) -> None:
-        if isinstance(x, str):
-            if x.strip():
-                acc.append(x)
-        elif isinstance(x, list):
-            for it in x[:20]:
-                _gather_strings(it, acc)
-        elif isinstance(x, dict):
-            # limit breadth to avoid huge traversal
-            for i, (_k, _v) in enumerate(list(x.items())[:40]):
-                _gather_strings(_v, acc)
-        else:
-            return
-
-    acc: List[str] = []
-    _gather_strings(obj, acc)
-    joined = "\n\n".join(acc)
-    return str(title), joined
+    # url
+    url = (
+        obj.get("url")
+        or (obj.get("main_entity", {}) or {}).get("url")
+        or (obj.get("is_part_of", {}) or {}).get("url")
+        or ""
+    )
+    # text: prefer concise fields first
+    text = (
+        obj.get("description")
+        or obj.get("abstract")
+    )
+    # sections join if needed
+    if not (isinstance(text, str) and text.strip()):
+        try:
+            sections = obj.get("sections") or []
+            parts: List[str] = []
+            if isinstance(sections, list):
+                for s in sections:
+                    if not isinstance(s, dict):
+                        continue
+                    hp = s.get("has_parts") or []
+                    if not isinstance(hp, list):
+                        continue
+                    for p in hp:
+                        if isinstance(p, dict):
+                            t = p.get("text")
+                            if isinstance(t, str) and t.strip():
+                                parts.append(t)
+            if parts:
+                text = "\n\n".join(parts)
+        except Exception:
+            text = None
+    # fallback: concatenate all string-like leaves
+    if not (isinstance(text, str) and text.strip()):
+        def _gather_strings(x: Any, acc: List[str]) -> None:
+            if isinstance(x, str):
+                if x.strip():
+                    acc.append(x)
+            elif isinstance(x, list):
+                for it in x[:20]:
+                    _gather_strings(it, acc)
+            elif isinstance(x, dict):
+                for i, (_k, _v) in enumerate(list(x.items())[:40]):
+                    _gather_strings(_v, acc)
+        acc2: List[str] = []
+        _gather_strings(obj, acc2)
+        text = "\n\n".join(acc2)
+    return {
+        "id": str(art_id or "").strip(),
+        "title": str(title or "").strip(),
+        "text": str(text or "").strip(),
+        "url": str(url or "").strip(),
+    }
 
 
 def _stream_jsonl_sample(dir_path: str, limit: int = 200) -> List[Dict[str, Any]]:
@@ -135,10 +151,17 @@ def _stream_jsonl_sample(dir_path: str, limit: int = 200) -> List[Dict[str, Any]
                         obj = json.loads(line)
                     except Exception:
                         continue
-                    title, text = _extract_text_from_obj(obj)
-                    if not text or not str(text).strip():
+                    rec = _extract_id_title_text_url(obj)
+                    title = rec.get("title", "")
+                    text = rec.get("text", "")
+                    if not (isinstance(text, str) and text.strip()):
                         continue
-                    rows.append({"title": str(title), "text": str(text)})
+                    rows.append({
+                        "id": rec.get("id", ""),
+                        "url": rec.get("url", ""),
+                        "title": str(title),
+                        "text": str(text),
+                    })
         except Exception:
             continue
     return rows
@@ -589,10 +612,16 @@ def _compute_dspy_baseline(optimized_module: Any, df: pd.DataFrame, cfg: WikiRun
     arch_eval.configure(external_df=df)
     opt_eval = P3O(archetype=arch_eval, verbose=False)
     rewards_accum: List[float] = []
+    dspy_full_predicted_categories: List[str] = []
     for k, out in zip(group_keys, outputs):
         if not isinstance(out, dict) or "response" not in out:
             raise ValueError("LLM output missing 'response' dict")
         structured = out["response"]
+        try:
+            predicted_label = max(cfg.categories, key=lambda c: float(structured.get(c, 0.0)))
+        except Exception:
+            predicted_label = ""
+        dspy_full_predicted_categories.append(predicted_label)
         _, reward, _, *_ = opt_eval._default_expt2_pipeline(k, structured, arch_eval)
         rewards_accum.append(float(reward))
     dspy_full_reward = float(sum(rewards_accum) / max(1, len(rewards_accum)))
@@ -614,6 +643,7 @@ def _compute_dspy_baseline(optimized_module: Any, df: pd.DataFrame, cfg: WikiRun
         "dspy_full_prompt_preview": dspy_full_prompt_preview,
         "dspy_compile_token_estimate": dspy_compile_token_estimate,
         "dspy_total_tokens_estimate": dspy_total_tokens_estimate,
+        "dspy_full_predicted_categories": dspy_full_predicted_categories,
     }
 
 
@@ -685,16 +715,22 @@ def _evaluate_hybrid(optimized_module: Any, opt: P3O, df: pd.DataFrame, cfg: Wik
     arch_h_eval.configure(external_df=df)
     opt_h_eval = P3O(archetype=arch_h_eval, verbose=False)
     hybrid_rewards_accum: List[float] = []
+    hybrid_predicted_categories: List[str] = []
     for k, out in zip(group_keys, hybrid_outputs):
         if not isinstance(out, dict) or "response" not in out:
             raise ValueError("LLM output missing 'response' dict")
         structured = out["response"]
+        try:
+            predicted_label = max(cfg.categories, key=lambda c: float(structured.get(c, 0.0)))
+        except Exception:
+            predicted_label = ""
+        hybrid_predicted_categories.append(predicted_label)
         _, r, _, *_ = opt_h_eval._default_expt2_pipeline(k, structured, arch_h_eval)
         hybrid_rewards_accum.append(float(r))
     hybrid_reward_raw = float(sum(hybrid_rewards_accum) / max(1, len(hybrid_rewards_accum)))
     after_tokens = int(get_tokens()) if callable(get_tokens) else 0
     hybrid_eval_tokens = (after_tokens - before_tokens) if callable(get_tokens) else int(sum(max(1, len(p) // 4) for p in hybrid_prompts))
-    return selected_labels, hybrid_reward_raw, hybrid_eval_tokens
+    return selected_labels, hybrid_reward_raw, hybrid_eval_tokens, hybrid_predicted_categories
 
 
 def _write_summary(cfg: WikiRunConfig,
@@ -806,6 +842,20 @@ def main() -> None:
     cfg = _build_config_from_env()
 
     df = _load_wiki_df(cfg)
+    # Quick verification that extraction produced expected fields
+    try:
+        n_rows = len(df)
+        id_ok = int(df["id"].astype(str).str.strip().ne("").sum()) if "id" in df.columns else 0
+        title_ok = int(df["title"].astype(str).str.strip().ne("").sum()) if "title" in df.columns else 0
+        text_ok = int(df["text"].astype(str).str.strip().ne("").sum()) if "text" in df.columns else 0
+        url_ok = int(df["url"].astype(str).str.strip().ne("").sum()) if "url" in df.columns else 0
+        print(f"Extraction check → rows={n_rows}, id={id_ok}/{n_rows}, title={title_ok}/{n_rows}, text={text_ok}/{n_rows}, url={url_ok}/{n_rows}")
+        if n_rows > 0:
+            sample = df.iloc[0]
+            preview = str(sample.get("text", ""))[:160]
+            print(f"Sample row → id='{sample.get('id','')}', title='{sample.get('title','')}', url='{sample.get('url','')}', text='{preview}'")
+    except Exception:
+        pass
 
     # Few-shot scaffold and DSPy module
     demos = _build_fewshot_demos(df, k=cfg.demo_count)
@@ -843,10 +893,12 @@ def main() -> None:
     dspy_full_prompt_preview = baseline["dspy_full_prompt_preview"]
     dspy_compile_token_estimate = baseline["dspy_compile_token_estimate"]
     dspy_total_tokens_estimate = baseline["dspy_total_tokens_estimate"]
+    dspy_full_predicted_categories = baseline["dspy_full_predicted_categories"]
     dspy_reward_p3o = dspy_full_reward
     dspy_token_estimate_p3o = dspy_full_tokens
+
     # ---------------------------------------------------------------------------------------------------------------
-    # Build Template directly from the DSPy module (explicit in main)
+    # Build Template directly from the DSPy module 
     template = from_predict(
         optimized_module,
         slots=cfg.slots,
@@ -869,13 +921,18 @@ def main() -> None:
         is_p3o_mock = True
     else:
         llm, is_p3o_mock = _select_p3o_llm(cfg)
+
+    # Create the Archetype and P3O optimizer
     arch = Archetype(prompt=template, llm=llm, n_arch=2)
     arch.configure(external_df=df)
     opt = P3O(archetype=arch, verbose=True)
+
+    #Run the P3O optimizer
     batch_size = min(cfg.batch_cap, len(df))
     print("\nRunning P3O (mode=quick)…")
     planned_steps = int(get_exploration_config(cfg.exploration, total_steps=cfg.total_steps).get("steps", 30))
     history = opt.train(mode=cfg.exploration, steps=planned_steps, log_interval=1, batch_size=batch_size)
+    
     print("Selections:", opt.get_p3o_selections())
     saved_paths = {}
     try:
@@ -897,12 +954,12 @@ def main() -> None:
         tokens_last_step = sum(max(1, len(str(p)) // 4) for p in prompts)
         steps_taken = max(1, len(history))
         hybrid_tokens_est_total = int(tokens_last_step * steps_taken)
+
     hybrid_reward = float(history[-1].get("reward", 0.0)) if history else 0.0
     cost_per_1k = float(os.getenv("GEMINI_COST_PER_1K", "0"))
     hybrid_cost_estimate = (hybrid_tokens_est_total / 1000.0) * cost_per_1k if cost_per_1k > 0 else None
 
-
-    selected_labels, hybrid_reward_raw, hybrid_eval_tokens = _evaluate_hybrid(
+    selected_labels, hybrid_reward_raw, hybrid_eval_tokens, hybrid_predicted_categories = _evaluate_hybrid(
         optimized_module, opt, df, cfg, eval_llm, eval_template, group_keys, max_rows
     )
 
