@@ -89,7 +89,7 @@ class Archetype:
                 setattr(self._prompt, "_external_df", df)
         return self
 
-    def sample(self, kwargs: Dict[str, Any] | None = None, verbose: bool = False) -> torch.Tensor:
+    def sample(self, kwargs: Dict[str, Any] | None = None, verbose: bool = False, batch_size: int = None) -> torch.Tensor:
         """Sample decisions.
         - If broadcast not called: run a single prompt and return (1,)
         - If broadcast called: run group-based prompts over population and return (n_agents,)
@@ -105,11 +105,19 @@ class Archetype:
             # One prompt only
             prompt_list = []
             if isinstance(self._prompt, Template):
-                # If an external_df was configured, generate prompts for all rows
+                # If an external_df was configured, generate prompts for rows (with optional batching)
                 external_df = getattr(self._prompt, "_external_df", None)
                 if external_df is not None:
+                    # Apply batch sampling if specified
+                    row_indices = list(range(len(external_df)))
+                    if batch_size and batch_size < len(external_df):
+                        import random
+                        row_indices = random.sample(row_indices, batch_size)
+                        if verbose:
+                            print(f"Batch sampling: Using {batch_size} jobs out of {len(external_df)} total")
+                    
                     prompt_list = []
-                    for row_idx in range(len(external_df)):
+                    for row_idx in row_indices:
                         # Pre-broadcast: show placeholders for fields not present in external_df
                         base_text = self._prompt.get_base_prompt_manager_template()
                         data = self._prompt.assemble_data(
@@ -163,27 +171,54 @@ class Archetype:
             value = 0.0
             if outputs:
                 out0 = outputs[0]
-                try:
-                    text_value = out0["text"] if isinstance(out0, dict) and "text" in out0 else out0
-                    value = float(text_value)
-                    if verbose:
-                        print(f"Parsed value: {value}")
-                except Exception:
-                    value = 0.0
-                    if verbose:
-                        print(f"Failed to parse, using default: {value}")
+                # Process structured response
+                structured_data = out0["response"]
+                value = sum(float(v) for v in structured_data.values())
+                if verbose:
+                    print(f"Parsed structured value: {value}")
             if verbose:
                 print(f"=== End LLM Call ===\n")
             tensor_out = torch.tensor([value], device=kwargs["device"]).float()
             if len(prompt_list) > 1:
-                try:
-                    vals = []
-                    for out in outputs:
-                        tv = out["text"] if isinstance(out, dict) and "text" in out else out
-                        vals.append(float(tv))
-                    tensor_out = torch.tensor(vals, device=kwargs["device"]).float()
-                except Exception:
-                    pass
+                vals = []
+                for out in outputs:
+                    structured_data = out["response"]
+                    val = sum(float(v) for v in structured_data.values())
+                    vals.append(val)
+                tensor_out = torch.tensor(vals, device=kwargs["device"]).float()
+            # Store data for P3O compatibility (pre-broadcast individual job mode)
+            # Create a mock behavior object to store the required P3O data
+            if not hasattr(self, '_mock_behavior'):
+                from types import SimpleNamespace
+                self._mock_behavior = SimpleNamespace()
+            
+            # Store group data for P3O (each job is treated as its own "group")
+            group_keys = [f"job_{i}" for i in range(len(outputs))]
+            group_outputs = []
+            group_structured = []
+            
+            for out in outputs:
+                structured_data = out["response"]
+                val = sum(float(v) for v in structured_data.values())
+                group_outputs.append(val)
+                group_structured.append(structured_data)
+            
+            # Store in mock behavior for P3O to access
+            self._mock_behavior.last_group_keys = group_keys
+            self._mock_behavior.last_group_outputs = group_outputs  
+            self._mock_behavior.last_group_structured = group_structured
+            
+            # Store slot choices if template has learnable variables
+            if isinstance(self._prompt, Template):
+                slots = self._prompt.create_slots()
+                sampled_choices = {}
+                for name, var in slots.items():
+                    if getattr(var, 'learnable', False):
+                        # Sample choice from variable distribution
+                        idx, _, _ = var.sample_index(self._prompt)
+                        sampled_choices[name] = idx
+                self._mock_behavior.last_slot_choices = sampled_choices
+            
             # Always print meta summary regardless of verbosity
             try:
                 _mean = float(tensor_out.mean().item())
