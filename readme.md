@@ -29,7 +29,7 @@ Many grand challenges like climate change and pandemics emerge from complex inte
 AgentTorch, our open-source platform, makes building and running massive LPMs accessible. It's optimized for GPUs, allowing efficient simulation of large-scale systems. Think PyTorch, but for large-scale agent-based simulations. AgentTorch LPMs have four design principles:
 
 - **Scalability**: AgentTorch models can simulate large-scale populations in
-  seconds on commodity hardware.
+  seconds across commodity hardware to computing cluster.
 - **Differentiability**: AgentTorch models can differentiate through simulations
   with stochastic dynamics and conditional interventions, enabling
   gradient-based optimization.
