@@ -102,7 +102,7 @@ This project is licensed under the GNU Affero General Public License v3.0 (AGPL-
 - You must give appropriate credit and indicate any changes made
 - For full terms, see [LICENSE.md](LICENSE.md) file in this repository
 
-For commercial licensing options or inquiries about using this software in a proprietary product, please reach out to request a license wavier.
+For inquiries about using this software in a proprietary product, please reach out to request a license wavier.
 
 ## Guides and Tutorials
 
