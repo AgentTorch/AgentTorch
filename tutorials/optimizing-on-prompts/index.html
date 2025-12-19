@@ -1,0 +1,863 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Optimizing Prompt Variables with P3O - AgentTorch</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#optimizing-prompt-variables-with-p3o" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AgentTorch" class="md-header__button md-logo" aria-label="AgentTorch" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AgentTorch
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Optimizing Prompt Variables with P3O
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AgentTorch" class="md-nav__button md-logo" aria-label="AgentTorch" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AgentTorch
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Framework Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating-a-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating a Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using the Config API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../processing-a-population/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Customizing the Population
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configure-behavior/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompting LLM as LPM agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integrating-with-beckn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    From Simulation to Reality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating-archetypes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark: Modeling with Archetypes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compare-llm-performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark: Sensitivity to Agent Behaviors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../differentiable-discrete-sampling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Differentiable Discrete Sampling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-optimize-prompts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why optimize prompts?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-p3o-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How P3O works
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How P3O works">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rewards-provider" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rewards Provider
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#targets-provider-optional-alternative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Targets Provider (optional alternative)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#custom-reward-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom reward functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-the-p3o-optimizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using the P3O Optimizer
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="optimizing-prompt-variables-with-p3o">Optimizing Prompt Variables with P3O</h1>
+<p>P3O is a lightweight policy‑gradient (REINFORCE‑style) optimizer that tunes discrete Template Variables (declared with <code>learnable=True</code>) to improve the decisions produced by an <code>Archetype</code>.</p>
+<h3 id="why-optimize-prompts">Why optimize prompts?</h3>
+<p>If you wish to reduce prompt engineering by learning how to present context fields (direct, labeled, descriptive, etc.) or improve task-specific metrics without retraining your LLM, consider using the <strong>Variable</strong> learnable argument and <strong>P3O</strong> import.</p>
+<h3 id="how-p3o-works">How P3O works</h3>
+<p>When defining a Template object, you get to choose which <strong>Variable</strong> objects the P3O optimizer gets to run on. By setting learnable to <strong>True</strong>, you allow P3O to receive these objects from the Template and optimize on them.</p>
+<pre><code class="language-python">age = lm.Variable(desc=&quot;agent age&quot;, learnable=True)
+gender = lm.Variable(desc=&quot;agent gender&quot;, learnable = False)
+</code></pre>
+<p>Each learnable Variable holds trainable logits over a few presentation choices. </p>
+<pre><code class="language-python">#as of right now, they are hard-coded in this format
+# inside Variable.py, example presentation choices:
+  return &quot;&quot;
+  return value
+  return f&quot;{field_name}: {value}&quot;
+  return f&quot;with {value}&quot;
+  return f&quot;The {field_name} is {value}&quot;
+#in the future, it would be possible to add markers to data so p3o can optimize on which specific markers for external data it will sample and choose from rather than being vague presentation choices i.e choosing a certain skill over another
+</code></pre>
+<p>// TODO: Optimize the presentation choices for prompt data.</p>
+<p>When you call <code>arch.sample(...)</code> to obtain predictions per group, you can construct a P3O object to use either:</p>
+<p>Use a Rewards provider: this is your custom reward function. P3O calls it each step with (group_keys, group_preds, arch) and expects a list[float] of rewards (one per group, same order). Use it when you want RL/bandit-style optimization or KPIs without labeled targets.</p>
+<p>Or use a targets provider: this includes target lookup. P3O calls it with (group_keys, arch) and expects a list[float] of targets (one per group). P3O then computes rewards via reward_fn(y, t) (default 1 − (y − t)^2). Use it for supervised-style optimization with labeled targets.</p>
+<p>The sections below will go in-depth in how to use both of these.</p>
+<h4 id="rewards-provider">Rewards Provider</h4>
+<p>Use a rewards provider when you want to optimize for your own objective (KPIs, safety, cost, UX) instead of classic ground‑truth targets. It lets you compute a scalar reward per group from the model’s predictions (and any external signals) without aligning or exposing targets. This is ideal for online feedback, composite metrics, or cases where “ground truth” is undefined.</p>
+<p>This is how you may define a reward function and pass it to P3O.</p>
+<p>Example:</p>
+<pre><code class="language-python">def rewards_provider(group_keys, group_preds, arch):
+    # Simple KPI: reward higher scores closer to 0.5
+    return [1.0 - (y - 0.5)**2 for y in group_preds]
+
+opt = P3O(archetype=arch, rewards_provider=rewards_provider)
+</code></pre>
+<h4 id="targets-provider-optional-alternative">Targets Provider (optional alternative)</h4>
+<p>Define a targets provider when you already have labeled targets and want a reproducible, target‑based objective. It can be helpful when you need to switch or compare reward shapes easily via <code>reward_fn</code> without changing data plumbing. If you prefer clearer auditing of (key → target) mappings versus computing rewards inline, then opt for using a targets provider.</p>
+<p>Provide a targets provider to P3O that returns one float target per group key. P3O combines it with an optional <code>reward_fn(y, t)</code> (default <code>1 - (y - t)**2</code>). </p>
+<p>Signature:</p>
+<pre><code class="language-python">def targets_provider(group_keys: list[str], arch) -&gt; list[float]:
+    ...
+</code></pre>
+<p>Example:</p>
+<pre><code class="language-python">def targets_provider(group_keys, arch):
+    lookup = {&quot;13-2099.01&quot;: 0.73}
+    return [lookup.get(k, 0.0) for k in group_keys]
+
+opt = P3O(archetype=arch, targets_provider=targets_provider, reward_fn=lambda y, t: 1.0 - (y - t)**2,)
+</code></pre>
+<p>Once more, define this only when you already have labeled targets and want a reproducible, target‑based objective.</p>
+<p>Here is an example with pre-defined ground-truth (align targets from a keyed CSV):</p>
+<pre><code class="language-python">import pandas as pd
+
+gt_df = pd.read_csv(&quot;ground_truth.csv&quot;)  # columns: soc_code, willingness
+lookup = {str(r[&quot;soc_code&quot;]): float(r[&quot;willingness&quot;]) for _, r in gt_df.iterrows()}
+
+def targets_provider(group_keys, arch):
+    # Return one target per group in the same order
+    return [lookup.get(str(k), 0.0) for k in group_keys]
+
+opt = P3O(
+    archetype=arch,
+    targets_provider=targets_provider,
+    reward_fn=lambda y, t: 1.0 - (y - t)**2,
+)
+</code></pre>
+<h4 id="custom-reward-functions">Custom reward functions</h4>
+<p>If you want to use a custom rewards function:</p>
+<p>Without targets (fully decoupled): define any reward on (group_keys, group_preds, arch)</p>
+<pre><code class="language-python">def rewards_provider(group_keys, group_preds, arch):
+    # Example: maximize margin above a threshold and penalize variance
+    thr = 0.6
+    base = [max(0.0, y - thr) for y in group_preds]
+    # optional stabilization
+    mean_y = sum(group_preds) / max(1, len(group_preds))
+    var_penalty = 0.1 * sum((y - mean_y)**2 for y in group_preds)
+    return [b - var_penalty for b in base]
+
+opt = P3O(archetype=arch, rewards_provider=rewards_provider)
+</code></pre>
+<p>With targets (supervised-style): keep targets separate and swap the fitness easily</p>
+<pre><code class="language-python">def targets_provider(group_keys, arch):
+    # Pull from a service/DB/cache; one target per group
+    return fetch_targets_for(group_keys)
+
+# Quadratic by default; switch to absolute or custom metric anytime
+opt = P3O(
+    archetype=arch,
+    targets_provider=targets_provider,
+    reward_fn=lambda y, t: 1.0 - abs(y - t),
+)
+</code></pre>
+<p>Notes:
+- If both providers are passed, <code>rewards_provider</code> is used.
+- Keep rewards bounded/normalized for stability (e.g., [0, 1] or [-1, 1]).</p>
+<h3 id="using-the-p3o-optimizer">Using the P3O Optimizer</h3>
+<p>See also: the companion notebook <code>p3o_demo.ipynb</code> in this folder for an end-to-end example of decoupled rewards and targets providers with <code>Archetype</code>.</p>
+<p>Rewards-based variant:</p>
+<pre><code class="language-python">opt = P3O(archetype=arch, rewards_provider=rewards_provider) # create the P3O object and supply your rewards provider
+for i in range(n): #optimization loop runs n times
+  arch.sample(print_examples=0)   # populate last group outputs/keys
+  opt.step()                      # computes rewards, updates Variable logits, and renders optimized Template object  
+  opt.zero_grad() # clears gradients for next iteration
+</code></pre>
+<p>Targets-based variant:</p>
+<pre><code class="language-python">opt = P3O(
+    archetype=arch,
+    targets_provider=targets_provider,
+    reward_fn=lambda y, t: 1.0 - (y - t)**2,
+)
+for i in range(n):
+    arch.sample(print_examples=0)
+    opt.step()
+    opt.zero_grad()
+</code></pre>
+<p>Loop notes:
+- Always call <code>arch.sample()</code> before <code>opt.step()</code> so group keys/preds are fresh.
+- Use <code>print_examples=k</code> during debugging; keep it <code>0</code> for performance runs.
+- If you need to observe choices, set <code>verbose=True</code> in P3O to print selected indices and rewards.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

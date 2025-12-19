@@ -1,0 +1,1116 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Index - AgentTorch</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#runner-flow-base-vs-optimized" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AgentTorch" class="md-header__button md-logo" aria-label="AgentTorch" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AgentTorch
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Index
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AgentTorch" class="md-nav__button md-logo" aria-label="AgentTorch" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AgentTorch
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Framework Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating-a-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating a Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using the Config API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../processing-a-population/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Customizing the Population
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configure-behavior/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompting LLM as LPM agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integrating-with-beckn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    From Simulation to Reality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating-archetypes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark: Modeling with Archetypes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compare-llm-performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark: Sensitivity to Agent Behaviors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../differentiable-discrete-sampling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Differentiable Discrete Sampling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#runner-flow-base-vs-optimized" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Runner Flow: Base vs Optimized
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Runner Flow: Base vs Optimized">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#summary-of-differences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary of Differences
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#basic-pattern-minimal-cpu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic pattern (minimal CPU)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimized-pattern-auto-selects-best-runner-timings-stats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optimized pattern (auto-selects best runner, timings, stats)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#devicesafe-parameter-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Device‑safe parameter updates
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#added-optimizations-optimized-runner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added Optimizations (optimized Runner)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-by-function-mapping-current-runner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Function-by-Function Mapping (current Runner)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use-the-optimized-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to use the optimized pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-the-optimized-runner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using the Optimized Runner
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Using the Optimized Runner">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#running-a-simulation-step-and-collecting-performance-stats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running a simulation step and collecting performance stats
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#devicesafe-parameter-updates_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Device‑safe parameter updates
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#endtoend-script-timing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End‑to‑end script timing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-differences-vs-base-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key differences vs base pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#initialization-differences-vs-base-initializer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Initialization differences vs base Initializer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+  <h1>Index</h1>
+
+<h2 id="runner-flow-base-vs-optimized">Runner Flow: Base vs Optimized</h2>
+<p>This document compares the base Runner usage pattern with the optimized Runner and highlights the practical differences, why they matter, and how to use the optimized path.</p>
+<h3 id="summary-of-differences">Summary of Differences</h3>
+<ul>
+<li><strong>Device awareness:</strong></li>
+<li>Basic: CPU-oriented, no device attribute.</li>
+<li>
+<p>Optimized: Detects CUDA (<code>use_gpu</code>), sets <code>self.device</code>, and routes to GPU/CPU paths.</p>
+</li>
+<li>
+<p><strong>Initialization:</strong></p>
+</li>
+<li>Both: use <code>Initializer.initialize()</code> and record an initial CPU snapshot via <code>to_cpu(self.state)</code>.</li>
+<li>
+<p>Optimized: wires a pooled buffer allocator into transition modules on CUDA (<code>_wire_transition_buffer_allocator</code>).</p>
+</li>
+<li>
+<p><strong>Step execution:</strong></p>
+</li>
+<li>Basic: single <code>step(...)</code> loop with per-substep observe → act → progress, always snapshot to CPU.</li>
+<li>
+<p>Optimized: dispatches to <code>_step_cpu_base</code> (same as basic) or <code>_step_gpu_optimized</code> with vectorization, memory pooling, and reduced transfers.</p>
+</li>
+<li>
+<p><strong>Performance instrumentation:</strong></p>
+</li>
+<li>Basic: none.</li>
+<li>
+<p>Optimized: <code>perf_stats</code> (gpu_to_cpu_transfers, tensor_allocations, memory_reused, vectorized_operations) and <code>get_performance_stats()</code> helper.</p>
+</li>
+<li>
+<p><strong>Parameter updates:</strong></p>
+</li>
+<li>Basic: <code>_set_parameters</code> replaces tensors directly.</li>
+<li>Optimized: <code>_set_parameters</code> ensures replacement tensors are moved to the correct device.</li>
+</ul>
+<h3 id="basic-pattern-minimal-cpu">Basic pattern (minimal CPU)</h3>
+<pre><code class="language-python">from agent_torch.core.executor import Executor
+from agent_torch.core.dataloader import LoadPopulation
+
+from agent_torch.models import covid
+from agent_torch.populations import astoria
+
+pop_loader = LoadPopulation(astoria)
+simulation = Executor(model=covid, pop_loader=pop_loader)
+runner = simulation.runner
+
+runner.init()
+runner.step(runner.config[&quot;simulation_metadata&quot;][&quot;num_steps_per_episode&quot;])
+</code></pre>
+<h3 id="optimized-pattern-auto-selects-best-runner-timings-stats">Optimized pattern (auto-selects best runner, timings, stats)</h3>
+<pre><code class="language-python">from agent_torch.core.executor import Executor
+from agent_torch.core.dataloader import LoadPopulation, DataLoader
+from agent_torch.models import covid
+from agent_torch.populations import astoria
+import time
+
+# Setup
+t0 = time.perf_counter()
+pop_loader = LoadPopulation(astoria)
+dl = DataLoader(covid, pop_loader)  # lets Executor pick an optimized Runner when available
+simulation = Executor(model=covid, data_loader=dl)
+runner = simulation.runner
+
+runner.init()
+
+# Simulate and optionally print perf stats
+num_steps = runner.config[&quot;simulation_metadata&quot;][&quot;num_steps_per_episode&quot;]
+runner.step(num_steps)
+if hasattr(runner, 'get_performance_stats'):
+    stats = runner.get_performance_stats()
+    print(&quot;\nPerformance Stats:&quot;)
+    for k, v in stats.items():
+        print(f&quot;   {k}: {v}&quot;)
+</code></pre>
+<h3 id="devicesafe-parameter-updates">Device‑safe parameter updates</h3>
+<pre><code class="language-python"># Ensure new tensors match runner.device when setting parameters directly
+device = runner.device
+new_tensor = torch.tensor([3.5, 4.2, 5.6], requires_grad=True, device=device)
+
+param_path = &quot;initializer.transition_function.0.new_transmission.learnable_args.R2&quot;
+runner._set_parameters({param_path: new_tensor})
+</code></pre>
+<h3 id="added-optimizations-optimized-runner">Added Optimizations (optimized Runner)</h3>
+<ol>
+<li>Device awareness and snapshot stream</li>
+<li>Fields: <code>_snapshot_stream</code>, <code>_batch_size</code>, <code>_pool_limit_per_shape</code>, <code>_inplace_progress</code></li>
+<li>
+<p>Purpose: manage memory and transfers efficiently and asynchronously when supported</p>
+</li>
+<li>
+<p>Memory pooling and reuse</p>
+</li>
+<li><code>_get_pooled_tensor</code>, <code>_return_to_pool</code></li>
+<li>
+<p>Reduces allocations; tracks <code>memory_reused</code> and <code>tensor_allocations</code></p>
+</li>
+<li>
+<p>Vectorized substep processing</p>
+</li>
+<li><code>_process_substep_vectorized</code>, <code>_gpu_optimized_agent_processing</code></li>
+<li>
+<p>Batches observation/action updates over active indices; increments <code>vectorized_operations</code></p>
+</li>
+<li>
+<p>Active-set detection</p>
+</li>
+<li>
+<p><code>_compute_active_indices</code> identifies which agents to process (e.g., by disease stage)</p>
+</li>
+<li>
+<p>Snapshot compression</p>
+</li>
+<li>
+<p><code>_compress_state_for_snapshot</code> downcasts/normalizes tensors; uses non-blocking transfers on a dedicated stream</p>
+</li>
+<li>
+<p>Optimized progress</p>
+</li>
+<li><code>_progress_state_optimized</code> placeholder for in-place/vectorized transitions (currently calls controller.progress)</li>
+</ol>
+<h3 id="function-by-function-mapping-current-runner">Function-by-Function Mapping (current Runner)</h3>
+<ul>
+<li><code>init()</code> → initialize and record initial CPU snapshot; wire buffer allocator on CUDA</li>
+<li><code>step(num_steps=None)</code> → dispatch to CPU base or GPU optimized path</li>
+<li><code>_step_cpu_base(...)</code> → mirrors the basic loop</li>
+<li><code>_step_gpu_optimized(...)</code> → vectorization, pooling, snapshot compression, perf counters</li>
+<li><code>_process_substep_vectorized(...)</code>, <code>_gpu_optimized_agent_processing(...)</code> → batched observe/act</li>
+<li><code>_observe_with_batches(...)</code>, <code>_act_with_batches(...)</code>, <code>_process_tensor_active_batched(...)</code> → active-index updates and reuse</li>
+<li><code>_wire_transition_buffer_allocator()</code> → pooled buffer hooks for transitions</li>
+<li><code>_get_pooled_tensor(...)</code>, <code>_return_to_pool(...)</code> → memory pool</li>
+<li><code>get_performance_stats()</code> → perf summary (optimized) or mode (base)</li>
+</ul>
+<h3 id="when-to-use-the-optimized-pattern">When to use the optimized pattern</h3>
+<ul>
+<li>Large populations (tens of thousands of agents)</li>
+<li>CUDA available (GPU compute)</li>
+<li>Need basic performance stats with minimal code changes</li>
+</ul>
+<h2 id="using-the-optimized-runner">Using the Optimized Runner</h2>
+<p>Below is a compact, copy‑pasteable pattern to set up and profile the optimized Runner without referring to any specific examples.</p>
+<pre><code class="language-python">from agent_torch.core.executor import Executor
+from agent_torch.core.dataloader import LoadPopulation, DataLoader
+from agent_torch.models import covid
+from agent_torch.populations import astoria
+import time
+
+def setup(model, population):
+    # Timers
+    t0 = time.perf_counter()
+
+    # Executor + DataLoader → auto-select optimized Runner when available
+    t_loader_start = time.perf_counter()
+    pop_loader = LoadPopulation(population)
+    dl = DataLoader(model, pop_loader)
+    simulation = Executor(model=model, data_loader=dl)
+    t_loader_end = time.perf_counter()
+
+    runner = simulation.runner
+
+    # Time runner.init()
+    t_init_start = time.perf_counter()
+    runner.init()
+    t_init_end = time.perf_counter()
+
+    # Print init timing summary
+    loader_exec_s = t_loader_end - t_loader_start
+    runner_init_s = t_init_end - t_init_start
+    total_init_s = t_init_end - t0
+    print(f&quot;\n Init timings: loader+executor={loader_exec_s:.3f}s, runner.init()={runner_init_s:.3f}s, total={total_init_s:.3f}s&quot;)
+
+    return runner
+</code></pre>
+<h3 id="running-a-simulation-step-and-collecting-performance-stats">Running a simulation step and collecting performance stats</h3>
+<pre><code class="language-python">def simulate(runner):
+    num_steps_per_episode = runner.config[&quot;simulation_metadata&quot;][&quot;num_steps_per_episode&quot;]
+
+    runner.step(num_steps_per_episode)
+    traj = runner.state_trajectory[-1][-1]
+    preds = traj[&quot;environment&quot;][&quot;daily_infected&quot;]
+    loss = preds.sum()
+
+    # Print performance stats if available
+    if hasattr(runner, 'get_performance_stats'):
+        stats = runner.get_performance_stats()
+        print(f&quot;\nPerformance Stats:&quot;)
+        for key, value in stats.items():
+            print(f&quot;   {key}: {value}&quot;)
+
+    return loss
+</code></pre>
+<h3 id="devicesafe-parameter-updates_1">Device‑safe parameter updates</h3>
+<p>When setting learnable parameters directly on substeps, ensure new tensors are on the same device as the Runner.</p>
+<pre><code class="language-python">runner = setup(covid, astoria)
+
+# Get a device‑correct tensor
+device = runner.device
+new_tensor = torch.tensor([3.5, 4.2, 5.6], requires_grad=True, device=device)
+
+# Example: map a dotted path to a learnable parameter and set it
+input_string = &quot;initializer.transition_function.0.new_transmission.learnable_args.R2&quot;
+params_dict = {input_string: new_tensor}
+runner._set_parameters(params_dict)
+</code></pre>
+<h3 id="endtoend-script-timing">End‑to‑end script timing</h3>
+<p>You can also measure total script time and per‑section timings to profile initialization and simulation step performance.</p>
+<pre><code class="language-python">if __name__ == &quot;__main__&quot;:
+    script_t0 = time.perf_counter()
+    runner = setup(covid, astoria)
+
+    sim_t0 = time.perf_counter()
+    loss = simulate(runner)
+    sim_t1 = time.perf_counter()
+    print(f&quot;\nLoss: {loss}&quot;)
+
+    script_t1 = time.perf_counter()
+    print(f&quot;\n Timings: simulation_step={sim_t1 - sim_t0:.3f}s, script_total={script_t1 - script_t0:.3f}s&quot;)
+</code></pre>
+<h3 id="key-differences-vs-base-pattern">Key differences vs base pattern</h3>
+<ul>
+<li>Uses <code>DataLoader</code> so the <code>Executor</code> can choose the best Runner automatically.</li>
+<li>Tracks timings around loader/executor creation and <code>runner.init()</code>.</li>
+<li>Optionally prints performance stats via <code>runner.get_performance_stats()</code>.</li>
+<li>Ensures tensors are created on <code>runner.device</code> when directly setting parameters.</li>
+</ul>
+<p>Use this pattern when you want the fastest available execution and basic profiling hooks with minimal changes to your workflow.</p>
+<h3 id="initialization-differences-vs-base-initializer">Initialization differences vs base Initializer</h3>
+<p>The optimized Initializer accelerates and hardens setup compared to the legacy/base version:</p>
+<ul>
+<li>Device resolution and propagation</li>
+<li>Base: reads <code>device</code> directly from config</li>
+<li>
+<p>Optimized: supports <code>device: auto</code>, resolves to <code>cuda</code> when available and writes the resolved device back to <code>config["simulation_metadata"]["device"]</code> so downstream code is consistent</p>
+</li>
+<li>
+<p>Streamed host→device transfers (CUDA)</p>
+</li>
+<li>Base: <code>tensor.to(self.device)</code> for every tensor</li>
+<li>
+<p>Optimized: round‑robin CUDA streams + pinned memory + <code>non_blocking=True</code> to overlap copies
+    <code>python
+    def _to_device_streamed(self, cpu_tensor):
+        if not self.is_cuda: return cpu_tensor.to(self.device)
+        s = self._next_stream()
+        if hasattr(cpu_tensor, 'is_pinned') and not cpu_tensor.is_pinned():
+            cpu_tensor = cpu_tensor.pin_memory()
+        with torch.cuda.stream(s):
+            return cpu_tensor.to(self.device, non_blocking=True)</code></p>
+</li>
+<li>
+<p>Centralized device routing</p>
+</li>
+<li>Base: scattered <code>.to(self.device)</code> calls</li>
+<li>
+<p>Optimized: <code>_to_device()</code> routes through the streamed path when on CUDA, used consistently across environment/agents/objects/networks</p>
+</li>
+<li>
+<p>Network adjacency handling</p>
+</li>
+<li>Base: moves <code>edge_list</code>/<code>attr_list</code> directly</li>
+<li>
+<p>Optimized: moves via streamed path and guards tuple structure</p>
+</li>
+<li>
+<p>Clear error behavior for dynamic args</p>
+</li>
+<li>Base: prints a message and returns</li>
+<li>
+<p>Optimized: raises <code>NotImplementedError</code> so misconfigurations fail fast during init</p>
+</li>
+<li>
+<p>ParameterDict state</p>
+</li>
+<li>Base: stores a custom dict; pickling paths vary</li>
+<li>Optimized: tracks <code>nn.ParameterDict</code> for learnables; <code>__getstate__/__setstate__</code> save/restore a real <code>state_dict</code></li>
+</ul>
+<p>These changes collectively reduce init time and make initialization deterministic and observable, especially on GPUs.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

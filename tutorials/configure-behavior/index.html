@@ -1,0 +1,1193 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../processing-a-population/">
+      
+      
+        <link rel="next" href="../integrating-with-beckn/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Prompting LLM as LPM agents - AgentTorch</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#guide-to-prompting-llm-as-abm-agents" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AgentTorch" class="md-header__button md-logo" aria-label="AgentTorch" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AgentTorch
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Prompting LLM as LPM agents
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AgentTorch" class="md-nav__button md-logo" aria-label="AgentTorch" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AgentTorch
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Framework Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating-a-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating a Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using the Config API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../processing-a-population/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Customizing the Population
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompting LLM as LPM agents
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompting LLM as LPM agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-introduction-to-the-framework" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Introduction to the Framework
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-setting-up-your-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Setting Up Your Environment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-understanding-the-core-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Understanding the Core Components
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Understanding the Core Components">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dspyllm-and-langchainllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DspyLLM and LangchainLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#archetype" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Archetype
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-creating-llm-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Creating LLM Agents
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Creating LLM Agents">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-dspy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using DSPy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-langchain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using Langchain
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-generating-population-behaviors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Generating Population Behaviors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-putting-it-all-together" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Putting It All Together
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-next-steps-and-advanced-topics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Next Steps and Advanced Topics
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integrating-with-beckn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    From Simulation to Reality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating-archetypes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark: Modeling with Archetypes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compare-llm-performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark: Sensitivity to Agent Behaviors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../differentiable-discrete-sampling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Differentiable Discrete Sampling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-introduction-to-the-framework" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Introduction to the Framework
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-setting-up-your-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Setting Up Your Environment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-understanding-the-core-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Understanding the Core Components
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Understanding the Core Components">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dspyllm-and-langchainllm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DspyLLM and LangchainLLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#archetype" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Archetype
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-creating-llm-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Creating LLM Agents
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Creating LLM Agents">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-dspy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using DSPy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-langchain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using Langchain
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-generating-population-behaviors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Generating Population Behaviors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-putting-it-all-together" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Putting It All Together
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-next-steps-and-advanced-topics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Next Steps and Advanced Topics
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="guide-to-prompting-llm-as-abm-agents">Guide to Prompting LLM as ABM Agents</h1>
+<p>Welcome to this comprehensive tutorial on AI agent behavior generation! This
+guide is designed for newcomers who want to learn how to create AI agents and
+simulate population behaviors using a custom framework. We'll walk you through
+each step, explaining concepts as we go.</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li><a href="#introduction">Introduction to the Framework</a></li>
+<li><a href="#setup">Setting Up Your Environment</a></li>
+<li><a href="#components">Understanding the Core Components</a></li>
+<li><a href="#first-agent">Creating Your First AI Agent</a></li>
+<li><a href="#behaviors">Generating Population Behaviors</a></li>
+<li><a href="#all-together">Putting It All Together</a></li>
+<li><a href="#next-steps">Next Steps and Advanced Topics</a></li>
+</ol>
+<p><a name="introduction"></a></p>
+<h2 id="1-introduction-to-the-framework">1. Introduction to the Framework</h2>
+<p>Our framework is designed to simulate population behaviors using AI agents. It
+combines several key components:</p>
+<ul>
+<li><strong>LLM Agents</strong>: We use Large Language Models (LLMs) to create intelligent
+  agents that can make decisions based on given scenarios.</li>
+<li><strong>Archetypes</strong>: These represent different types of individuals in a
+  population.</li>
+<li><strong>Behaviors</strong>: These simulate how individuals might act in various situations.</li>
+</ul>
+<p>This framework is particularly useful for modeling complex social or economic
+scenarios, such as population responses during a pandemic.</p>
+<p><a name="setup"></a></p>
+<h2 id="2-setting-up-your-environment">2. Setting Up Your Environment</h2>
+<p>Now, let's set up your OpenAI API key (you'll need an OpenAI account):</p>
+<pre><code class="language-python">OPENAI_API_KEY = None # Replace with your actual API key
+</code></pre>
+<p><a name="components"></a></p>
+<h2 id="3-understanding-the-core-components">3. Understanding the Core Components</h2>
+<p>Let's break down the main components of our framework:</p>
+<h3 id="dspyllm-and-langchainllm">DspyLLM and LangchainLLM</h3>
+<p>These are wrappers around language models that allow us to create AI agents.
+They can process prompts and generate responses based on given scenarios.</p>
+<h3 id="archetype">Archetype</h3>
+<p>This component helps create different "types" of individuals in our simulated
+population. Like Male under 19, Female from 20 to 29 years of age.</p>
+<h3 id="behavior">Behavior</h3>
+<p>The Behavior component simulates how individuals (or groups) might act in
+various situations. It uses the AI agents to generate these behaviors.</p>
+<p>Now you have two AI agents ready to process prompts!</p>
+<h2 id="4-creating-llm-agents">4. Creating LLM Agents</h2>
+<p>We support using Langchain and Dspy backends to initialize LLM instances - for agent and archetypes. Using our <a href="https://github.com/AgentTorch/AgentTorch/blob/1b2a723aa8da4d47f30870af51e87a55cea838b8/agent_torch/core/llm/backend.py#L17">LLMBackend class</a>, you can integrate any framework of your choice.</p>
+<h3 id="using-dspy">Using DSPy</h3>
+<pre><code class="language-python">from dspy_modules import COT, BasicQAWillToWork
+from agent_torch.core.llm.llm import DspyLLM
+
+llm_dspy = DspyLLM(qa=BasicQAWillToWork, cot=COT, openai_api_key=OPENAI_API_KEY)
+llm_dspy.initialize_llm()
+
+output_dspy = llm_dspy.prompt([&quot;You are an individual living during the COVID-19 pandemic. You need to decide your willingness to work each month and portion of your assets you are willing to spend to meet your consumption demands, based on the current situation of NYC.&quot;])
+print(&quot;DSPy Output:&quot;, output_dspy)
+</code></pre>
+<h3 id="using-langchain">Using Langchain</h3>
+<pre><code class="language-python">from agent_torch.core.llm.llm import LangchainLLM
+
+agent_profile = &quot;You are an helpful agent who is trying to help the user make a decision. Give answer as a single number between 0 and 1, only.&quot;
+
+llm_langchian = LangchainLLM(openai_api_key=OPENAI_API_KEY, agent_profile=agent_profile, model=&quot;gpt-3.5-turbo&quot;)
+llm_langchian.initialize_llm()
+
+output_langchain = llm_langchian.prompt([&quot;You are an helpful agent who is trying to help the user make a decision. Give answer as a single number between 0.0 and 1.0, only.&quot;])
+print(&quot;Langchain Output:&quot;, output_langchain)
+</code></pre>
+<p><a name="behaviors"></a></p>
+<h2 id="5-generating-population-behaviors">5. Generating Population Behaviors</h2>
+<p>To simulate population behaviors, we'll use the Archetype and Behavior classes:</p>
+<pre><code class="language-python">from agent_torch.core.llm.archetype import Archetype
+from agent_torch.core.llm.behavior import Behavior
+from agent_torch.populations import NYC
+
+# Create an object of the Archetype class
+# n_arch is the number of archetypes to be created. This is used to calculate a distribution from which the outputs are then sampled.
+archetype = Archetype(n_arch=7)
+
+# Define a prompt template
+# Age,Gender and other attributes which are part of the population data, will be replaced by the actual values of specified region, during the simulation.
+# Other variables like Unemployment Rate and COVID cases should be passed as kwargs to the behavior model.
+user_prompt_template = &quot;Your age is {age} {gender}, unemployment rate is {unemployment_rate}, and the number of COVID cases is {covid_cases}.Current month is {month} and year is {year}.&quot;
+
+# Create a behavior model
+# You have options to pass any of the above created llm objects to the behavior class
+# Specify the region for which the behavior is to be sampled. This should be the name of any of the regions available in the populations folder.
+earning_behavior = Behavior(
+    archetype=archetype.llm(llm=llm_dspy, user_prompt=user_prompt_template, num_agents=12),
+    region=NYC
+)
+
+print(&quot;Behavior model created successfully!&quot;)
+</code></pre>
+<p>This sets up a behavior model that can simulate how 12 different agents might
+behave in NYC during the COVID-19 pandemic.</p>
+<p><a name="all-together"></a></p>
+<h2 id="6-putting-it-all-together">6. Putting It All Together</h2>
+<p>Now, let's use our behavior model to generate some population behaviors:</p>
+<pre><code class="language-python"># Define scenario parameters
+# Names of the parameters should match the placeholders in the user_prompt template
+scenario_params = {
+    'month': 'January',
+    'year': '2020',
+    'covid_cases': 1200,
+    'device': 'cpu',
+    'current_memory_dir': '/path-to-save-memory',
+    'unemployment_rate': 0.05,
+}
+
+# Generate behaviors
+population_behaviors = earning_behavior.sample(scenario_params)
+print(&quot;Population Behaviors:&quot;)
+print(population_behaviors)
+</code></pre>
+<pre><code class="language-python"># Define another scenario parameters
+scenario_params = {
+    'month': 'February',
+    'year': '2020',
+    'covid_cases': 900,
+    'device': 'cpu',
+    'current_memory_dir': '/path-to-save-memory',
+    'unemployment_rate': 0.1,
+}
+
+# Generate behaviors
+population_behaviors = earning_behavior.sample(scenario_params)
+print(&quot;Population Behaviors:&quot;)
+print(population_behaviors)
+</code></pre>
+<pre><code class="language-python"># Define yet another scenario parameters
+scenario_params = {
+    'month': 'March',
+    'year': '2020',
+    'covid_cases': 200,
+    'device': 'cpu',
+    'current_memory_dir': '/path-to-save-memory',
+    'unemployment_rate': 0.11,
+}
+
+# Generate behaviors
+population_behaviors = earning_behavior.sample(scenario_params)
+print(&quot;Population Behaviors:&quot;)
+print(population_behaviors)
+</code></pre>
+<p>And so on...</p>
+<p>This will output a set of behaviors for our simulated population based on the
+given scenario.</p>
+<p><a name="next-steps"></a></p>
+<h2 id="7-next-steps-and-advanced-topics">7. Next Steps and Advanced Topics</h2>
+<p>You've just created your first AI agents and simulated population behaviors.
+Here are some advanced topics you might want to explore next:</p>
+<ul>
+<li>Customizing archetypes for specific populations</li>
+<li>Creating more complex behavior models</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

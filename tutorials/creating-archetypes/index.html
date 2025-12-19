@@ -1,0 +1,1117 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../integrating-with-beckn/">
+      
+      
+        <link rel="next" href="../compare-llm-performance/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Benchmark: Modeling with Archetypes - AgentTorch</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#creating-archetypes" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AgentTorch" class="md-header__button md-logo" aria-label="AgentTorch" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AgentTorch
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Benchmark: Modeling with Archetypes
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AgentTorch" class="md-nav__button md-logo" aria-label="AgentTorch" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AgentTorch
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Framework Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating-a-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating a Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using the Config API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../processing-a-population/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Customizing the Population
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configure-behavior/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompting LLM as LPM agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integrating-with-beckn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    From Simulation to Reality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark: Modeling with Archetypes
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark: Modeling with Archetypes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-an-archetype" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is an archetype?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#defining-your-archetype" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Defining your Archetype:
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Defining your Archetype:">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-setting-up-your-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Setting up your LLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-creating-a-prompt-for-archetype-through-a-template-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Creating a prompt for Archetype through a Template object
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-configuring-your-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Configuring your data
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-using-archetype" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4: Using Archetype
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 4: Using Archetype">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-sample-pre-broadcast-vs-post-broadcast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using .sample() pre-broadcast vs post-broadcast
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-broadcast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using .broadcast()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compare-llm-performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark: Sensitivity to Agent Behaviors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../differentiable-discrete-sampling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Differentiable Discrete Sampling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-an-archetype" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is an archetype?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#defining-your-archetype" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Defining your Archetype:
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Defining your Archetype:">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-setting-up-your-llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Setting up your LLM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-creating-a-prompt-for-archetype-through-a-template-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Creating a prompt for Archetype through a Template object
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-configuring-your-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Configuring your data
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-using-archetype" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4: Using Archetype
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 4: Using Archetype">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-sample-pre-broadcast-vs-post-broadcast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using .sample() pre-broadcast vs post-broadcast
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-broadcast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using .broadcast()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="creating-archetypes">Creating Archetypes</h1>
+<p>This page shows how a user can build a useful archetype in minutes.</p>
+<h2 id="what-is-an-archetype">What is an archetype?</h2>
+<p>An archetype is a plug‑in decision module that turns agent context into a single numeric decision each step. It has a basic surface: <code>configure(...)</code>, <code>broadcast(...)</code>, <code>sample(...)</code>. It’s backend‑agnostic: you can use rules, extend the skeleton class <code>MockLLM</code>, or bring in your own LLM to evaluate decisions.</p>
+<p>Setup:</p>
+<pre><code class="language-python">import agent_torch.core.llm.template as lm
+from agent_torch.core.llm.archetype import Archetype
+</code></pre>
+<h2 id="defining-your-archetype">Defining your Archetype:</h2>
+<p>Archetype is created with a prompt, LLM object, and an n_arch parameter which is the number of archetypes to be created. This is used to calculate a distribution from which the outputs are then sampled.</p>
+<p>Example:</p>
+<pre><code class="language-python">llm = MockLLM()
+archetype_n_2  = Archetype(prompt=&quot;Your age is {age}...&quot;, llm=llm, n_arch=2)
+archetype_n_12 = Archetype(prompt=&quot;Your age is {age}...&quot;, llm=llm, n_arch=12)
+</code></pre>
+<h3 id="step-1-setting-up-your-llm">Step 1: Setting up your LLM</h3>
+<p>First, let us set up the LLM. You can use any LLM of your choosing, provided you implement a <strong>call</strong> hook. This is the ony hook that is <strong>REQUIRED</strong>. </p>
+<pre><code class="language-python">class MyLLM:
+    # optional:
+    def initialize_llm(self):
+        return self 
+    def __call__(self, prompt_inputs):
+        # prompt_inputs: [{&quot;agent_query&quot;: str, &quot;chat_history&quot;: [...]}, ...]
+        # Return float-convertible outputs; you own parsing/validation
+        return [&quot;...&quot; for _ in prompt_inputs]
+</code></pre>
+<p>Optional:</p>
+<ul>
+<li>If your LLM exposes <code>initialize_llm(self)</code>, Archetype will call it on construction. Use it to configure your environment/API keys if needed.</li>
+<li>Use the <strong>call</strong> hook when your LLM wrapper is directly callable, or modify the <strong>prompt</strong> hook for SDKs that expose a named method instead.</li>
+</ul>
+<p>Additionally, you can extend the <code>MockLLM</code> class to overload these hooks and implement your LLM like so:</p>
+<pre><code class="language-python">from agent_torch.core.llm.mock_llm import MockLLM
+
+class MyLLM(MockLLM):
+    # Optional: run any one-time setup (keys, clients, etc.)
+    def initialize_llm(self):
+        self.client = SomeSDK(api_key=os.getenv(&quot;API_KEY&quot;))
+        return self
+
+    # Preferred entrypoint: make the wrapper callable
+    # prompt_list: list[{&quot;agent_query&quot;: str, &quot;chat_history&quot;: list}]
+    # return: list[str] or list[{&quot;text&quot;: str}] of same length
+    def __call__(self, prompt_list):
+        outputs = []
+        for item in prompt_list:
+            query = item.get(&quot;agent_query&quot;, &quot;&quot;)
+            history = item[&quot;chat_history&quot;] 
+            # Replace this with your SDK call and parsing
+            score = self._rng.uniform(self.low, self.high)
+            outputs.append({&quot;text&quot;: f&quot;{score:.3f}&quot;})
+        return outputs
+
+    # If your SDK exposes a named method instead of __call__, implement prompt(...)
+    # Archetype will fall back to this if __call__ is missing.
+    # def prompt(self, prompt_list):
+    #     return self.__call__(prompt_list)
+</code></pre>
+<p>I/O contract:</p>
+<p>Input: A list of items, one per prompt in the form: {"agent_query": str, "chat_history": list}. Chat history can be [] if you do not wish to use the memory handler.</p>
+<p>Output: a list of the same length, one result per input, in the same order.
+Each result must be float-convertible (you manage formatting/validation).
+Preferred: return strings like "0.12" (or floats like 1.23).
+Also accepted: dicts with a "text" key, e.g., {"text": "321.0"}.
+Archetype parses to floats and returns a torch tensor.</p>
+<h3 id="step-2-creating-a-prompt-for-archetype-through-a-template-object">Step 2: Creating a prompt for Archetype through a Template object</h3>
+<p>The prompt field for archetype will accept either a simple string template or Template object. </p>
+<p>String template example:</p>
+<pre><code class="language-python">arch = Archetype(prompt=&quot;Your age is {age}, gender is {gender}, and you are deciding whether to isolate or not.&quot;, llm=MyLLM(), n_arch=1)
+</code></pre>
+<p>However, when you have external data and you want to optimize on prompts, consider extending the Template class. The Template class defines how to turn agent and external context data into a single prompt for the LLM.</p>
+<p>Here is an example dataframe:</p>
+<pre><code class="language-python">import pandas as pd
+
+df = pd.DataFrame({
+    &quot;Salary&quot;: [65000, 43000, 120000],
+    &quot;Work_Week_Hours&quot;: [60, 40, 80],
+    &quot;Satisfaction_Level&quot;: [&quot;Not satisfied&quot;, &quot;Partially satisfied&quot;, &quot;Very satisfied&quot;]
+})
+</code></pre>
+<p>To create a template class extension that utilizes this dataframe, first create Variable objects to encapsulate them.
+Variable objects mark placeholders and allow you to make them learnable for further optimization down the line (see <a href="../optimizing-on-prompts/">Optimizing Prompt Variables with P3O</a>).</p>
+<p>The "desc" field is used for metadata regarding the slot. Set learnable to True when considering prompt optimizations, else set it to False. Additionally, if you are uncertain if data for a particular row/attribute exists, you may use the default field to specify what the default placeholder value should be (OPTIONAL).</p>
+<p>Ex.</p>
+<pre><code class="language-python"># lm is an alias for template
+salary = lm.Variable(desc=&quot;salary&quot;) # # by default, sets learnable to False, default param is set to an empty string
+work_week = lm.Variable(desc=&quot;hours worked in a week&quot;, learnable=True)
+satisfaction = lm.Variable(desc=&quot;categorical satisfaction levels&quot;, learnable=False, default=&quot;unknown satisfaction&quot;)
+</code></pre>
+<hr />
+<p>//todo: population helpers are not implemented yet.</p>
+<p>Note: Variable objects are not limited to exclusively external data; Variable objects may reference population attributes as well, where Template will infer the data source. To view what population attributes exist, load a population like so, and then use the <strong>.view()</strong> utility:</p>
+<pre><code class="language-python">from agent_torch.populations import astoria
+astoria.view() # prints all attributes relevant attributes with sample values
+</code></pre>
+<p>You can then register Variable objects to the attributes you determine are relevant.</p>
+<pre><code class="language-python">age = lm.Variable(desc = age) # sets learnable = False, default to ''
+</code></pre>
+<hr />
+<p>Then when extending template, reference the Variable objects in the <strong>prompt</strong> hook.</p>
+<pre><code class="language-python">class MyTemplate(lm.Template):
+
+    def __prompt__(self):
+        #set prompt_string field
+        self.prompt_string = &quot;I work for {work_week}, and get paid {salary}. I am {satisfaction} with my current job.&quot;
+
+</code></pre>
+<p>When considering higher level instructions such as a system prompt and output prompt, reference <strong>system_prompt</strong> and the <strong>output_prompt</strong> hook. These are purely optional and will default to empty strings if not used. </p>
+<pre><code class="language-python">#inside MyTemplate
+def __system_prompt__(self):
+    return &quot;Consider the following variables and determine your willingness to isolate.&quot;
+def __output__(self):
+    return &quot;Answer on a scale from 0 - 1.0.&quot;
+</code></pre>
+<p>The Template object assembles them in order of: system_prompt -&gt; prompt -&gt; output_prompt for the LLM.
+Once this is set up, you can integrate your newly configured Template into Archetype.</p>
+<p>Here is an example of it put together:</p>
+<pre><code class="language-python">import agent_torch.core.llm.template as lm
+
+class MyTemplate(lm.Template):
+    salary = lm.Variable(desc=&quot;salary&quot;)
+    work_week = lm.Variable(desc=&quot;hours worked in a week&quot;, learnable=True)
+    satisfaction = lm.Variable(desc=&quot;categorical satisfaction levels&quot;, learnable=False, default=&quot;unknown satisfaction&quot;)
+
+    def __system_prompt__(self):
+        return &quot;Consider the following variables and determine your willingness to isolate.&quot;
+
+    def __prompt__(self):
+        self.prompt_string = &quot;I work for {work_week} hours, and get paid ${salary}. I am {satisfaction} with my current job.&quot;
+
+    def __output__(self):
+        return &quot;Answer on a scale from 0 - 1.0.&quot;
+
+
+arch = Archetype(prompt=MyTemplate(), llm=MockLLM(), n_arch=3)
+
+# Example of a filled LLM prompt:
+# -------------------------------
+'''
+&quot;Consider the following variables and determine your willingness to isolate.
+I work for 60 hours and get paid $65000. I am Not Satisfied with my current job.
+Answer on a scale from 0-1.0.&quot;
+'''
+</code></pre>
+<h3 id="step-3-configuring-your-data">Step 3: Configuring your data</h3>
+<p>This step is crucial in ensuring your data is fully compatible and wired to the Archetype object. 
+Utilize the .configure method to set your external data to the archetype. If you want extra flexibility for testing, use the split parameter to selectively choose how many rows to feed from.</p>
+<pre><code class="language-python">arch.configure(external_df=df)
+arch.configure(external_df=df, split=2)  # Only takes the first 2 rows of the df
+</code></pre>
+<h3 id="step-4-using-archetype">Step 4: Using Archetype</h3>
+<p>Archetype contains sampling and broadcasting functionalities. Use .sample when you want a quick preview of how your external data prompts might look, when you may not necessarily need per-agent outputs yet. Use .broadcast when you want to bind to a population for one value per agent in a given population. </p>
+<h4 id="using-sample-pre-broadcast-vs-post-broadcast">Using .sample() pre-broadcast vs post-broadcast</h4>
+<p>It is advisable to call .sample before calling .broadcast to determine if prompts are correctly configured for your external data source.</p>
+<p>When sampling from Archetype pre-broadcast call (if your data is configured correctly), it will render one prompt per dataframe row and produce a tensor in the shape of (n_rows,). If data is configured incorrectly or .configure() was not called, .sample() will return a shape of (1,). If split=k was called during configure, it will return a tensor in the shape of (k,).</p>
+<p>When using .sample(), use <code>verbose = True</code> to carefully inspect prompts. Note that when calling sample before binding to a population, population fields (such as age, gender, supplied by the population module) will remain as placeholders as archetype has not been bounded to a population yet. Only after broadcast is called, will it fill in the full prompt.</p>
+<pre><code class="language-python">arch.sample()  # no prompt printing
+#OR
+arch.configure(df, split = k)
+arch.sample(verbose=True)  # prints k prompts
+</code></pre>
+<p>After you have used .broadcast(), you can call sample again to receive per-agent outputs in the shape of a (n_agents,) tensor.</p>
+<h4 id="using-broadcast">Using .broadcast()</h4>
+<p>If you would like to broadcast the prompts to a wider population, use the .broadcast() method.
+It expects a population object to broadcast to, a match_on argument to determine the proper key from the external dataframe for each agent, and a group-on argument which determines which batching key to use. By default, if the group-on is not specified, the group_on key will default to match_on. </p>
+<p>First, import your population.</p>
+<pre><code class="language-python">from agent_torch.populations import astoria
+</code></pre>
+<p>Then determine what your external data should "match_on" to. If your external data contains n_rows for each n_agents in a population on a per-agent basis, disregard match_on. By default, if a match_on key is not provided, .broadcast() will index on a per-agent basis (one row in external data assigned to one agent). </p>
+<p>However, <strong>if your dataframe does not cover a per-agent basis</strong>, ensure that:</p>
+<p>The population chosen has a .pkl file which references the key you wish to map to. Template will fill the external data based on that key for each agent, so ensure your dataframe references the exact key. </p>
+<p>Assume we have created a Job_Number.pkl file in the "astoria" population which contain the numbers 1, 2, 3 and matches them across n_agents.</p>
+<p>In your dataframe, add a Job_Number column:</p>
+<pre><code class="language-python">df = pd.DataFrame({
+    &quot;Job_Number&quot;: [1,2,3], # Job 1 matches to an agent with the attributes: (salary, 65000), (Work_Week_Hours, 60), (Satisfaction_Level, &quot;Not Satisfied&quot;)
+    &quot;Salary&quot;: [65000, 43000, 120000],
+    &quot;Work_Week_Hours&quot;: [60, 40, 80],
+    &quot;Satisfaction_Level&quot;: [&quot;Not satisfied&quot;, &quot;Partially satisfied&quot;, &quot;Very satisfied&quot;]
+})
+'''
+call broadcast on astoria, mapping external data to Job_Number attribute in agent data. Broadcast binds the population and joins external data by Job_Number. 
+'''
+arch.broadcast(astoria, match_on=&quot;Job_Number&quot;)
+</code></pre>
+<p>Lastly, consider how to batch/group your prompts with an explicit group_on argument. The group_on argument creates buckets with the given keys, so that all agents in the same bucket share one prompt and receive the same score. Use a single key (e.g., "Job_Number") or a list (e.g., ["Job_Number", "Age"]). This reduces duplicate LLM calls, speeds up runs, and keeps decisions consistent for identical contexts.</p>
+<p>Examples of broadcast calls:</p>
+<pre><code class="language-python">arch.broadcast(population=astoria, match_on=&quot;Job_Number&quot;)  # groups based on match_on argument aka Job_Number
+arch.broadcast(population=astoria, match_on=&quot;Job_Number&quot;, group_on = &quot;Age&quot;)         # any agent with the same age is put into a bucket
+arch.broadcast(population=astoria, match_on=&quot;Job_Number&quot;, group_on = [&quot;Age&quot;, &quot;Job_Number&quot;])  # same age AND job_number share a bucket
+</code></pre>
+<p>Call .sample after calling .broadcast to execute on the buckets created. This step is necessary to execute if you want to receive an (n_agents,) decision tensor.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
