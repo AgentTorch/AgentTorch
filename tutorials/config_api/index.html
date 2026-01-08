@@ -1,0 +1,1262 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../creating-a-model/">
+      
+      
+        <link rel="next" href="../processing-a-population/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Using the Config API - AgentTorch</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#agenttorch-configuration-api-tutorial" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AgentTorch" class="md-header__button md-logo" aria-label="AgentTorch" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AgentTorch
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Using the Config API
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AgentTorch" class="md-nav__button md-logo" aria-label="AgentTorch" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AgentTorch
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Framework Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating-a-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating a Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using the Config API
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using the Config API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#basic-usage-movement-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Usage: Movement Simulation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Basic Usage: Movement Simulation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#project-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project Structure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setting-up-the-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setting Up the Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1-simulation-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Simulation Metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-state-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. State Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-substep-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Substep Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-manual-substep-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Manual Substep Implementation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-setting-up-module-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Setting Up Module Structure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-running-the-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Running the Simulation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-usage-automatic-substep-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced Usage: Automatic Substep Generation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#more-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        More Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../processing-a-population/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Customizing the Population
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configure-behavior/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompting LLM as LPM agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integrating-with-beckn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    From Simulation to Reality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating-archetypes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark: Modeling with Archetypes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compare-llm-performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark: Sensitivity to Agent Behaviors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../differentiable-discrete-sampling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Differentiable Discrete Sampling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#basic-usage-movement-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Usage: Movement Simulation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Basic Usage: Movement Simulation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#project-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project Structure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setting-up-the-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setting Up the Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1-simulation-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Simulation Metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-state-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. State Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-substep-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Substep Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-manual-substep-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Manual Substep Implementation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-setting-up-module-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Setting Up Module Structure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-running-the-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Running the Simulation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-usage-automatic-substep-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced Usage: Automatic Substep Generation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#more-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        More Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="agenttorch-configuration-api-tutorial">AgentTorch Configuration API Tutorial</h1>
+<p>This tutorial will guide you through using AgentTorch's Configuration API to set up simulations. We'll use a simple movement simulation as our primary example and then explore advanced features.</p>
+<h2 id="basic-usage-movement-simulation">Basic Usage: Movement Simulation</h2>
+<p>Let's create a simulation where agents move randomly within a bounded space. The full code is available <a href="../../../agent_torch/examples/models/movement/">here</a>. This example demonstrates the core concepts of AgentTorch's configuration system.</p>
+<h3 id="project-structure">Project Structure</h3>
+<pre><code>agent_torch/examples/models/movement/
+├── __init__.py
+├── substeps/
+│   ├── __init__.py
+│   ├── random_move.py
+│   └── update_position.py
+└── yamls/
+    └── config.yaml
+</code></pre>
+<h3 id="setting-up-the-configuration">Setting Up the Configuration</h3>
+<p>First, import the necessary builders:</p>
+<pre><code class="language-python">from agent_torch.config import (
+    ConfigBuilder,
+    StateBuilder,
+    AgentBuilder,
+    PropertyBuilder,
+    EnvironmentBuilder,
+    SubstepBuilder,
+    PolicyBuilder,
+    TransitionBuilder
+)
+</code></pre>
+<h3 id="1-simulation-metadata">1. Simulation Metadata</h3>
+<p>Define the basic simulation parameters (note that all these are REQUIRED PARAMETERS):</p>
+<pre><code class="language-python">metadata = {
+    &quot;num_agents&quot;: 1000,
+    &quot;num_episodes&quot;: 10,
+    &quot;num_steps_per_episode&quot;: 20,
+    &quot;num_substeps_per_step&quot;: 1,
+    &quot;device&quot;: &quot;cpu&quot;,
+    &quot;calibration&quot;: False # if learnable parameters will be optimized externally [more details in gradient-based calibration tutorial]
+}
+config.set_metadata(metadata)
+</code></pre>
+<h3 id="2-state-configuration">2. State Configuration</h3>
+<p>Configure the simulation state including agents and environment:</p>
+<pre><code class="language-python"># Build state
+state_builder = StateBuilder()
+
+# Add agent with position property
+agent_builder = AgentBuilder(&quot;citizens&quot;, metadata[&quot;num_agents&quot;])
+position = PropertyBuilder(&quot;position&quot;)\
+    .set_dtype(&quot;float&quot;)\
+    .set_shape([metadata[&quot;num_agents&quot;], 2])\
+    .set_value([0.0, 0.0])
+agent_builder.add_property(position)
+state_builder.add_agent(&quot;citizens&quot;, agent_builder)
+
+# Add environment bounds
+env_builder = EnvironmentBuilder()
+bounds = PropertyBuilder(&quot;bounds&quot;)\
+    .set_dtype(&quot;float&quot;)\
+    .set_shape([2])\
+    .set_value([100.0, 100.0])
+env_builder.add_variable(bounds)
+state_builder.set_environment(env_builder)
+
+# Set state in config
+config.set_state(state_builder.to_dict())
+</code></pre>
+<h3 id="3-substep-configuration">3. Substep Configuration</h3>
+<p>Define the simulation substeps with their policies and transitions:</p>
+<pre><code class="language-python"># Create movement substep
+movement = SubstepBuilder(&quot;Movement&quot;, &quot;Agent movement simulation&quot;)
+movement.add_active_agent(&quot;citizens&quot;)
+movement.config[&quot;observation&quot;] = {&quot;citizens&quot;: None}
+
+# Add movement policy
+policy = PolicyBuilder()
+step_size = PropertyBuilder.create_argument(
+    name=&quot;Step size parameter&quot;,
+    value=1.0,
+    learnable=True
+).config
+
+policy.add_policy(
+    &quot;move&quot;,
+    &quot;RandomMove&quot;,
+    {&quot;position&quot;: &quot;agents/citizens/position&quot;},
+    [&quot;direction&quot;],
+    {&quot;step_size&quot;: step_size}
+)
+movement.set_policy(&quot;citizens&quot;, policy)
+
+# Add movement transition
+transition = TransitionBuilder()
+bounds_param = PropertyBuilder.create_argument(
+    name=&quot;Environment bounds&quot;,
+    value=[100.0, 100.0],
+    shape=[2],
+    learnable=True
+).config
+
+transition.add_transition(
+    &quot;update_position&quot;,
+    &quot;UpdatePosition&quot;,
+    {&quot;position&quot;: &quot;agents/citizens/position&quot;},
+    [&quot;position&quot;],
+    {&quot;bounds&quot;: bounds_param}
+)
+movement.set_transition(transition)
+
+# Add substep to config and save
+config.add_substep(&quot;0&quot;, movement)
+config.save_yaml(&quot;models/movement/yamls/config.yaml&quot;)
+</code></pre>
+<h3 id="4-manual-substep-implementation">4. Manual Substep Implementation</h3>
+<p>The substeps can be implemented manually as Python classes. Here's an example of the movement policy:</p>
+<pre><code class="language-python">@Registry.register_substep(&quot;move&quot;, &quot;policy&quot;)
+class RandomMove(SubstepAction):
+    def forward(self, state: Dict[str, Any], observations) -&gt; Dict[str, Any]:
+        positions = get_var(state, self.input_variables[&quot;position&quot;])
+        num_agents = positions.shape[0]
+
+        # Get step size from learnable arguments
+        self.step_size = self.learnable_args[&quot;step_size&quot;]
+
+        # Generate random angles and directions
+        angles = torch.rand(num_agents) * 2 * torch.pi
+        direction = torch.stack([
+            torch.cos(angles) * self.step_size,
+            torch.sin(angles) * self.step_size
+        ], dim=1)
+
+        # Return using output variable name from config
+        outputs = {}
+        outputs[self.output_variables[0]] = direction
+        return outputs
+</code></pre>
+<h3 id="5-setting-up-module-structure">5. Setting Up Module Structure</h3>
+<p>The substeps need to be properly imported and registered. This is done through <code>__init__.py</code> files:</p>
+<pre><code class="language-python"># models/movement/substeps/__init__.py
+&quot;&quot;&quot;Substep implementations for movement simulation.&quot;&quot;&quot;
+from .random_move import *
+from .update_position import *
+</code></pre>
+<pre><code class="language-python"># models/movement/__init__.py
+&quot;&quot;&quot;Movement simulation model.&quot;&quot;&quot;
+from agent_torch.core import Registry
+from agent_torch.core.helpers import *
+
+from .substeps import *
+
+# Create and populate registry as a module-level variable
+registry = Registry()
+</code></pre>
+<p>These files ensure that:
+1. All substep implementations are imported when the movement module is imported
+2. The registry is created at the module level
+3. Substeps are automatically registered via their decorators when imported</p>
+<h3 id="6-running-the-simulation">6. Running the Simulation</h3>
+<p>The movement simulation can be run using:</p>
+<pre><code class="language-python"># run_movement_sim.py
+from agent_torch.populations import sample2
+from agent_torch.examples.models import movement
+from agent_torch.core.environment import envs
+
+def run_movement_simulation():
+    &quot;&quot;&quot;Run the movement simulation.&quot;&quot;&quot;
+    # Create simulation runner
+    runner = envs.create(
+        model=movement,
+        population=sample2
+    )
+
+    # Get simulation parameters
+    sim_steps = runner.config[&quot;simulation_metadata&quot;][&quot;num_steps_per_episode&quot;]
+    num_episodes = runner.config[&quot;simulation_metadata&quot;][&quot;num_episodes&quot;]
+
+    # Run episodes
+    for episode in range(num_episodes):
+        if episode &gt; 0:
+            runner.reset()
+        runner.step(sim_steps)
+
+        # Print statistics
+        positions = runner.state[&quot;agents&quot;][&quot;citizens&quot;][&quot;position&quot;]
+        print(f&quot;Episode {episode + 1} - Average position: {positions.mean(dim=0)}&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    runner = run_movement_simulation()
+</code></pre>
+<p>To run the simulation:</p>
+<pre><code class="language-bash">python -m agent_torch.examples.run_movement_sim
+</code></pre>
+<h2 id="advanced-usage-automatic-substep-generation">Advanced Usage: Automatic Substep Generation</h2>
+<p>Instead of writing substeps manually, AgentTorch provides <code>SubstepBuilderWithImpl</code> to automatically generate implementation templates. Let's see how we could have used it for our movement example:</p>
+<pre><code class="language-python">from agent_torch.config import SubstepBuilderWithImpl
+
+# Create substep with implementation generation
+movement_substep = SubstepBuilderWithImpl(
+    name=&quot;Movement&quot;, 
+    description=&quot;Agent movement simulation&quot;,
+    output_dir=&quot;models/movement/substeps&quot;
+)
+movement_substep.add_active_agent(&quot;citizens&quot;)
+movement_substep.config[&quot;observation&quot;] = {&quot;citizens&quot;: None}
+
+# Add same policy and transition configurations
+policy = PolicyBuilder()
+policy.add_policy(
+    &quot;move&quot;,
+    &quot;RandomMove&quot;,
+    {&quot;position&quot;: &quot;agents/citizens/position&quot;},
+    [&quot;direction&quot;],
+    {&quot;step_size&quot;: step_size}
+)
+movement_substep.add_policy(&quot;citizens&quot;, policy)
+
+transition = TransitionBuilder()
+transition.add_transition(
+    &quot;update_position&quot;,
+    &quot;UpdatePosition&quot;,
+    {&quot;position&quot;: &quot;agents/citizens/position&quot;},
+    [&quot;position&quot;],
+    {&quot;bounds&quot;: bounds_param}
+)
+movement_substep.set_transition(transition)
+
+# Generate implementation files
+generated_files = movement_substep.generate_implementations()
+</code></pre>
+<p>This will generate template files for both <code>random_move.py</code> and <code>update_position.py</code> with:
+- Proper imports and class structure
+- Registry decorators
+- Input/output variable handling
+- TODO sections for implementation logic</p>
+<p>You would then only need to fill in the forward logic in the TODO sections.</p>
+<h2 id="more-examples">More Examples</h2>
+<p>For a more complex example, check out the COVID-19 simulation in <code>agent_torch/examples/models/covid/</code>. This example demonstrates:
+- Multiple substeps with complex interactions
+- Custom observation and reward functions
+- Network-based agent interactions
+- Advanced use of learnable parameters</p>
+<p>You can run it with:</p>
+<pre><code class="language-bash">python -m agent_torch.examples.run_covid_sim
+</code></pre>
+<h2 id="best-practices">Best Practices</h2>
+<ol>
+<li>
+<p><strong>Metadata</strong>: Always include required fields like <code>num_agents</code>, <code>num_episodes</code>, <code>num_steps_per_episode</code>, and <code>num_substeps_per_step</code>.</p>
+</li>
+<li>
+<p><strong>PropertyBuilder Arguments</strong>: Use <code>PropertyBuilder.create_argument()</code> for learnable parameters, and access them in substeps via <code>self.learnable_args</code> or <code>self.arguments</code> (if not learnable).</p>
+</li>
+<li>
+<p><strong>Output Variables</strong>: Always use <code>self.output_variables[index]</code> as dictionary keys when returning from substep forward methods to ensure consistency with the configuration.</p>
+</li>
+<li>
+<p><strong>Observation Structure</strong>: When no observation is needed, use <code>{"citizens": None}</code> instead of an empty dict.</p>
+</li>
+<li>
+<p><strong>Implementation Generation</strong>: Use <code>SubstepBuilderWithImpl</code> for complex simulations to automatically generate consistent substep templates. This is especially helpful when you have many substeps or want to ensure consistent structure across your codebase. </p>
+</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,1033 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../compare-llm-performance/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Differentiable Discrete Sampling - AgentTorch</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#differentiable-discrete-sampling-using-agenttorch" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AgentTorch" class="md-header__button md-logo" aria-label="AgentTorch" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AgentTorch
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Differentiable Discrete Sampling
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AgentTorch" class="md-nav__button md-logo" aria-label="AgentTorch" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AgentTorch
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Framework Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating-a-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating a Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using the Config API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../processing-a-population/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Customizing the Population
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configure-behavior/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompting LLM as LPM agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integrating-with-beckn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    From Simulation to Reality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating-archetypes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark: Modeling with Archetypes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compare-llm-performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark: Sensitivity to Agent Behaviors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Differentiable Discrete Sampling
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Differentiable Discrete Sampling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#introduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Introduction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rethinking-discrete-sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rethinking Discrete Sampling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#experiment-1-random-walk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Experiment 1: Random Walk
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Experiment 1: Random Walk">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#experiment-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Experiment Setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#experiment-2-neural-relational-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Experiment 2: Neural Relational Inference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Experiment 2: Neural Relational Inference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#experiment-setup_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Experiment Setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#results_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conclusion
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#introduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Introduction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rethinking-discrete-sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rethinking Discrete Sampling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#experiment-1-random-walk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Experiment 1: Random Walk
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Experiment 1: Random Walk">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#experiment-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Experiment Setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#experiment-2-neural-relational-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Experiment 2: Neural Relational Inference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Experiment 2: Neural Relational Inference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#experiment-setup_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Experiment Setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#results_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conclusion
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="differentiable-discrete-sampling-using-agenttorch">Differentiable Discrete Sampling using AgentTorch</h1>
+<h2 id="introduction">Introduction</h2>
+<p>Discrete sampling poses significant challenges in gradient-based optimization due to its non-differentiable nature, which prevents effective backpropagation. Operations like argmax disrupt gradient flow, leading to high-variance or biased gradient estimates. The Gumbel-Softmax technique addresses this by using a reparameterization trick that adds Gumbel noise to logits and applies a temperature-controlled softmax, enabling differentiable approximations of discrete samples. As the temperature approaches zero, the method produces near-discrete outputs while maintaining gradient flow, making it suitable for integrating discrete sampling into neural networks.</p>
+<h2 id="rethinking-discrete-sampling">Rethinking Discrete Sampling</h2>
+<p>It was assumed that Gumbel softmax solves this problem. However, Gumbel-Softmax has its own limitations. The temperature parameter introduces a bias-variance tradeoff: higher temperatures smooth gradients but deviate from true categorical distributions, while lower temperatures yield near-discrete samples with unstable gradients. Additionally, its continuous approximations may require straight-through estimators, which can introduce bias during backpropagation. These issues make Gumbel-Softmax less effective in tasks requiring precise distribution matching or structured outputs, highlighting the need for further improvements in discrete sampling techniques.</p>
+<p>So we introduce a new method for discrete sampling using the <code>agent_torch.core.distribution.Categorical</code> class. This class provides a differentiable approximation to discrete sampling, allowing for gradient-based optimization while maintaining the integrity of the categorical distribution.</p>
+<p>This estimator can simply be used as follows:</p>
+<pre><code class="language-python">import torch
+from agent_torch.core.distributions import Categorical
+# Define the probabilities for each category
+probs = torch.tensor([0.2, 0.5, 0.3], dtype=torch.float32)
+# Create a Categorical distribution
+sample = Categorical.apply(probs)
+# The sample will be a tensor containing the sampled category
+print(sample)
+</code></pre>
+<p>Let's discuss more about this by seeing its application in various experiments.</p>
+<h2 id="experiment-1-random-walk">Experiment 1: Random Walk</h2>
+<p>Let's implement a 1D markovian random walk X0, X1, ...., Xn using the <code>agent_torch.core.distribution.Categorical</code> sampling method. The agent can move left or right with probabilites:</p>
+<ul>
+<li>Xn+1 = Xn + 1 with probability e^(-Xn/p)</li>
+<li>Xn+1 = Xn - 1 with probability 1 - e^(-Xn/p)</li>
+</ul>
+<p>First, lets import the important modules:</p>
+<pre><code class="language-python">import torch
+import math
+from agent_torch.core.distributions import Categorical
+</code></pre>
+<p>We are interested in studying the asymptotic behavior of the variance of
+our automatically derived gradient estimator, and so set p = n so that the transition function varies appreciably over the range of the walk for all n.</p>
+<p>Let's define the main function:</p>
+<pre><code class="language-python">def random_walk_categorical(n, p, device):
+    x = 0.0  # initial state
+    path = [0.0]
+    for _ in range(n):
+        # Compute the probability of moving up.
+        q = math.exp(-x / p)
+        prob = torch.tensor([q, 1.0 - q], dtype=torch.float32, device=device).unsqueeze(0)  
+        # Sample an action using the custom Categorical function.
+        sample = Categorical.apply(prob)  
+        move = 1 if sample.item() == 0 else -1
+        # if at x==0, a downward move is overridden, since probability for going up is 1.
+        if x == 0 and move == -1:
+            move = 1
+        x += move
+        path.append(x)
+    return path
+</code></pre>
+<p>This random walk can be generated by:</p>
+<pre><code class="language-python">n = 20  # A 20 step simulation
+p = n
+device = torch.device(&quot;cuda&quot; if torch.cuda.is_available() else &quot;cpu&quot;)
+random_path = random_walk_categorical(n,p,device)
+
+# This random walk looks like [0,1,2,1,...]
+</code></pre>
+<p>Having seen how a random walk is implemented using AgentTorch, let's benchmark this against the Gumbel softmax method. The Gumbel softmax method is a differentiable approximation to the categorical distribution, allowing for gradient-based optimization. Let's discuss the experiment setup.</p>
+<h4 id="experiment-setup">Experiment Setup</h4>
+<p>This experiment focuses on the optimization of a parameter θ (theta) embedded within an exponential probability distribution function exp(-(x + θ)/p), which governs the stochastic transition dynamics of our model. The primary objective is to calibrate θ such that the model's behavior closely approximates a baseline implementation, as measured by mean squared error (MSE).</p>
+<p>The methodology involves generating a substantial dataset comprising 1,000 trajectories, each consisting of 100 discrete time steps. This dataset is partitioned following standard machine learning protocols, with 70% allocated for parameter estimation (training) and 30% reserved for out-of-sample validation (testing).</p>
+<p>By systematically adjusting θ, we aim to modulate the underlying probability distribution, thereby altering the likelihood of specific state transitions. This parameter optimization process seeks to minimize the discrepancy between the simulated trajectories and those produced by the baseline model. The efficacy of each candidate value for θ is quantitatively assessed via the MSE metric, which provides a rigorous measure of the deviation between the predicted and reference trajectories.</p>
+<p>This approach enables the fine-tuning of stochastic models to replicate observed phenomena with enhanced precision, with potential applications in various domains including statistical physics, financial modeling, and computational biology.</p>
+<h4 id="results">Results</h4>
+<p>The empirical findings demonstrate that the <code>agent_torch.core.distribution.Categorical</code> approach consistently exhibits superior performance metrics compared to the Gumbel-based method. Specifically, the <code>agent_torch.core.distribution.Categorical</code> method maintains consistently lower Wasserstein distance values across all experimental configurations, indicating better alignment between simulated and baseline distributions. Furthermore, the <code>agent_torch.core.distribution.Categorical</code> approach effectively preserves the variance ratio at approximately unity, which substantiates that the generated trajectories maintain distributional characteristics highly comparable to those of the baseline.</p>
+<p>Although the parameter convergence behavior varies across different initialization points, particularly for initial values of 10.0 and 0.0, the distributional properties of the Categorical method's outputs remain demonstrably superior to those produced by the Gumbel approach. This superiority is quantitatively verified through both lower Wasserstein distance measurements and reduced mean squared error metrics, which collectively indicate that the <code>agent_torch.core.distribution.Categorical</code> method generates distributions with greater fidelity to the baseline distribution regardless of initialization conditions. These results suggest that the <code>agent_torch.core.distribution.Categorical</code> approach provides a more robust framework for distribution matching in this experimental context, maintaining consistent performance advantages across varied experimental configurations.</p>
+<p>These results will further become clear when we plot these random walks. It can clearly be infered that the Gumbel method starts diverging from the baseline and performs poorly on the test dataset.</p>
+<p><img alt="image" src="rwalk.png" />
+<img alt="image" src="rwalk1.png" /></p>
+<p>First, we run the experiment for 100 time-steps and calibrate theta values for both methods. Among the methods, <code>agent_torch.core.distribution.Categorical</code> stays relatively close to the baseline, while the Gumbel-based approach begins to drift early and deviates substantially in the testing region. This suggests that the Categorical method generalizes better across regions and is more stable under extended evaluation.</p>
+<p>Second, we extend the experiment to 1000 steps to examine long-term behavior. Over this longer horizon, the difference becomes even more pronounced. Gumbel's trajectory continues to diverge and accumulates a large positional error, confirming its poor generalization performance. In contrast, <code>agent_torch.core.distribution.Categorical</code> remains much more aligned with the baseline throughout.</p>
+<h2 id="experiment-2-neural-relational-inference">Experiment 2: Neural Relational Inference</h2>
+<p>The neural relational inference experiment is designed to infer and model latent interactions among entities in a dynamic system. In this experiment, a graph-based neural architecture is employed in which a factor graph CNN encoder extracts relational features from observed data, while a learned recurrent interaction net decoder predicts future states by modeling interactions between nodes (or atoms). The goal is to simultaneously learn the underlying relations and use these learned interactions to improve prediction accuracy and interpretability of the system’s dynamics.</p>
+<h4 id="experiment-setup_1">Experiment Setup</h4>
+<p>The NRI experiment specifically focuses on learning to infer interactions in physical systems without supervision. The model is structured as a variational auto-encoder where the latent code represents the underlying interaction graph and the reconstruction is based on graph neural networks. The researchers conducted experiments on simulated physical systems including springs and charged particles. The model is evaluated on its ability to recover ground-truth interactions in these simulated environments, as well as its capacity to find interpretable structure and predict complex dynamics in real-world data such as motion capture and sports tracking data</p>
+<p>Initially, the experiment employed a Gumbel-Softmax approach for discrete sampling. In this setup, the addition of Gumbel noise and a temperature-controlled softmax allowed for differentiable approximations of categorical samples. However, the inherent bias-variance tradeoff—where higher temperatures yield smoother but less discrete gradients, and lower temperatures produce near-discrete but unstable gradients—limits the method's effectiveness. While the negative log-likelihood decreases over epochs, the KL divergence remains relatively low, suggesting insufficient regularization of the discrete structure .</p>
+<p>Recognizing these limitations, the experiment was repeated using our <code>agent_torch.core.distribution.Categorical</code> class. This new estimator directly provides a differentiable approximation for discrete sampling, bypassing some of the drawbacks inherent in the Gumbel-Softmax method. Notably, by more tightly coupling the sampling process to the categorical distribution, the estimator mitigates the bias-variance issue and improves gradient stability during training.</p>
+<h4 id="results_1">Results</h4>
+<p><img alt="acc" src="acc_nri.png" />
+<img alt="kl" src="kl_nri.png" /></p>
+<p>The training logs for the categorical estimator experiment reveal several improvements:</p>
+<ul>
+<li>Stable KL Divergence: The KL divergence values remained consistent from early epochs into convergence. This higher and stable KL value suggests that the model is enforcing a stronger regularization on the inferred discrete relations, leading to a more consistent latent structure.</li>
+<li>Lower Negative Log-Likelihood: While both methods converge to low nll_train values as training proceeds, the categorical estimator maintains comparably low loss values alongside improved training accuracy. </li>
+<li>Improved Predictive Accuracy: The accuracy trends in the logs show that the categorical estimator experiment reaches and sustains higher accuracy levels. The results point to a model that not only fits the data better but also generalizes more effectively—an essential trait when dealing with structured, relational data.</li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<p>This tutorial demonstrated how to implement and use differentiable discrete sampling operations using AgentTorch.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

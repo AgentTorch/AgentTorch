@@ -1,0 +1,968 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Example v2 optimizations - AgentTorch</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#example-v2-runtime-optimizations-explained" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AgentTorch" class="md-header__button md-logo" aria-label="AgentTorch" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AgentTorch
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Example v2 optimizations
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AgentTorch" class="md-nav__button md-logo" aria-label="AgentTorch" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AgentTorch
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Framework Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating-a-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating a Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using the Config API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../processing-a-population/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Customizing the Population
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configure-behavior/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompting LLM as LPM agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integrating-with-beckn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    From Simulation to Reality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating-archetypes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark: Modeling with Archetypes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compare-llm-performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark: Sensitivity to Agent Behaviors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../differentiable-discrete-sampling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Differentiable Discrete Sampling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#example-v2-runtime-optimizations-explained" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example v2: Runtime optimizations explained
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Example v2: Runtime optimizations explained">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-auto-device-selection-cpu-vs-cuda" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) Auto device selection (CPU vs CUDA)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-batch-stepping-reduce-python-overhead" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) Batch stepping (reduce Python overhead)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-targeted-parameter-updates-no-per-parameter-python-loops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5) Targeted parameter updates (no per-parameter Python loops)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-optional-kernelperf-telemetry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7) Optional kernel/perf telemetry
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enginelevel-optimizations-runnerexecutorinitializer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Engine‑level optimizations (Runner/Executor/Initializer)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Engine‑level optimizations (Runner/Executor/Initializer)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#runner-cuda-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Runner (CUDA path)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vectorizedrunner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VectorizedRunner
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#initializer-and-data-residency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Initializer and data residency
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#utils-and-graph-representation-gpu-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Utils and graph representation (GPU path)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#perf-scaffolding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perf scaffolding
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#evidence-of-impact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence of impact
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+  <h1>Example v2 optimizations</h1>
+
+<h2 id="example-v2-runtime-optimizations-explained">Example v2: Runtime optimizations explained</h2>
+<p>This note documents the performance-minded choices used in <code>example_v2.py</code>, why they help, and how they reduce end‑to‑end time.</p>
+<h3 id="1-auto-device-selection-cpu-vs-cuda">1) Auto device selection (CPU vs CUDA)</h3>
+<ul>
+<li>What: The <code>Executor</code> auto-detects CUDA and instantiates the appropriate runner.</li>
+<li>Why it helps: Utilizes GPU kernels for heavy tensor work without manual configuration.</li>
+<li>How it helps: Large state updates and transitions run on the GPU where available, improving throughput.</li>
+</ul>
+<p>```100:106:example_v2.py
+    runner = setup(covid, astoria)
+    learn_params = [(name, params) for (name, params) in runner.named_parameters()]
+    # Ensure new tensor is on the same device as the runner
+    device = runner.device</p>
+<pre><code>
+### 2) Minimize host↔device transfers (create tensors on runner.device)
+
+- What: New tensors (e.g., learnable parameters) are created directly on `runner.device`.
+- Why it helps: Avoids implicit CPU→GPU copies that add latency and can fragment GPU memory.
+- How it helps: Keeps data resident on the device where compute happens.
+
+```105:113:example_v2.py
+    device = runner.device
+    new_tensor = torch.tensor([3.5, 4.2, 5.6], requires_grad=True, device=device)
+    input_string = learn_params[0][0]
+    input_string = &quot;initializer.transition_function.0.new_transmission.learnable_args.R2&quot;
+    params_dict = {input_string: new_tensor}
+    runner._set_parameters(params_dict)
+</code></pre>
+<h3 id="3-batch-stepping-reduce-python-overhead">3) Batch stepping (reduce Python overhead)</h3>
+<ul>
+<li>What: Call <code>runner.step(num_steps_per_episode)</code> once instead of stepping inside a Python loop.</li>
+<li>Why it helps: Minimizes Python overhead and lets the runner fuse/sequence operations internally.</li>
+<li>How it helps: The inner loop runs in optimized code paths (vectorized kernels / graph where applicable).</li>
+</ul>
+<p>```79:88:example_v2.py
+def simulate(runner):
+    num_steps_per_episode = runner.config["simulation_metadata"]["num_steps_per_episode"]
+    runner.step(num_steps_per_episode)
+    traj = runner.state_trajectory[-1][-1]
+    preds = traj["environment"]["daily_infected"]
+    loss = preds.sum()
+    ...
+    return loss</p>
+<pre><code>
+### 4) Single-pass loss aggregation on-device
+
+- What: Compute `loss = preds.sum()` directly from the final trajectory slice.
+- Why it helps: Avoids copying intermediate results back to the CPU and re-iterating in Python.
+- How it helps: Keeps reductions in optimized tensor ops.
+
+```84:88:example_v2.py
+    traj = runner.state_trajectory[-1][-1]
+    preds = traj[&quot;environment&quot;][&quot;daily_infected&quot;]
+    loss = preds.sum()
+</code></pre>
+<h3 id="5-targeted-parameter-updates-no-per-parameter-python-loops">5) Targeted parameter updates (no per-parameter Python loops)</h3>
+<ul>
+<li>What: Build a small <code>params_dict</code> and call <code>runner._set_parameters</code> once.</li>
+<li>Why it helps: Fewer Python attribute lookups and dynamic dispatches.</li>
+<li>How it helps: Consolidates mutation into a single call; avoids repeated crossing of Python↔backend boundaries.</li>
+</ul>
+<p>```109:113:example_v2.py
+    input_string = "initializer.transition_function.0.new_transmission.learnable_args.R2"
+    params_dict = {input_string: new_tensor}
+    runner._set_parameters(params_dict)</p>
+<pre><code>
+### 6) Coarse-grained timing with `perf_counter`
+
+- What: Time loader/executor construction, `runner.init()`, and simulation separately.
+- Why it helps: Identifies the real bottlenecks (I/O vs. initialization vs. step kernel time) quickly.
+- How it helps: Guides where to invest optimization effort (e.g., caching data vs. kernel fusion).
+
+```52:76:example_v2.py
+def setup(model, population):
+    t0 = time.perf_counter()
+    t_loader_start = time.perf_counter()
+    pop_loader = LoadPopulation(population)
+    dl = DataLoader(model, pop_loader)
+    simulation = Executor(model=model, data_loader=dl)
+    t_loader_end = time.perf_counter()
+    runner = simulation.runner
+    t_init_start = time.perf_counter()
+    runner.init()
+    t_init_end = time.perf_counter()
+    ...
+    return runner
+</code></pre>
+<h3 id="7-optional-kernelperf-telemetry">7) Optional kernel/perf telemetry</h3>
+<ul>
+<li>What: Query <code>runner.get_performance_stats()</code> if available.</li>
+<li>Why it helps: Surfaces GPU/CPU timing breakdowns from the runtime without adding profiling overhead everywhere.</li>
+<li>How it helps: Quick feedback loop for tuning step sizes, batch shapes, or device placement.</li>
+</ul>
+<p>```89:96:example_v2.py
+    if hasattr(runner, 'get_performance_stats'):
+        stats = runner.get_performance_stats()
+        print("\nPerformance Stats:")
+        for key, value in stats.items():
+            print(f"   {key}: {value}")</p>
+<pre><code>
+### 8) DataLoader/LoadPopulation pre-processing (I/O efficiency)
+
+- What: Use `LoadPopulation` + `DataLoader` to encapsulate population I/O and preprocessing.
+- Why it helps: Centralizes data loading, caching, and potential format conversions away from the hot loop.
+- How it helps: Reduces per-run I/O and keeps the simulation loop compute-bound.
+
+```56:61:example_v2.py
+    pop_loader = LoadPopulation(population)
+    dl = DataLoader(model, pop_loader)
+    simulation = Executor(model=model, data_loader=dl)
+</code></pre>
+<hr />
+<p>In combination, these choices keep compute on the right device, reduce Python overhead, avoid unnecessary transfers, and surface timing where it matters—yielding faster, more predictable runs.</p>
+<h2 id="enginelevel-optimizations-runnerexecutorinitializer">Engine‑level optimizations (Runner/Executor/Initializer)</h2>
+<p>Beyond the simple loop patterns above, the runtime includes several built‑in optimizations that improve scaling and latency:</p>
+<h3 id="runner-cuda-path">Runner (CUDA path)</h3>
+<ul>
+<li>GPU streams and async transfers: overlaps minimal snapshot I/O with compute, reducing stalls.</li>
+<li>Memory pooling and tensor reuse: cuts allocator churn and fragmentation; fewer device alloc/free cycles.</li>
+<li>Vectorized processing hooks: processes many agents in batched ops rather than Python loops.</li>
+<li>Active‑set batching: updates only relevant agents (e.g., exposed/infected), keeping per‑step cost proportional to active agents.</li>
+<li>Minimal/env‑only snapshots: bounds trajectory payload; optional downcasting (e.g., int64→int32, bool→uint8).</li>
+<li>Optional mixed precision: leverages fp16/bf16 where profitable to increase throughput.</li>
+</ul>
+<p>Why it helps: less time in the Python interpreter and allocator, fewer/lighter device transfers, and more FLOPs devoted to the subset of agents that actually changed.</p>
+<h3 id="vectorizedrunner">VectorizedRunner</h3>
+<ul>
+<li>Detects and uses vectorized implementations (e.g., via vmap) when available, falling back otherwise.</li>
+<li>Reduces host overhead and enables fused batched kernels for observation/policy/transition.</li>
+</ul>
+<p>Why it helps: shifts work from many small ops to fewer larger ops, improving arithmetic intensity and kernel efficiency.</p>
+<h3 id="initializer-and-data-residency">Initializer and data residency</h3>
+<ul>
+<li>Single device move at init: tensor leaves are moved once; subsequent steps keep data resident on GPU.</li>
+<li>Dedicated snapshot stream: subsequent snapshots are async and minimal rather than full copies.</li>
+</ul>
+<p>Why it helps: avoids repeated CPU↔GPU shuttling and keeps the hot path compute‑bound.</p>
+<h3 id="utils-and-graph-representation-gpu-path">Utils and graph representation (GPU path)</h3>
+<ul>
+<li>Sparse edge representations instead of dense adjacency matrices in contact networks.</li>
+</ul>
+<p>Why it helps: lowers memory footprint and avoids O(N^2) dense ops, improving performance on large populations.</p>
+<h3 id="perf-scaffolding">Perf scaffolding</h3>
+<ul>
+<li>Built‑in counters/timers (allocations, reuses, vectorized ops, transfer counts) and <code>get_performance_stats()</code>.</li>
+</ul>
+<p>Why it helps: fast feedback to tune batch sizes, active‑set thresholds, and snapshot frequency without full profilers.</p>
+<h3 id="evidence-of-impact">Evidence of impact</h3>
+<ul>
+<li>See <code>analyze_performance/perf-astoria-cuda-vs-cpu.md</code>: CUDA + optimized utils achieve ~71.6× total speedup vs CPU base for Astoria (37,518 agents), with step time ~138× faster. Scaling to NYC shows good efficiency with much larger populations.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

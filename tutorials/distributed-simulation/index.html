@@ -1,0 +1,1032 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Distributed Multi-GPU Simulation - AgentTorch</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#distributed-multi-gpu-simulation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AgentTorch" class="md-header__button md-logo" aria-label="AgentTorch" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AgentTorch
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Distributed Multi-GPU Simulation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AgentTorch" class="md-nav__button md-logo" aria-label="AgentTorch" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AgentTorch
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Framework Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating-a-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating a Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using the Config API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../processing-a-population/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Customizing the Population
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configure-behavior/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompting LLM as LPM agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integrating-with-beckn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    From Simulation to Reality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating-archetypes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark: Modeling with Archetypes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compare-llm-performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark: Sensitivity to Agent Behaviors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../differentiable-discrete-sampling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Differentiable Discrete Sampling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start-only-2-lines-changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start: Only 2 Lines Changed!
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Features
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-distributed-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Distributed Simulation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#specific-gpu-count" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Specific GPU Count
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#custom-sync-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Sync Settings
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-working-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎯 Complete Working Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works-behind-the-scenes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🛠️ How It Works Behind The Scenes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📝 Requirements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔧 Advanced Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔧 Advanced Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#partitioning-strategies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Partitioning Strategies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#synchronization-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Synchronization Control
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🐛 Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🐛 Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#check-gpu-availability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Check GPU Availability
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memory-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memory Issues
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Issues
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        💡 Migration Guide
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="distributed-multi-gpu-simulation">Distributed Multi-GPU Simulation</h1>
+<p>AgentTorch supports distributed simulation across multiple GPUs with <strong>minimal code changes</strong>.</p>
+<h2 id="quick-start-only-2-lines-changed">Quick Start: Only 2 Lines Changed!</h2>
+<p>Convert any existing AgentTorch simulation to distributed execution:</p>
+<pre><code class="language-python"># BEFORE (Single GPU)
+from agent_torch.populations import sample2
+from agent_torch.examples.models import movement
+from agent_torch.core.environment import envs
+
+runner = envs.create(model=movement, population=sample2)
+runner.init()
+runner.step(20)
+</code></pre>
+<pre><code class="language-python"># AFTER (Distributed Multi-GPU) - Only 2 lines changed!
+from agent_torch.populations import sample2
+from agent_torch.examples.models import movement
+from agent_torch.core.environment import envs
+
+runner = envs.create(
+    model=movement, 
+    population=sample2, 
+    distributed=True,           # &lt;-- CHANGE 1: Enable distributed
+    world_size=4               # &lt;-- CHANGE 2: Specify GPU count
+)
+runner.init()  # Same as before
+runner.step(20)  # Same as before
+</code></pre>
+<p>That's it! Your simulation now runs across 4 GPUs automatically.</p>
+<h2 id="key-features">Key Features</h2>
+<ul>
+<li><strong>No config files needed</strong> - just change 2 parameters in <code>envs.create()</code></li>
+<li><strong>Automatic agent partitioning</strong> across GPUs</li>
+<li><strong>Zero model code changes</strong> required</li>
+<li><strong>Backward compatible</strong> with all existing models</li>
+<li><strong>Auto-fallback</strong> to single GPU if needed</li>
+<li><strong>Same API</strong> - <code>.init()</code>, <code>.step()</code>, <code>.reset()</code> work identically</li>
+</ul>
+<p>Scale to <strong>hundreds of</strong> millions of agents seamlessly.</p>
+<h2 id="usage-examples">Usage Examples</h2>
+<h3 id="basic-distributed-simulation">Basic Distributed Simulation</h3>
+<pre><code class="language-python"># Use all available GPUs
+runner = envs.create(
+    model=your_model,
+    population=your_population,
+    distributed=True  # Auto-detects GPU count
+)
+</code></pre>
+<h3 id="specific-gpu-count">Specific GPU Count</h3>
+<pre><code class="language-python"># Use exactly 4 GPUs
+runner = envs.create(
+    model=your_model,
+    population=your_population,
+    distributed=True,
+    world_size=4
+)
+</code></pre>
+<h3 id="custom-sync-settings">Custom Sync Settings</h3>
+<pre><code class="language-python"># Advanced: Custom synchronization
+distributed_config = {
+    &quot;strategy&quot;: &quot;data_parallel&quot;,
+    &quot;sync_frequency&quot;: 5  # Sync every 5 steps
+}
+
+runner = envs.create(
+    model=your_model,
+    population=your_population,
+    distributed=True,
+    world_size=4,
+    distributed_config=distributed_config
+)
+</code></pre>
+<h2 id="complete-working-example">🎯 Complete Working Example</h2>
+<p>See <code>agent_torch/examples/run_movement_sim_distributed.py</code>:</p>
+<pre><code class="language-python">def run_movement_simulation_distributed(world_size=2):
+    &quot;&quot;&quot;Run movement simulation on multiple GPUs.&quot;&quot;&quot;
+
+    # Only these lines changed from single GPU version:
+    runner = envs.create(
+        model=movement, 
+        population=sample2, 
+        distributed=True,           # Enable distributed
+        world_size=world_size       # Specify GPU count
+    )
+
+    # Everything else stays exactly the same:
+    runner.init()
+
+    sim_steps = runner.config[&quot;simulation_metadata&quot;][&quot;num_steps_per_episode&quot;]
+    num_episodes = runner.config[&quot;simulation_metadata&quot;][&quot;num_episodes&quot;]
+
+    for episode in range(num_episodes):
+        if episode &gt; 0:
+            runner.reset()
+        runner.step(sim_steps)
+
+        # Print results
+        positions = runner.state[&quot;agents&quot;][&quot;citizens&quot;][&quot;position&quot;]
+        print(f&quot;Average position: {positions.mean(dim=0)}&quot;)
+</code></pre>
+<h2 id="how-it-works-behind-the-scenes">🛠️ How It Works Behind The Scenes</h2>
+<ol>
+<li><strong><code>envs.create()</code></strong> detects <code>distributed=True</code> and creates a <code>DistributedRunnerWrapper</code></li>
+<li><strong>Automatic agent partitioning</strong> - framework splits agents across GPUs</li>
+<li><strong>Same API</strong> - wrapper provides identical interface to regular runner</li>
+<li><strong>PyTorch multiprocessing</strong> - spawns processes across GPUs automatically</li>
+<li><strong>Auto-synchronization</strong> - handles data gathering and state management</li>
+</ol>
+<h2 id="requirements">📝 Requirements</h2>
+<ul>
+<li>Multiple CUDA-capable GPUs</li>
+<li>PyTorch with CUDA support  </li>
+<li>Existing AgentTorch model and population</li>
+</ul>
+<p><strong>No additional configuration files or setup needed!</strong></p>
+<h2 id="advanced-configuration">🔧 Advanced Configuration</h2>
+<h3 id="partitioning-strategies">Partitioning Strategies</h3>
+<pre><code class="language-python"># Data parallelism (default)
+distributed_config = {&quot;strategy&quot;: &quot;data_parallel&quot;}
+
+# Future: Spatial parallelism
+distributed_config = {&quot;strategy&quot;: &quot;spatial_parallel&quot;}
+</code></pre>
+<h3 id="synchronization-control">Synchronization Control</h3>
+<pre><code class="language-python">distributed_config = {
+    &quot;sync_frequency&quot;: 10,    # Sync every 10 steps
+    &quot;compression&quot;: &quot;gzip&quot;    # Compress communications
+}
+</code></pre>
+<h2 id="troubleshooting">🐛 Troubleshooting</h2>
+<h3 id="check-gpu-availability">Check GPU Availability</h3>
+<pre><code class="language-python">import torch
+print(f&quot;Available GPUs: {torch.cuda.device_count()}&quot;)
+</code></pre>
+<h3 id="memory-issues">Memory Issues</h3>
+<ul>
+<li>Reduce agent count per GPU</li>
+<li>Increase sync frequency to reduce memory usage</li>
+<li>Use gradient checkpointing for large models</li>
+</ul>
+<h3 id="performance-issues">Performance Issues</h3>
+<ul>
+<li>Ensure agent count is divisible by GPU count</li>
+<li>Monitor load balance across GPUs</li>
+<li>Use appropriate sync frequency</li>
+</ul>
+<h2 id="migration-guide">💡 Migration Guide</h2>
+<p>Converting existing AgentTorch code is trivial:</p>
+<ol>
+<li><strong>Find your <code>envs.create()</code> call</strong></li>
+<li><strong>Add <code>distributed=True</code></strong>  </li>
+<li><strong>Optionally add <code>world_size=N</code></strong></li>
+<li><strong>Done!</strong></li>
+</ol>
+<p>No other changes needed - your existing model, population, and simulation logic work unchanged. </p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
