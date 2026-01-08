@@ -100,7 +100,7 @@ print("Internal parameter gradients:", gradients)
 
 ## Method 2: External Parameter Optimization
 
-The second approach involves optimizing external parameters that are fed into the simulation. This provides more flexibility in parameter management.
+The second approach involves optimizing external parameters that are fed into the simulation. This provides more flexibility in parameter management. This requires pre-setting `calibration=True`
 
 ```python
 def optimize_external_params():
