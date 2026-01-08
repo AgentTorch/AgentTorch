@@ -196,9 +196,3 @@ calibrate_model(method='internal', num_epochs=3)
 ## Conclusion
 
 We've explored three different approaches to model calibration in AgentTorch. Each method has its strengths and is suited for different scenarios. Choose the approach that best matches your specific needs and model complexity.
-
-## Additional Resources
-
-- [AgentTorch Documentation](https://agent-torch.ai/)
-- [PyTorch Optimization](https://pytorch.org/docs/stable/optim.html)
-- [Related Tutorials](../index.md)
