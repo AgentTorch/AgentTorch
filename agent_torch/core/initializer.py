@@ -401,6 +401,31 @@ class Initializer(nn.Module):
         self.state["objects"] = self.objects
 
         self.state["parameters"] = self.parameters_dict
+    
+    def reset_state(self):
+        """Reinitialize state tensors WITHOUT recreating substep modules.
+        
+        This preserves learnable parameters in substeps while resetting
+        the simulation state (agent positions, environment, etc.).
+        Use this for training loops where gradients must flow through
+        learnable parameters across epochs.
+        """
+        self.state["current_step"] = 0
+        self.state["current_substep"] = "0"
+        
+        # Reset state containers
+        self.environment, self.agents, self.objects, self.networks = {}, {}, {}, {}
+        self.fixed_parameters, self.learnable_parameters = {}, {}
+        
+        # Reinitialize state (but NOT substeps!)
+        self.simulator()
+        
+        # Update state references
+        self.state["environment"] = self.environment
+        self.state["network"] = self.networks
+        self.state["agents"] = self.agents
+        self.state["objects"] = self.objects
+        self.state["parameters"] = self.parameters_dict
 
     def forward(self):
         """nn.Module forward delegates to initialize for convenience."""

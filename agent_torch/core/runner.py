@@ -82,6 +82,25 @@ class Runner(nn.Module):
         reinitialize the simulator at the beginning of an episode
         """
         self.init()
+    
+    def reset_state(self):
+        r"""
+        Reinitialize state tensors WITHOUT recreating substep modules.
+        
+        Use this for training loops where you need:
+        - Fresh simulation state each epoch (agent positions, etc.)
+        - Preserved learnable parameters in substeps (for gradient flow)
+        
+        Unlike reset(), this does NOT recreate substep modules, so the
+        learnable parameters remain the same tensor objects that the
+        optimizer is tracking.
+        """
+        self.initializer.reset_state()
+        self.state = self.initializer.state
+        
+        # Reset trajectory
+        self.state_trajectory = []
+        self.state_trajectory.append([to_cpu(self.state)])
 
     def reset_state_before_episode(self):
         r"""
