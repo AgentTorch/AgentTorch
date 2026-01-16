@@ -1,8 +1,13 @@
+import torch
 import torch.nn as nn
 from torch_geometric.nn import MessagePassing
 from abc import ABC, abstractmethod
 
 from agent_torch.core.helpers.general import *
+
+# Re-export vmap from helpers for convenience
+# Users can import: from agent_torch.core.substep import SubstepTransition, vmap
+from agent_torch.core.helpers.vmap import vmap, sample_grid
 
 
 class SubstepObservation(nn.Module, ABC):
