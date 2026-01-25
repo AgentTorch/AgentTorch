@@ -45,33 +45,33 @@ def sample_grid(grid, position):
     Example (inside vmapped forward):
         sugar_value = sample_grid(sugar_grid, position)
     """
+    import torch.nn.functional as F
+    
     H, W = grid.shape
     x, y = position[0], position[1]
     
-    # Clamp to valid range
-    x = torch.clamp(x, 0, H - 1.001)  # Small epsilon to avoid edge issues
-    y = torch.clamp(y, 0, W - 1.001)
+    # Normalize coordinates to [-1, 1] range for grid_sample
+    # grid_sample expects (x, y) in range [-1, 1] where:
+    #   -1 corresponds to left/top edge
+    #   +1 corresponds to right/bottom edge
+    x_norm = 2.0 * x / (H - 1) - 1.0
+    y_norm = 2.0 * y / (W - 1) - 1.0
     
-    # Get integer and fractional parts
-    x0 = x.floor().long()
-    y0 = y.floor().long()
-    x1 = torch.clamp(x0 + 1, max=H - 1)
-    y1 = torch.clamp(y0 + 1, max=W - 1)
+    # grid_sample expects input [N, C, H, W] and grid [N, H_out, W_out, 2]
+    # For single point sampling: input [1, 1, H, W], grid [1, 1, 1, 2]
+    grid_input = grid.unsqueeze(0).unsqueeze(0)  # [1, 1, H, W]
+    sample_point = torch.stack([y_norm, x_norm]).view(1, 1, 1, 2)  # [1, 1, 1, 2] - note: grid_sample uses (y, x) order!
     
-    # Fractional weights
-    wx = x - x0.float()
-    wy = y - y0.float()
+    # Sample with bilinear interpolation
+    sampled = F.grid_sample(
+        grid_input, 
+        sample_point, 
+        mode='bilinear', 
+        padding_mode='border',
+        align_corners=True
+    )
     
-    # Bilinear interpolation
-    v00 = grid[x0, y0]
-    v01 = grid[x0, y1]
-    v10 = grid[x1, y0]
-    v11 = grid[x1, y1]
-    
-    return (v00 * (1 - wx) * (1 - wy) +
-            v01 * (1 - wx) * wy +
-            v10 * wx * (1 - wy) +
-            v11 * wx * wy)
+    return sampled.squeeze()  # Return scalar
 
 
 # =============================================================================
@@ -132,7 +132,15 @@ def vmap(agent_args, shared_args=None, outputs=None, compile=False):
             config = self._vmap_config
             
             # Get agent type (assume first/only agent type for now)
-            agent_types = list(self.config["agents"].keys())
+            # FIX 1: Handle both config["agents"] and config["state"]["agents"] structures
+            # The Runner provides config with "state.agents" structure, not just "agents"
+            if "agents" in self.config:
+                agent_types = list(self.config["agents"].keys())
+            elif "state" in self.config and "agents" in self.config["state"]:
+                agent_types = list(self.config["state"]["agents"].keys())
+            else:
+                raise ValueError("No agent types found in config (checked 'agents' and 'state.agents')")
+            
             if not agent_types:
                 raise ValueError("No agent types found in config")
             agent_type = agent_types[0]
@@ -202,8 +210,10 @@ def vmap(agent_args, shared_args=None, outputs=None, compile=False):
             # Build in_dims: 0 for each agent tensor
             in_dims = tuple([0] * len(agent_tensors))
             
-            # Create vmapped function
-            vmapped_fn = torch.vmap(single_agent_fn, in_dims=in_dims)
+            # FIX 2: Create vmapped function with randomness='different' to allow
+            # random operations like gumbel_softmax to work correctly.
+            # Each agent gets different random values instead of shared randomness.
+            vmapped_fn = torch.vmap(single_agent_fn, in_dims=in_dims, randomness='different')
             
             # Optionally compile
             if config["compile"]:
@@ -238,4 +248,3 @@ def vmap(agent_args, shared_args=None, outputs=None, compile=False):
         return cls
     
     return decorator
-
