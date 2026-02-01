@@ -1,35 +1,77 @@
+"""
+LLM Backend Abstraction for AgentTorch
+======================================
+
+Provides abstract base class and implementations for LLM integration.
+
+Supported backends:
+- MockLLM: For testing without API calls (see mock_llm.py)
+- DspyLLM: DSPy-based LLM integration (requires dspy package)
+
+Usage:
+    from agent_torch.core.llm.mock_llm import MockLLM
+    llm = MockLLM(low=0.1, high=0.9)
+    
+    # Or with DSPy:
+    from agent_torch.core.llm.backend import DspyLLM
+    llm = DspyLLM(openai_api_key="...", qa=MyQA, cot=MyCOT)
+"""
 import os
 import sys
-from langchain_openai import ChatOpenAI
-from langchain.chains import LLMChain
-import dspy
-import concurrent.futures
 import io
-from langchain.prompts import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-    MessagesPlaceholder,
-)
+import concurrent.futures
 from abc import ABC, abstractmethod
 
 
 class LLMBackend(ABC):
+    """
+    Abstract base class for LLM backends.
+    
+    All LLM backends must implement the `prompt()` method which takes
+    a list of prompts and returns a list of outputs.
+    """
+    
     def __init__(self):
         pass
 
     def initialize_llm(self):
+        """Initialize the LLM. Override in subclasses if needed."""
         raise NotImplementedError
 
     @abstractmethod
     def prompt(self, prompt_list):
+        """
+        Send prompts to the LLM and get responses.
+        
+        Args:
+            prompt_list: List of prompts. Each can be:
+                - str: Simple prompt string
+                - dict: {"agent_query": str, "chat_history": list}
+                
+        Returns:
+            List of outputs, one per input prompt.
+            Each output should be a dict with at least {"text": str}
+        """
         pass
 
     def inspect_history(self, last_k, file_dir):
+        """Inspect LLM call history. Override in subclasses if supported."""
         raise NotImplementedError
 
 
 class DspyLLM(LLMBackend):
+    """
+    DSPy-based LLM backend.
+    
+    Uses DSPy's chain-of-thought reasoning for structured prompting.
+    
+    Args:
+        openai_api_key: OpenAI API key
+        qa: Question-answering signature class
+        cot: Chain-of-thought module class
+        model: Model name (default: "gpt-4o-mini")
+    """
+    
     def __init__(self, openai_api_key, qa, cot, model="gpt-4o-mini"):
         super().__init__()
         self.qa = qa
@@ -39,6 +81,7 @@ class DspyLLM(LLMBackend):
         self.model = model
 
     def initialize_llm(self):
+        import dspy
         self.llm = dspy.OpenAI(
             model=self.model, api_key=self.openai_api_key, temperature=0.0
         )
@@ -68,7 +111,7 @@ class DspyLLM(LLMBackend):
             agent_output = self.query_agent(
                 prompt_input["agent_query"], prompt_input["chat_history"]
             )
-        return agent_output.answer
+        return {"text": agent_output}
 
     def query_agent(self, query, history):
         pred = self.predictor(question=query, history=history)
@@ -85,62 +128,3 @@ class DspyLLM(LLMBackend):
             with open(save_path, "w") as f:
                 f.write(printed_data)
         sys.stdout = original_stdout
-
-
-class LangchainLLM(LLMBackend):
-    def __init__(
-        self,
-        openai_api_key,
-        agent_profile,
-        model="gpt-4o-mini",
-    ):
-        super().__init__()
-        self.backend = "langchain"
-        self.llm = ChatOpenAI(model=model, openai_api_key=openai_api_key, temperature=1)
-        self.prompt_template = ChatPromptTemplate.from_messages(
-            [
-                SystemMessagePromptTemplate.from_template(agent_profile),
-                MessagesPlaceholder(variable_name="chat_history"),
-                HumanMessagePromptTemplate.from_template("{user_prompt}"),
-            ]
-        )
-
-    def initialize_llm(self):
-        self.predictor = LLMChain(
-            llm=self.llm, prompt=self.prompt_template, verbose=False
-        )
-        return self.predictor
-
-    def prompt(self, prompt_list):
-        agent_outputs = self.call_langchain_agent(prompt_list)
-        return agent_outputs
-
-    def call_langchain_agent(self, prompt_inputs):
-        agent_outputs = []
-        try:
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                agent_outputs = list(
-                    executor.map(self.langchain_query_and_get_answer, prompt_inputs)
-                )
-        except Exception as e:
-            print(e)
-        return agent_outputs
-
-    def langchain_query_and_get_answer(self, prompt_input):
-        if type(prompt_input) is str:
-            agent_output = self.predictor.invoke(
-                {"user_prompt": prompt_input, "chat_history": []}
-            )
-        else:
-            agent_output = self.predictor.invoke(
-                {
-                    "user_prompt": prompt_input["agent_query"],
-                    "chat_history": prompt_input["chat_history"],
-                }
-            )
-        return agent_output["text"]
-
-    def inspect_history(self, last_k, file_dir):
-        raise NotImplementedError(
-            "inspect_history method is not applicable for Langchain backend"
-        )

@@ -634,4 +634,3 @@ class Template:
 
 def load_file(filepath: str):
     raise NotImplementedError("Use pandas to load data within __data__ hooks directly.")
-        
