@@ -70,7 +70,7 @@ Alternately, the easiest way to install AgentTorch (v0.6.0) is from pypi:
 
 The following section depicts the usage of existing models and population data
 to run simulations on your machine. It also acts as a showcase of the Agent
-Torch API. See the getting started tutorial at [RANDOM WALK](https://agenttorch.github.io/AgentTorch/tutorials/config_api/)
+Torch API. See the getting started tutorial at [building a random walk model](https://agenttorch.github.io/AgentTorch/tutorials/config_api/)
 
 ### Executing a Simulation
 
