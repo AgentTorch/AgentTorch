@@ -104,9 +104,36 @@ class LoadPopulation:
     keeps mixed/non-numeric data as pandas for higher-level mapping.
     """
     def __init__(self, region):
-        self.population_folder_path = region.__path__[0]
+        # Accept string path, module with __path__, or object with population_folder_path
+        if isinstance(region, str):
+            self.population_folder_path = region
+        elif hasattr(region, '__path__'):
+            self.population_folder_path = region.__path__[0]
+        elif hasattr(region, 'population_folder_path'):
+            self.population_folder_path = region.population_folder_path
+        else:
+            self.population_folder_path = str(region)
         self.population_size = 0
         self.load_population()
+
+    def _load_from_parquet(self, parquet_files):
+        """Load population from parquet file(s). Each column becomes an attribute.
+
+        Handles both:
+        - Single multi-column file (population.parquet with all attributes)
+        - Multiple single-column files (age.parquet, income.parquet, etc.)
+        """
+        for pf in parquet_files:
+            df = pd.read_parquet(pf)
+            if self.population_size == 0:
+                self.population_size = len(df)
+            for col in df.columns:
+                series = df[col]
+                if pdt.is_numeric_dtype(series.dtype):
+                    arr = series.to_numpy(dtype="float32", copy=False)
+                    setattr(self, col, torch.from_numpy(arr))
+                else:
+                    setattr(self, col, series)
 
     def convert_to_parquet(self, pickle_file):
         parquet_file = pickle_file.replace(".pickle", ".parquet").replace(
@@ -122,12 +149,19 @@ class LoadPopulation:
 
     def load_population(self):
         """load population data with improved performance and robustness.
+        - Supports parquet (preferred) and pickle formats
         - Parallel file reads (threaded)
         - Robust numeric detection
         - Zero-copy NumPy→Torch when possible
         - Authoritative population_size using age.pickle when available
         """
-        # Discover files
+        # Try parquet first (single file with all columns, or multiple per-attribute files)
+        parquet_files = glob.glob(f"{self.population_folder_path}/*.parquet")
+        if parquet_files:
+            self._load_from_parquet(parquet_files)
+            return
+
+        # Fall back to pickle files
         pickle_files = glob.glob(
             f"{self.population_folder_path}/*.pickle", recursive=False
         ) + glob.glob(f"{self.population_folder_path}/*.pkl", recursive=False)
