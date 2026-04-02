@@ -268,9 +268,9 @@ class Template:
                 # P3O mode: Use slot choice to format the actual data
                 slot_choice = active_slot_values[field_name]
                 
-                # Skip P3O formatting if data is missing - fall back to normal mode
+                # Skip P3O formatting if data is missing — leave placeholder for later filling
                 if field_name not in data:
-                    raise KeyError(f"Field '{field_name}' missing from data")
+                    return match.group(0)
                 
                 # Apply P3O presentation choice using Slot lambda function
                 if var is not None:
@@ -285,8 +285,8 @@ class Template:
                 # Normal mode: Use data value directly
                 return str(data[field_name])
             else:
-                # Field missing from data
-                raise KeyError(f"Field '{field_name}' missing from data")
+                # Field missing from data — leave placeholder for later filling (e.g., state context at sample time)
+                return match.group(0)
         
         # Replace all placeholders
         filled_section = re.sub(pattern, replace_placeholder, filled_section)
