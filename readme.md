@@ -46,6 +46,19 @@ Learn more [here](https://media.mit.edu/projects/ai-lpm).
 
 https://github.com/AgentTorch/AgentTorch/assets/13482350/4c3f9fa9-8bce-4ddb-907c-3ee4d62e7148
 
+## License
+Copyright (c) Ayush Chopra
+
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). This means:
+- You can freely use, modify, and distribute this software
+- If you use this software to provide services over a network, you must make your source code available to users
+- Any modifications or derivative works must also be licensed under AGPL-3.0
+- You must give appropriate credit and indicate any changes made
+- For full terms, see [LICENSE.md](LICENSE.md) file in this repository
+
+For inquiries about using this software in a commercial product, please reach out to request a commercial license.
+
+
 ## Installation
 Install the most recent version from source using `pip`:
 
@@ -91,18 +104,6 @@ for epi in range(num_episodes):
   runner.reset() # re-initializes the sim parameters for new episode
 
 ```
-
-## License
-Copyright (c) Ayush Chopra
-
-This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). This means:
-- You can freely use, modify, and distribute this software
-- If you use this software to provide services over a network, you must make your source code available to users
-- Any modifications or derivative works must also be licensed under AGPL-3.0
-- You must give appropriate credit and indicate any changes made
-- For full terms, see [LICENSE.md](LICENSE.md) file in this repository
-
-For inquiries about using this software in a proprietary product, please reach out to request a commercial license.
 
 ## Guides and Tutorials
 
