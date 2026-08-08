@@ -63,7 +63,7 @@ class EatGrass(SubstepTransition):
         regrowth_time = get_var(state, input_variables["regrowth_time"])
 
         # if no grass can be eaten, skip modifying the state.
-        if len(action["prey"]["eatable_grass_positions"]) < 1:
+        if (action["prey"] is None) or (len(action["prey"]["eatable_grass_positions"]) < 1):
             return {}
 
         eatable_grass_positions = torch.stack(
