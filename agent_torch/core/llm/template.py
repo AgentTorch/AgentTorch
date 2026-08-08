@@ -48,6 +48,95 @@ class Template:
                     if attr.default is not None:
                         self.__dict__[name] = attr.default
     
+    def register_variable(self, name: str, variable: Variable) -> None:
+        """
+        Register a Variable dynamically (for runtime-created Variables).
+        
+        Args:
+            name: The name to register the Variable under
+            variable: The Variable instance to register
+            
+        Example:
+            skill_var = lm.Variable(desc="Programming skills", learnable=True)
+            template.register_variable("programming", skill_var)
+        """
+        if not isinstance(variable, Variable):
+            raise TypeError(f"Expected Variable instance, got {type(variable)}")
+        
+        # Register in the variables dict
+        self._variables[name] = variable
+        
+        # Set the Variable's name (normally done by __set_name__ for class attributes)
+        variable._name = name
+        
+        # Optionally set as instance attribute for direct access
+        setattr(self, name, variable)
+        
+        # Initialize instance value from default if provided
+        if variable.default is not None:
+            self.__dict__[name] = variable.default
+    
+    def register_variables(self, variables: Dict[str, Variable]) -> None:
+        """
+        Register multiple Variables at once.
+        
+        Args:
+            variables: Dictionary mapping names to Variable instances
+            
+        Example:
+            template.register_variables({
+                "programming": lm.Variable(desc="Programming skills", learnable=True),
+                "communication": lm.Variable(desc="Communication skills", learnable=True)
+            })
+        """
+        for name, variable in variables.items():
+            self.register_variable(name, variable)
+    
+    # --- Ergonomic aliases for dynamic variable creation/registration ---
+    def add_variable(self, name: str, variable: Variable) -> "Template":
+        """Alias of register_variable that returns self for chaining."""
+        self.register_variable(name, variable)
+        return self
+
+    def add_variables(self, variables: Dict[str, Variable]) -> "Template":
+        """Alias of register_variables that returns self for chaining."""
+        self.register_variables(variables)
+        return self
+
+    def add_slots(
+        self,
+        slots: List[str],
+        presentations: Optional[List[str]] = None,
+        desc_prefix: str = "Include",
+    ) -> "Template":
+        """
+        Convenience method to create and register Variables for a list of slot names.
+        Each slot becomes a learnable binary include/omit Variable.
+        """
+        def _clean_name(raw: str) -> str:
+            import re
+            cleaned = (
+                raw.lower()
+                .replace("/", "_")
+                .replace("-", "_")
+                .replace("(", "_")
+                .replace(")", "_")
+                .replace("&", "and")
+            )
+            cleaned = re.sub(r"[^a-z0-9_]", "_", cleaned)
+            cleaned = re.sub(r"_+", "_", cleaned).strip("_")
+            if cleaned and cleaned[0].isdigit():
+                cleaned = "slot_" + cleaned
+            return cleaned or "unnamed_slot"
+
+        pres = presentations if presentations is not None else ["", "- {value}"]
+        to_add: Dict[str, Variable] = {}
+        for s in slots:
+            name = _clean_name(str(s))
+            to_add[name] = Variable(desc=f"{desc_prefix} {s}", learnable=True, presentations=pres)
+        self.register_variables(to_add)
+        return self
+    
     def set_optimized_slots(self, slot_choices: Dict[str, int]):
         """
         Set P3O optimized slot choices. Template will use these for presentation.
@@ -292,6 +381,69 @@ class Template:
         filled_section = re.sub(pattern, replace_placeholder, filled_section)
         
         return filled_section
+    
+    def render_job_info(self, row: Dict[str, Any], slot_choices: Optional[Dict[str, int]] = None) -> str:
+        """
+        Render a compact content block from learnable variables (e.g., skills) for a single row.
+        - Respects P3O slot choices if provided (include only when choice==1)
+        - Respects sparse data (omits variables with value 0/None)
+        - Uses Variable presentation logic when available
+        - Cleans empty lines
+        """
+        try:
+            mapping = getattr(self, '_mapping', {})
+        except Exception:
+            mapping = {}
+
+        lines: List[str] = []
+        slots = self.create_slots()
+
+        for field_name, var in slots.items():
+            if not getattr(var, 'learnable', False):
+                continue
+
+            # Respect slot choice when provided
+            if slot_choices is not None and field_name in slot_choices:
+                if int(slot_choices[field_name]) != 1:
+                    continue
+
+            # Respect sparse data (require truthy/1 value when present)
+            raw_value = row.get(field_name, None)
+            if raw_value in (None, 0, '0', False):
+                continue
+
+            # Prefer Variable's P3O presentation if available
+            try:
+                _, present_fn = var.get_p3o_choice(mapping)
+                rendered = present_fn(1, row)
+            except Exception:
+                # Fallback: simple line with title-cased field name
+                rendered = f"- {field_name.replace('_', ' ').title()}"
+
+            rendered = str(rendered or '').strip()
+            if rendered:
+                lines.append(rendered)
+
+        # Clean empty lines and return
+        return "\n".join(l for l in lines if str(l).strip())
+
+    def restrict_slots(self, row: Dict[str, Any], top_k: int = 0) -> List[str]:
+        """
+        Return a pruned list of learnable variable names for the given row, optionally capped to top_k.
+        Default heuristic: include variables with value==1 (or truthy) in the row.
+        """
+        slots = self.create_slots()
+        candidates: List[str] = []
+        for field_name, var in slots.items():
+            if not getattr(var, 'learnable', False):
+                continue
+            val = row.get(field_name, None)
+            if val not in (None, 0, '0', False):
+                candidates.append(field_name)
+
+        if top_k and top_k > 0 and len(candidates) > top_k:
+            return candidates[:top_k]
+        return candidates
     
     def grouping_key(self, agent_profile: Dict[str, Any]) -> str:
         """

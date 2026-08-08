@@ -1,0 +1,17 @@
+# Core numerical/data
+numpy>=1.26
+pandas>=2.1
+pydantic>=2.5
+
+# ML/optimization
+torch>=2.1
+mlflow>=2.13
+
+# DSPy (imports as `dspy`)
+dspy-ai>=2.4
+
+# Utilities
+tqdm>=4.66
+
+# Optional: Gemini integration for base/hybrid experiments (set GOOGLE_API_KEY)
+google-generativeai>=0.7

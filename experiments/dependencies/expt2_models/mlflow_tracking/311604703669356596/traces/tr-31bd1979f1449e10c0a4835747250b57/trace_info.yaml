@@ -1,0 +1,22 @@
+execution_duration_ms: 5242
+request_preview: '{"job_info": "Tasks: Measure and cut insulation for covering surfaces,
+  using tape measures, handsaws, knives, and scissors.\r\nApply, remove, and repair
+  insulation on industrial equipment, pipes, ductwork, or other mechanical systems
+  such as heat exchangers, tanks, and vessels, to help control noise and maintain
+  temperatures.\r\nSelect appropriate insulation, such as fiberglass, Styrofoam, or
+  cork, based on the heat retaining or excluding characteristics of the material.\r\nFit
+  insulation around obstructions, and shape insulating materials and protective coverings
+  as required.\r\nDetermine the amounts and types of insulation needed, and methods
+  of installation, based on factors such as location, surface shape, and equipment
+  use.\r\nCover, seal, or finish insulated surfaces or access holes with plastic covers,
+  canvas strips, sealants, tape, cement, or asphalt mastic.\r\nInstall sheet metal
+  around insulated pipes with screws to protect the insulation from weather conditions
+  or physica...'
+request_time: '2025-10-05T09:55:08.368Z'
+response_preview: ''
+state: OK
+trace_id: tr-31bd1979f1449e10c0a4835747250b57
+trace_location:
+  mlflow_experiment:
+    experiment_id: '311604703669356596'
+  type: MLFLOW_EXPERIMENT

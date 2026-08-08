@@ -1,0 +1,10 @@
+# Minimal dependencies for the wiki experiment and analysis
+dspy-ai
+google-generativeai
+pandas>=1.5
+matplotlib>=3.7
+numpy>=1.24
+
+# Note: AgentTorch is used from the repo source. If running outside the repo context,
+# you may need to install it from your local package or source distribution.
+
