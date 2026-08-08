@@ -1,0 +1,3 @@
+[submodule "retail"]
+	path = retail
+	url = https://github.com/BombayBrownBoy09/Retail_Agents.git
