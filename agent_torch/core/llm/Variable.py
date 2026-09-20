@@ -9,20 +9,56 @@ Descriptor to declare variables inside Template subclasses.
   Template instance; no separate Slot class is needed.
 """
 
-from typing import Any, Optional, Tuple, Callable
+from typing import Any, Optional, Tuple, Callable, Dict, List
 import torch
 import torch.nn as nn
 
 
 class Variable:
-    def __init__(self, desc: Optional[str] = None, learnable: bool = False, default: Any = None):
+    def __init__(self, desc: Optional[str] = None, learnable: bool = False, default: Any = None,
+                 presentations: Optional[List[str]] = None):
+        """
+        Args:
+            desc: Description of what this variable represents
+            learnable: Whether this variable's presentation can be optimized
+            default: Default value when variable is not set
+            presentations: List of format strings for presentation choices.
+                          presentations[0] should always be "" (skip)
+                          presentations[1+] are user-defined formats with {value} placeholder
+                          
+        Example:
+            skill = lm.Variable(
+                desc="Programming expertise",
+                learnable=True,
+                presentations=[
+                    "",                           # Choice 0: Skip
+                    "Skill: {value}",            # Choice 1: Formal
+                    "Expert in {value}",         # Choice 2: Expertise
+                    "{value} experience"         # Choice 3: Casual
+                ]
+            )
+        """
         self.desc = desc
         self.learnable = learnable
         self.default = default
         self._name: Optional[str] = None
-        # Number of presentation options for P3O (0..num_options-1)
-        # 0: skip, 1: direct, 2: labeled, 3: contextual, 4: descriptive
-        self.num_options: int = 5
+        
+        # Set up presentation choices
+        if presentations is None:
+            # Default behavior: binary choice (skip or include with current format)
+            self.presentations = [
+                "",                    # Choice 0: Skip
+                "- {value}: {value}"   # Choice 1: Default format
+            ]
+        else:
+            # User-provided presentations
+            if not presentations or presentations[0] != "":
+                # Ensure first choice is always "skip"
+                presentations = [""] + (presentations or ["- {value}: {value}"])
+            self.presentations = presentations
+        
+        # Number of presentation options for P3O
+        self.num_options: int = len(self.presentations)
 
     def __set_name__(self, owner, name: str):
         self._name = name
@@ -42,16 +78,26 @@ class Variable:
     # --- Learnable parameter support (replaces Slot) ---
     def get_parameter(self, instance: Any) -> Optional[nn.Parameter]:
         """Return/create the learnable parameter (logits over options) for this variable on the given instance."""
-        if not self.learnable or self._name is None:
+        if not self.learnable:
             return None
+        
+        # Auto-discover name if not set
+        if self._name is None:
+            for name, var in getattr(instance, '_variables', {}).items():
+                if var is self:
+                    self._name = name
+                    break
+        
+        if self._name is None:
+            return None
+            
         param_attr = f"__var_param__{self._name}"
         param = getattr(instance, param_attr, None)
+
         if not isinstance(param, nn.Parameter):
-            # Initialize logits over presentation options
-            init = torch.full((self.num_options,), 0.5, dtype=torch.float32)
-            # Bias against skip option (index 0)
-            if self.num_options > 0:
-                init[0] = -1.0
+            # Match original experiment: unbiased initialization with torch.zeros()
+            # This gives 50/50 probability for binary choices, letting P3O learn naturally
+            init = torch.zeros(self.num_options, dtype=torch.float32)
             param = nn.Parameter(init, requires_grad=True)
             setattr(instance, param_attr, param)
         return param
@@ -87,28 +133,123 @@ class Variable:
             if not field_name:
                 return ""
             raw_value = data.get(field_name)
+            
+            # Handle sparse skill data: if skill is not relevant (0 or missing), always skip
+            if field_name != 'soc_code' and field_name != 'job_title':
+                # For skill fields, check if this skill is relevant to this job
+                if raw_value is None or raw_value == 0 or raw_value == '0':
+                    return ""  # Skill not relevant for this job, always skip
+            
             if raw_value is None:
                 return ""
             value = map_value(raw_value)
 
-            # If not learnable, always direct
+            # If not learnable, always use the first non-skip presentation
             if not self.learnable:
+                if len(self.presentations) > 1:
+                    return self.presentations[1].format(value=value)
                 return value
 
-            if category == 0:
-                return ""
-            if category == 1:
-                return value
-            if category == 2:
-                return f"{field_name}: {value}"
-            if category == 3:
-                return f"with {value}"
-            if category == 4:
-                return f"The {field_name} is {value}"
-            # Fallback
+            # For skills: only render if choice=1 AND skill is relevant (value=1) 
+            if field_name != 'soc_code' and field_name != 'job_title':
+                if category == 0:
+                    return ""  # P3O chose to skip this skill
+                elif category == 1 and raw_value == 1:
+                    # P3O chose to include AND skill is relevant for this job
+                    if 1 < len(self.presentations):
+                        return self.presentations[1].format(value=field_name.replace('_', ' ').title())
+                    return f"- {field_name.replace('_', ' ').title()}: {field_name.replace('_', ' ').title()}"
+                else:
+                    return ""  # Skill not relevant or P3O chose to skip
+
+            # For non-skill fields (soc_code, etc.), use normal presentation logic
+            if 0 <= category < len(self.presentations):
+                presentation = self.presentations[category]
+                if presentation == "":
+                    return ""
+                return presentation.format(value=value)
+            
+            # Fallback to last presentation if category is out of range
+            if self.presentations:
+                last_presentation = self.presentations[-1]
+                return last_presentation.format(value=value) if last_presentation else ""
+            
             return value
 
         return self.num_options, fmt
+
+    # --- DSPy Conversion Utilities ---
+    @classmethod
+    def from_dspy_field(cls, field_name: str, field_annotation, dspy_field, **kwargs) -> 'Variable':
+        """Convert a DSPy InputField or OutputField to an lm.Variable.
+        
+        Args:
+            field_name: Name of the field in the DSPy signature
+            field_annotation: Type annotation (e.g., str, JobMetrics)
+            dspy_field: The dspy.InputField() or dspy.OutputField() instance
+            **kwargs: Additional Variable constructor arguments
+            
+        Returns:
+            Variable instance configured for use in AgentTorch templates
+            
+        Example:
+            # From DSPy signature:
+            # job_info: str = dspy.InputField(desc="Job description")
+            
+            var = lm.Variable.from_dspy_field(
+                "job_info", str, dspy.InputField(desc="Job description"),
+                learnable=True  # Make it optimizable
+            )
+        """
+        # Extract description from DSPy field
+        desc = getattr(dspy_field, 'desc', None) or f"Converted from DSPy field: {field_name}"
+        
+        # InputFields are typically learnable (content we want to optimize)
+        # OutputFields are typically not learnable (LLM generates them)
+        default_learnable = 'InputField' in str(type(dspy_field))
+        learnable = kwargs.pop('learnable', default_learnable)
+        
+        # Create Variable with DSPy metadata
+        return cls(
+            desc=desc,
+            learnable=learnable,
+            default=kwargs.pop('default', None),
+            **kwargs
+        )
+    
+    @classmethod
+    def from_dspy_signature(cls, signature_class) -> Dict[str, 'Variable']:
+        """Convert an entire DSPy Signature to a dictionary of lm.Variables.
+        
+        Args:
+            signature_class: A DSPy Signature class
+            
+        Returns:
+            Dictionary mapping field names to Variable instances
+            
+        Example:
+            class JobSignature(dspy.Signature):
+                job_info: str = dspy.InputField(desc="Job skills")
+                prediction: JobMetrics = dspy.OutputField(desc="Predictions")
+            
+            variables = lm.Variable.from_dspy_signature(JobSignature)
+            # Returns: {"job_info": Variable(...), "prediction": Variable(...)}
+        """
+        import inspect
+        variables = {}
+        
+        # Get signature fields
+        if hasattr(signature_class, '__annotations__'):
+            for field_name, field_type in signature_class.__annotations__.items():
+                if hasattr(signature_class, field_name):
+                    dspy_field = getattr(signature_class, field_name)
+                    # Skip non-field attributes
+                    if hasattr(dspy_field, 'desc') or 'Field' in str(type(dspy_field)):
+                        variables[field_name] = cls.from_dspy_field(
+                            field_name, field_type, dspy_field
+                        )
+        
+        return variables
 
     # --- Helpers for P3O optimization over Variable options ---
     def sample_index(self, instance: Any) -> Tuple[int, torch.Tensor, torch.Tensor]:
@@ -122,6 +263,7 @@ class Variable:
         logits = self.get_parameter(instance)
         if logits is None:
             return 1, torch.tensor(0.0), torch.tensor(0.0)
+
         probs = torch.softmax(logits, dim=0)
         dist = torch.distributions.Categorical(probs)
         idx = dist.sample()
