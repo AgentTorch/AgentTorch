@@ -3,7 +3,7 @@ name = "agent_torch"
 version = "0.6.0"
 description = "large population models"
 readme = "readme.md"
-license = {text = "MIT"}
+license = {text = "AGPL-3.0"}
 authors = [
     {name = "Ayush Chopra"}
 ]
