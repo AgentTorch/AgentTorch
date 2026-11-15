@@ -8,7 +8,7 @@ you how to set up your environment and contribute to this library.
 You must have the following software installed:
 
 1. [`git`](https://github.com/git-guides/install-git) (latest)
-2. [`python`](https://wiki.python.org/moin/BeginnersGuide/Download) (>= 3.10)
+2. [`python`](https://wiki.python.org/moin/BeginnersGuide/Download) (>= 3.9; the test workflow uses Python 3.9)
 
 Once you have installed the above, follow
 [these instructions](https://docs.github.com/en/get-started/quickstart/fork-a-repo)
@@ -51,36 +51,19 @@ Once you have created a branch, you can start coding!
 
 ## Project Structure
 
-The project is structured as follows. The comments written next to the
-file/folder give a brief explanation of what purpose the file/folder serves.
+Key top-level paths in the current repository include:
 
 ```sh
 .
-├── agent_torch/
-│  ├── helpers/ # defines helper functions used to initialize or work with the state of the simulation.
-│  ├── llm/ # contains all the code related to using llms as agents in the simulation
-│  ├── __init__.py # exports everything to the world
-│  ├── config.py # handles reading and processing the simulation's configuration
-│  ├── controller.py # executes the substeps for each episode
-│  ├── initializer.py # creates a simulation from a configuration and registry
-│  ├── registry.py # registry that stores references to the implementations of the substeps and helper functions
-│  ├── runner.py # executes the episodes of the simulation, and handles its state
-│  ├── substep.py # contains base classes for the substep observations, actions and transitions
-│  └── utils.py # utility functions used throughout the project
-├── docs/
-│  ├── media/ # assets like screenshots or diagrams inserted in .md files
-│  ├── tutorials/ # jupyter notebooks with tutorials and their explanations
-│  ├── architecture.md # the framework's architecture
-│  └── install.md # instructions on installing the framework
-├── models/
-│  ├── covid/ # a model simulating disease spread, using the example of covid 19
-│  └── predator_prey/ # a simple model used to showcase the features of the framework
-├── citation.bib # contains the latex code to use to cite this project
-├── contributing.md # this file, helps onboard contributors
-├── license.md # contains the license for this project (MIT)
-├── readme.md # contains details on the what, why, and how
-├── requirements.txt # lists the dependencies of the framework
-└── setup.py # defines metadata for the project
+├── agent_torch/      # package source (core, data, examples, models, optim, populations)
+├── docs/             # architecture, installation, and tutorials
+├── tests/            # test suite
+├── .github/          # CI and release workflows
+├── development.txt   # development/test dependencies
+├── LICENSE           # GNU Affero General Public License v3.0 (AGPL-3.0)
+├── pyproject.toml    # package and build metadata
+├── readme.md         # project overview and getting started
+└── requirements.txt  # runtime dependencies
 ```
 
 Note that after making any code changes, you should run the `black` code
